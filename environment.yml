@@ -1,0 +1,20 @@
+name: MTL
+channels:
+  - pyg
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - xarray
+  - seaborn
+  - scikit-learn
+  - tqdm
+  - hydroerr
+  - pytorch
+  - pytorch-scatter
+  - tensorboard
+  - torchvision
+  - pytest
+  - black
+  - ipykernel
