@@ -1,10 +1,10 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-05 20:48:57
+ * @LastEditTime: 2023-04-05 21:40:14
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
- * @FilePath: \HydroMTL\README.md
+ * @FilePath: /HydroMTL/README.md
  * Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 -->
 # HydroMTL
@@ -18,7 +18,10 @@ Multi-task deep learning models for basin hydrological modeling
 ### Install dependencies
 
 ```bash
+# if you have mamaba installed, it's faster to use mamba to create a new environment than conda
 mamba env create -f environment.yml
+# after the environment is created, activate it
+conda activate MTL
 ```
 
 ### Prepare data

@@ -1,4 +1,4 @@
-from hydroSPB.data.source.data_constant import (
+from hydromtl.data.source.data_constant import (
     PET_ERA5LAND_NAME,
     PET_NLDAS_NAME,
     PRCP_DAYMET_NAME,
