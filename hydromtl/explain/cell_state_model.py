@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Tuple, Union
 import torch
 from torch import nn
 from sklearn.base import RegressorMixin
-from hydroSPB.explore.cell_state_dataset import (
+from hydromtl.explain.cell_state_dataset import (
     CellStateDataset,
     train_validation_split,
     get_train_test_dataset,

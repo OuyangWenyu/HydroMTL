@@ -20,6 +20,7 @@ dependencies:
   - torchvision
   - pytest
   - black
+  - flake8
   - ipykernel
   - pip
   - pip:

@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2023-03-04 14:39:16
+LastEditTime: 2023-04-06 21:55:16
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
-FilePath: \HydroSPB\hydroSPB\explore\probe_analysis.py
+FilePath: /HydroMTL/hydromtl/explain/probe_analysis.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import numpy as np
@@ -20,20 +20,20 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 import definitions
-from hydroSPB.utils.hydro_constant import HydroVar
-from hydroSPB.data.source import data_constant
-from hydroSPB.explore.cell_state_model import (
+from hydromtl.utils.hydro_constant import HydroVar
+from hydromtl.data.source import data_constant
+from hydromtl.explain.cell_state_model import (
     get_all_models_weights,
     train_model_loop,
     calculate_predictions,
     calculate_raw_correlations,
     LinearModel,
 )
-from hydroSPB.explore.explain_lstm import (
+from hydromtl.explain.explain_lstm import (
     calculate_all_error_metrics,
     get_input_target_data_for_corr_analysis,
 )
-from hydroSPB.hydroDL.training_utils import get_the_device
+from hydromtl.models.training_utils import get_the_device
 
 
 def train_probe(run_exp, var="ET", retrain=False, **kwargs):

@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-06 16:52:49
+ * @LastEditTime: 2023-04-06 21:45:25
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: /HydroMTL/README.md
@@ -61,7 +61,10 @@ python prepare_data.py
 
 ### Train
 
+After data is ready, run the following command to train the model.
+
 ```bash
+# train an MTL model
 python train_mtl.py
 ```
 

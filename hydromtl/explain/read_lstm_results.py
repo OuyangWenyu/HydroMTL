@@ -6,13 +6,13 @@ from tqdm import tqdm
 import os
 
 import definitions
-from hydroSPB.hydroDL.time_model import PyTorchForecast
-from hydroSPB.hydroDL.evaluator import generate_predictions
-from hydroSPB.data.loader.dataloaders4test import TestDataModel
-from hydroSPB.hydroDL.training_utils import get_the_device
-from hydroSPB.data.data_dict import data_sources_dict
-from hydroSPB.data.config import get_config_file
-from hydroSPB.data.source_pro.data_camels_pro import CamelsPro
+from hydromtl.models.time_model import PyTorchForecast
+from hydromtl.models.evaluator import generate_predictions
+from hydromtl.data.loader.dataloaders4test import TestDataModel
+from hydromtl.models.training_utils import get_the_device
+from hydromtl.data.data_dict import data_sources_dict
+from hydromtl.data.config import get_config_file
+from hydromtl.data.source_pro.data_camels_pro import CamelsPro
 
 
 def get_trained_model(config):

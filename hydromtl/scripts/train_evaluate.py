@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2022-02-15 22:21:52
+LastEditTime: 2023-04-06 21:48:50
 LastEditors: Wenyu Ouyang
 Description: Entrypoint for training all ML models
-FilePath: /HydroSPB/hydroSPB/app/streamflow/camels_analysis.py
+FilePath: /HydroMTL/hydromtl/scripts/train_evaluate.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import os
@@ -12,8 +12,8 @@ import sys
 from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from hydroSPB.data.config import default_config_file, cmd, update_cfg
-from hydroSPB.hydroDL.trainer import train_and_evaluate
+from hydromtl.data.config import default_config_file, cmd, update_cfg
+from hydromtl.models.trainer import train_and_evaluate
 
 
 def main(args):

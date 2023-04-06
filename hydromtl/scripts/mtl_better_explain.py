@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 19:45:55
-LastEditTime: 2022-12-21 15:28:46
+LastEditTime: 2023-04-06 21:50:27
 LastEditors: Wenyu Ouyang
 Description: Plots for explaining MTL is better than STL
-FilePath: \HydroSPB\hydroSPB\app\multi_task\mtl_better_explain.py
+FilePath: /HydroMTL/hydromtl/scripts/mtl_better_explain.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
-from hydroSPB.data.source import data_constant
-from hydroSPB.explore.probe_analysis import show_probe
+from hydromtl.data.source import data_constant
+from hydromtl.explain.probe_analysis import show_probe
 
 save_dir = os.path.join(
     definitions.ROOT_DIR,

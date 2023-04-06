@@ -5,10 +5,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from hydroSPB.data.source.data_camels import Camels
+from hydromtl.data.source.data_camels import Camels
 
-from hydroSPB.utils.hydro_utils import t_range_days
-from hydroSPB.visual.plot_stat import (
+from hydromtl.utils.hydro_utils import t_range_days
+from hydromtl.visual.plot_stat import (
     plot_boxs,
     plot_diff_boxes,
     plot_ts_map,

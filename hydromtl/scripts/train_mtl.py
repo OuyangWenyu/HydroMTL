@@ -1,13 +1,16 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-04-06 17:22:56
+LastEditTime: 2023-04-06 22:04:00
 LastEditors: Wenyu Ouyang
 Description: Run MTL experiments
 FilePath: /HydroMTL/hydromtl/scripts/train_mtl.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import os
+import sys
+from pathlib import Path
+sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 import definitions
 from hydromtl.scripts.mtl_results_utils import run_mtl_camels_flow_et
 

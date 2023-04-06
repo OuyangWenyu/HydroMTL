@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-06 17:36:01
+LastEditTime: 2023-04-06 22:01:58
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
 FilePath: /HydroMTL/hydromtl/scripts/mtl_results_utils.py
@@ -626,12 +626,12 @@ def run_mtl_camels_flow_et(
         data_loader="StreamflowDataModel",
         scaler="DapengScaler",
         n_output=2,
-        # train_epoch=300,
-        # save_epoch=20,
-        # te=300,
-        train_epoch=2,
-        save_epoch=1,
-        te=2,
+        train_epoch=300,
+        save_epoch=20,
+        te=300,
+        # train_epoch=2,
+        # save_epoch=1,
+        # te=2,
         fill_nan=["no", "mean"],
         gage_id_file=gage_id_file,
     )

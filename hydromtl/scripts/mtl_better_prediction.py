@@ -17,15 +17,15 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
-from hydroSPB.app.multi_task.mtl_results_utils import (
+from hydromtl.scripts.mtl_results_utils import (
     plot_mtl_results_map,
     plot_multi_metrics_for_stl_mtl,
     plot_multi_single_comp_flow_boxes,
     read_multi_single_exps_results,
 )
-from hydroSPB.visual.plot_stat import plot_scatter_with_11line, plot_ts
-from hydroSPB.data.source.data_camels import Camels
-from hydroSPB.utils import hydro_utils
+from hydromtl.visual.plot_stat import plot_scatter_with_11line, plot_ts
+from hydromtl.data.source.data_camels import Camels
+from hydromtl.utils import hydro_utils
 
 # MTL exps with different λ: 1, 1/3, 1/8, 1/24
 mtl_q_et_valid_exps = ["exp41013", "exp41019", "exp41025", "exp41031"]

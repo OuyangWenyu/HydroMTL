@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-09 15:46:41
-LastEditTime: 2022-11-23 11:31:09
+LastEditTime: 2023-04-06 21:49:21
 LastEditors: Wenyu Ouyang
 Description: Try cmds
-FilePath: /HydroSPB/hydroSPB/app/script_args.py
+FilePath: /HydroMTL/hydromtl/scripts/script_args.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 #################################################
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from hydroSPB.data.config import default_config_file, cmd, update_cfg
+from hydromtl.data.config import default_config_file, cmd, update_cfg
 
 
 def main(config_data, args):

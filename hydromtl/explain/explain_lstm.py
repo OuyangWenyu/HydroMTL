@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-19 21:05:32
-LastEditTime: 2022-12-21 15:32:45
+LastEditTime: 2023-04-06 21:54:55
 LastEditors: Wenyu Ouyang
 Description: Extract information from LSTM
-FilePath: \HydroSPB\hydroSPB\explore\explain_lstm.py
+FilePath: /HydroMTL/hydromtl/explain/explain_lstm.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from tqdm import tqdm
@@ -18,18 +18,18 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 import definitions
-from hydroSPB.explore.read_lstm_results import (
+from hydromtl.explain.read_lstm_results import (
     load_ts_var_data_for_exp,
     normalize_xr_by_basin,
     load_cell_states_for_exp,
     normalize_xarray_cstate,
 )
-from hydroSPB.explore.cell_state_dataset import (
+from hydromtl.explain.cell_state_dataset import (
     fill_gaps,
     choose_data_like_et_or_ssm,
 )
-from hydroSPB.utils.hydro_exceptions import AllNaNError
-from hydroSPB.utils import hydro_stat
+from hydromtl.utils.hydro_exceptions import AllNaNError
+from hydromtl.utils import hydro_stat
 
 
 def get_input_target_data_for_corr_analysis(run_exp, var="ET"):
