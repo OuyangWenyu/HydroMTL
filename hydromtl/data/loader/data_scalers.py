@@ -12,9 +12,9 @@ from sklearn.preprocessing import (
     MaxAbsScaler,
 )
 
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.data.source.data_camels import CAMELS_REGIONS
-from hydroSPB.utils.hydro_stat import (
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.data.source.data_camels import CAMELS_REGIONS
+from hydromtl.utils.hydro_stat import (
     cal_stat_basin_norm,
     cal_stat_prcp_norm,
     cal_stat_gamma,

@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-02-11 08:22:15
+LastEditTime: 2023-04-06 17:36:01
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
-FilePath: /HydroSPB/hydroSPB/app/multi_task/mtl_results_utils.py
+FilePath: /HydroMTL/hydromtl/scripts/mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import os
@@ -17,22 +17,22 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
-from hydroSPB.app.streamflow_utils import (
+from hydromtl.scripts.streamflow_utils import (
     get_json_file,
     get_lastest_weight_path,
     predict_in_test_period_with_model,
 )
-from hydroSPB.data.config import cmd, default_config_file, update_cfg
-from hydroSPB.data.source.data_camels import Camels
-from hydroSPB.hydroDL.trainer import stat_result, train_and_evaluate
-from hydroSPB.utils.hydro_stat import stat_error
-from hydroSPB.visual.plot_stat import (
+from hydromtl.data.config import cmd, default_config_file, update_cfg
+from hydromtl.data.source.data_camels import Camels
+from hydromtl.models.trainer import stat_result, train_and_evaluate
+from hydromtl.utils.hydro_stat import stat_error
+from hydromtl.visual.plot_stat import (
     plot_boxes_matplotlib,
     plot_boxs,
     plot_ts,
     plot_map_carto,
 )
-from hydroSPB.data.source.data_constant import (
+from hydromtl.data.source.data_constant import (
     PRCP_DAYMET_NAME,
     PRCP_NLDAS_NAME,
     Q_CAMELS_US_NAME,
@@ -44,13 +44,13 @@ from hydroSPB.data.source.data_constant import (
     NLDAS_NAME,
     ERA5LAND_NAME,
 )
-from hydroSPB.app.app_constant import (
+from hydromtl.scripts.app_constant import (
     VAR_C_CHOSEN_FROM_CAMELS_US,
     VAR_T_CHOSEN_FROM_NLDAS,
     VAR_C_CHOSEN_FROM_CAMELS_CC,
     VAR_T_CHOSEN_FROM_ERA5LAND,
 )
-from hydroSPB.utils import hydro_constant
+from hydromtl.utils import hydro_constant
 
 
 def plot_multi_single_comp_flow_boxes(
@@ -238,45 +238,6 @@ def read_multi_single_exps_results(
     if return_value:
         return inds_all_lst, preds_all_lst, obss_all_lst
     return inds_all_lst
-
-
-def plot_uw_sigma(
-    exps,
-    var_names,
-    fig_name,
-    result_dir=None,
-):
-    count = 0
-    for exp in exps:
-        cfg_dir = os.path.join(
-            definitions.ROOT_DIR, "hydroSPB", "example", "camels", exp
-        )
-        cfg = get_json_file(cfg_dir)
-        log_vars = []
-        for epoch in cfg["run"]:
-            log_vars.append([float(tmp) for tmp in epoch["log_vars"][1:-1].split(",")])
-        plot_ts(
-            np.tile(np.arange(len(log_vars)), (2, 1)).tolist(),
-            np.array(log_vars).T.tolist(),
-            leg_lst=var_names[count],
-            fig_size=(6, 4),
-            xlabel="Epoch",
-            ylabel="UW_σ",
-        )
-        FIGURE_DPI = 600
-        if result_dir is not None:
-            plt.savefig(
-                os.path.join(result_dir, fig_name[count]),
-                dpi=FIGURE_DPI,
-                bbox_inches="tight",
-            )
-        else:
-            plt.savefig(
-                os.path.join(cfg_dir, fig_name[count]),
-                dpi=FIGURE_DPI,
-                bbox_inches="tight",
-            )
-        count = count + 1
 
 
 def predict_new_et_exp(
@@ -587,10 +548,7 @@ def run_mtl_camels_flow_et(
     test_period=None,
     weight_ratio=None,
     gage_id_file=os.path.join(
-        definitions.ROOT_DIR,
-        "hydroSPB",
-        "example",
-        "camels",
+        definitions.RESULT_DIR,
         "camels_us_mtl_2001_2021_flow_screen.csv",
     ),
     cache_dir=None,
@@ -621,9 +579,7 @@ def run_mtl_camels_flow_et(
         }
     else:
         raise NotImplementedError("No such loss function")
-    weight_path_dir = os.path.join(
-        definitions.ROOT_DIR, "hydroSPB", "example", "camels", target_exp
-    )
+    weight_path_dir = os.path.join(definitions.RESULT_DIR, target_exp)
     try:
         weight_path = (
             get_lastest_weight_path(weight_path_dir)
@@ -670,9 +626,12 @@ def run_mtl_camels_flow_et(
         data_loader="StreamflowDataModel",
         scaler="DapengScaler",
         n_output=2,
-        train_epoch=300,
-        save_epoch=20,
-        te=300,
+        # train_epoch=300,
+        # save_epoch=20,
+        # te=300,
+        train_epoch=2,
+        save_epoch=1,
+        te=2,
         fill_nan=["no", "mean"],
         gage_id_file=gage_id_file,
     )

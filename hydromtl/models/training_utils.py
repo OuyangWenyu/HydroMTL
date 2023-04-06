@@ -1,16 +1,16 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-08-09 10:19:13
-LastEditTime: 2022-01-11 22:39:14
+LastEditTime: 2023-04-06 17:17:19
 LastEditors: Wenyu Ouyang
 Description: Some util classes and functions during hydroDL training or testing
-FilePath: /HydroSPB/hydroSPB/hydroDL/training_utils.py
+FilePath: /HydroMTL/hydromtl/models/training_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
 from typing import Union
 import torch
-from hydroSPB.utils.hydro_utils import hydro_logger
+from hydromtl.utils.hydro_utils import hydro_logger
 
 
 def get_the_device(device_num: Union[list, int]):

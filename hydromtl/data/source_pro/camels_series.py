@@ -5,13 +5,13 @@ import collections
 from functools import reduce
 import pandas as pd
 import numpy as np
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.data.source.data_camels import (
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.data.source.data_camels import (
     CAMELS_REGIONS,
     Camels,
     CAMELS_NO_DATASET_ERROR_LOG,
 )
-from hydroSPB.utils import hydro_utils
+from hydromtl.utils import hydro_utils
 
 
 class CamelsSeries(DataSourceBase):

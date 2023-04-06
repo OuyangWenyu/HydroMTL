@@ -12,11 +12,11 @@ import collections
 
 import numpy as np
 
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.data.source.data_modiset4camels import ModisEt4Camels
-from hydroSPB.data.source.data_nldas4camels import Nldas4Camels
-from hydroSPB.data.source.data_smap4camels import Smap4Camels
-from hydroSPB.utils import hydro_utils
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.data.source.data_modiset4camels import ModisEt4Camels
+from hydromtl.data.source.data_nldas4camels import Nldas4Camels
+from hydromtl.data.source.data_smap4camels import Smap4Camels
+from hydromtl.utils import hydro_utils
 
 
 class CamelsPro(DataSourceBase):

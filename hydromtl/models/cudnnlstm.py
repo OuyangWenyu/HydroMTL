@@ -1,24 +1,21 @@
 """
 Author: MHPI group, Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-01-18 10:34:45
+LastEditTime: 2023-04-06 16:05:55
 LastEditors: Wenyu Ouyang
 Description: LSTM with dropout implemented by Kuai Fang and more LSTMs using it
-FilePath: /HydroSPB/hydroSPB/hydroDL/rnns/cudnnlstm.py
+FilePath: /HydroMTL/hydromtl/models/cudnnlstm.py
 Copyright (c) 2021-2022 MHPI group, Wenyu Ouyang. All rights reserved.
 """
 
 import math
-from typing import Union
 
 import torch
-import torch.nn as nn
 from torch.nn import Parameter
 import torch.nn.functional as F
 
-from hydroSPB.hydroDL.basic.ann import SimpleAnn
-from hydroSPB.hydroDL.cnns.cnn_vanilla import CNN1dKernel, cal_conv_size, cal_pool_size
-from hydroSPB.hydroDL.rnns.dropout import DropMask, create_mask
+from hydromtl.models.ann import SimpleAnn
+from hydromtl.models.dropout import DropMask, create_mask
 
 
 class LstmCellTied(torch.nn.Module):
@@ -432,143 +429,6 @@ class LinearCudnnLstmModel(torch.nn.Module):
     def forward(self, x, do_drop_mc=False, dropout_false=False):
         x0 = F.relu(self.former_linear(x))
         return self.tl_part(x0, do_drop_mc=do_drop_mc, dropout_false=dropout_false)
-
-
-class CNN1dLCmodel(torch.nn.Module):
-    # Directly add the CNN extracted features into LSTM inputSize
-    def __init__(
-        self,
-        nx,
-        ny,
-        nobs,
-        hidden_size,
-        n_kernel: Union[list, tuple] = (10, 5),
-        kernel_size: Union[list, tuple] = (3, 3),
-        stride: Union[list, tuple] = (2, 1),
-        dr=0.5,
-        pool_opt=None,
-        cnn_dr=0.5,
-        cat_first=True,
-    ):
-        """cat_first means: we will concatenate the CNN output with the x, then input them to the CudnnLstm model;
-        if not cat_first, it is relu_first, meaning we will relu the CNN output firstly, then concatenate it with x"""
-        # two convolutional layer
-        super(CNN1dLCmodel, self).__init__()
-        self.nx = nx
-        self.ny = ny
-        self.obs = nobs
-        self.hiddenSize = hidden_size
-        n_layer = len(n_kernel)
-        self.features = nn.Sequential()
-        n_in_chan = 1
-        lout = nobs
-        for ii in range(n_layer):
-            conv_layer = CNN1dKernel(
-                n_in_channel=n_in_chan,
-                n_kernel=n_kernel[ii],
-                kernel_size=kernel_size[ii],
-                stride=stride[ii],
-            )
-            self.features.add_module("CnnLayer%d" % (ii + 1), conv_layer)
-            if cnn_dr != 0.0:
-                self.features.add_module("dropout%d" % (ii + 1), nn.Dropout(p=cnn_dr))
-            n_in_chan = n_kernel[ii]
-            lout = cal_conv_size(lin=lout, kernel=kernel_size[ii], stride=stride[ii])
-            self.features.add_module("Relu%d" % (ii + 1), nn.ReLU())
-            if pool_opt is not None:
-                self.features.add_module(
-                    "Pooling%d" % (ii + 1), nn.MaxPool1d(pool_opt[ii])
-                )
-                lout = cal_pool_size(lin=lout, kernel=pool_opt[ii])
-        self.N_cnn_out = int(
-            lout * n_kernel[-1]
-        )  # total CNN feature number after convolution
-        self.cat_first = cat_first
-        if cat_first:
-            nf = self.N_cnn_out + nx
-            self.linearIn = torch.nn.Linear(nf, hidden_size)
-            self.lstm = CudnnLstm(
-                input_size=hidden_size, hidden_size=hidden_size, dr=dr
-            )
-        else:
-            nf = self.N_cnn_out + hidden_size
-            self.linearIn = torch.nn.Linear(nx, hidden_size)
-            self.lstm = CudnnLstm(input_size=nf, hidden_size=hidden_size, dr=dr)
-        self.linearOut = torch.nn.Linear(hidden_size, ny)
-        self.gpu = 1
-
-    def forward(self, x, z, do_drop_mc=False):
-        # z = n_grid*nVar add a channel dimension
-        z = z.t()
-        n_grid, nobs = z.shape
-        rho, bs, n_var = x.shape
-        # add a channel dimension
-        z = torch.unsqueeze(z, dim=1)
-        z0 = self.features(z)
-        # z0 = (n_grid) * n_kernel * sizeafterconv
-        z0 = z0.view(n_grid, self.N_cnn_out).repeat(rho, 1, 1)
-        if self.cat_first:
-            x = torch.cat((x, z0), dim=2)
-            x0 = F.relu(self.linearIn(x))
-        else:
-            x = F.relu(self.linearIn(x))
-            x0 = torch.cat((x, z0), dim=2)
-        out_lstm, (hn, cn) = self.lstm(x0, do_drop_mc=do_drop_mc)
-        return self.linearOut(out_lstm)
-
-
-class CudnnLstmModelLstmKernel(torch.nn.Module):
-    """use a trained/un-trained CudnnLstm as a kernel generator before another CudnnLstm."""
-
-    def __init__(
-        self,
-        nx,
-        ny,
-        hidden_size,
-        nk=None,
-        hidden_size_later=None,
-        cut=False,
-        dr=0.5,
-        delta_s=False,
-    ):
-        """delta_s means we will use the difference of the first lstm's output and the second's as the final output"""
-        super(CudnnLstmModelLstmKernel, self).__init__()
-        # These three layers are same with CudnnLstmModel to be used for transfer learning or just vanilla-use
-        self.linearIn = torch.nn.Linear(nx, hidden_size)
-        self.lstm = CudnnLstm(input_size=hidden_size, hidden_size=hidden_size, dr=dr)
-        self.linearOut = torch.nn.Linear(hidden_size, ny)
-        # if cut is True, we will only select the final index in nk, and repeat it, then concatenate with x
-        self.cut = cut
-        # the second lstm has more input than the previous
-        if nk is None:
-            nk = ny
-        if hidden_size_later is None:
-            hidden_size_later = hidden_size
-        self.linear_in_later = torch.nn.Linear(nx + nk, hidden_size_later)
-        self.lstm_later = CudnnLstm(
-            input_size=hidden_size_later, hidden_size=hidden_size_later, dr=dr
-        )
-        self.linear_out_later = torch.nn.Linear(hidden_size_later, ny)
-
-        self.delta_s = delta_s
-        # when delta_s is true, cut cannot be true, because they have to have same number params
-        assert not (cut and delta_s)
-
-    def forward(self, x, do_drop_mc=False, dropout_false=False):
-        x0 = F.relu(self.linearIn(x))
-        out_lstm1, (hn1, cn1) = self.lstm(
-            x0, do_drop_mc=do_drop_mc, dropout_false=dropout_false
-        )
-        gen = self.linearOut(out_lstm1)
-        if self.cut:
-            gen = gen[-1, :, :].repeat(x.shape[0], 1, 1)
-        x1 = torch.cat((x, gen), dim=len(gen.shape) - 1)
-        x2 = F.relu(self.linear_in_later(x1))
-        out_lstm2, (hn2, cn2) = self.lstm_later(
-            x2, do_drop_mc=do_drop_mc, dropout_false=dropout_false
-        )
-        out = self.linear_out_later(out_lstm2)
-        return gen - out if self.delta_s else (out, gen)
 
 
 class CudnnLstmModelMultiOutput(torch.nn.Module):

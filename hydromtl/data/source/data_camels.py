@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-05 18:01:11
-LastEditTime: 2022-12-03 11:39:48
+LastEditTime: 2023-04-06 16:07:04
 LastEditors: Wenyu Ouyang
 Description: Read Camels datasets
-FilePath: /HydroSPB/hydroSPB/data/source/data_camels.py
+FilePath: /HydroMTL/hydromtl/data/source/data_camels.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import collections
@@ -18,16 +18,16 @@ import numpy as np
 from pandas.core.dtypes.common import is_string_dtype, is_numeric_dtype
 from tqdm import tqdm
 
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.data.source.data_constant import (
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.data.source.data_constant import (
     ET_MODIS_NAME,
     Q_CAMELS_CC_NAME,
     SSM_SMAP_NAME,
     Q_CAMELS_US_NAME,
 )
-from hydroSPB.utils.hydro_stat import cal_fdc
-from hydroSPB.utils import hydro_utils
-from hydroSPB.utils.hydro_utils import download_one_zip, unzip_nested_zip
+from hydromtl.utils.hydro_stat import cal_fdc
+from hydromtl.utils import hydro_utils
+from hydromtl.utils.hydro_utils import download_one_zip, unzip_nested_zip
 
 CAMELS_REGIONS = ["AUS", "BR", "CA", "CE", "CL", "GB", "US", "YR", "CC"]
 CAMELS_NO_DATASET_ERROR_LOG = (

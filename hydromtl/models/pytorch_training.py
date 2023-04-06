@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-01-03 22:11:19
+LastEditTime: 2023-04-06 21:18:38
 LastEditors: Wenyu Ouyang
 Description: Training function for DL models
-FilePath: /HydroSPB/hydroSPB/hydroDL/pytorch_training.py
+FilePath: /HydroMTL/hydromtl/models/pytorch_training.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from datetime import datetime
@@ -18,30 +18,29 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from hydroSPB.data.loader.data_loaders import (
+from hydromtl.data.loader.data_loaders import (
     BasinFlowDataModel,
-    DplDataModel,
     HydroDlTsDataModel,
 )
-from hydroSPB.data.loader.data_sets import BasinFlowDataset
-from hydroSPB.data.loader.dataloaders4test import TestDataModel, TestDplDataModel
-from hydroSPB.hydroDL.time_model import PyTorchForecast
-from hydroSPB.hydroDL.model_dict_function import (
+from hydromtl.data.loader.data_sets import BasinFlowDataset
+from hydromtl.data.loader.dataloaders4test import TestDataModel
+from hydromtl.models.time_model import PyTorchForecast
+from hydromtl.models.model_dict_function import (
     pytorch_opt_dict,
     pytorch_criterion_dict,
     pytorch_model_wrapper_dict,
     sequence_first_model_lst,
 )
-from hydroSPB.hydroDL.evaluator import generate_predictions, dpl_model_predictions
-from hydroSPB.hydroDL.training_utils import EarlyStopper
-from hydroSPB.hydroDL.crits import (
+from hydromtl.models.evaluator import generate_predictions
+from hydromtl.models.training_utils import EarlyStopper
+from hydromtl.models.crits import (
     GaussianLoss,
     UncertaintyWeights,
     DynamicTaskPrior,
 )
-from hydroSPB.utils import hydro_utils
-from hydroSPB.utils.hydro_utils import random_index
-from hydroSPB.utils.hydro_stat import stat_error
+from hydromtl.utils import hydro_utils
+from hydromtl.utils.hydro_utils import random_index
+from hydromtl.utils.hydro_stat import stat_error
 
 
 def model_train(forecast_model: PyTorchForecast) -> None:

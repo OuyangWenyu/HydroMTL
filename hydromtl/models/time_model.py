@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-01-03 23:15:20
+LastEditTime: 2023-04-06 17:17:27
 LastEditors: Wenyu Ouyang
 Description: HydroDL model class
-FilePath: \HydroSPB\hydroSPB\hydroDL\time_model.py
+FilePath: /HydroMTL/hydromtl/models/time_model.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
@@ -16,14 +16,14 @@ import json
 import os
 from datetime import datetime
 
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.data.data_dict import dataloaders_dict
-from hydroSPB.hydroDL.model_dict_function import (
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.data.data_dict import dataloaders_dict
+from hydromtl.models.model_dict_function import (
     pytorch_model_dict,
     pytorch_model_wrapper_dict,
     sequence_first_model_lst,
 )
-from hydroSPB.hydroDL.training_utils import get_the_device
+from hydromtl.models.training_utils import get_the_device
 
 
 class TimeSeriesModel(ABC):

@@ -7,25 +7,15 @@ Description: Dicts including models (which are seq-first), losses, and optims
 FilePath: /HydroSPB/hydroSPB/hydroDL/model_dict_function.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
-from hydroSPB.hydroDL.hydros.tl4dpl import LinearDplModel
-from hydroSPB.hydroDL.rnns.cudnnlstm import (
+from hydromtl.models.cudnnlstm import (
     CudnnLstmModel,
     LinearCudnnLstmModel,
-    CNN1dLCmodel,
-    CudnnLstmModelLstmKernel,
     CudnnLstmModelMultiOutput,
     KuaiLstm,
 )
-from hydroSPB.hydroDL.cnns.cnnlstm import (
-    CnnLstmEra,
-    SppCudnnLSTM,
-    TimeDisCNNEraLSTM,
-    SppLstm,
-)
-from hydroSPB.hydroDL.rnns.lstm_vanilla import CudaLSTM, OfficialLstm
+from hydromtl.models.lstm_vanilla import CudaLSTM, OfficialLstm
 from torch.optim import Adam, SGD, Adadelta
-from hydroSPB.hydroDL.rnns.darnn_model import DARNN
-from hydroSPB.hydroDL.crits import (
+from hydromtl.models.crits import (
     RMSELoss,
     RmseLoss,
     MultiOutLoss,
@@ -34,11 +24,6 @@ from hydroSPB.hydroDL.crits import (
     MultiOutWaterBalanceLoss,
 )
 
-from hydroSPB.hydroDL.hydros.dpl4hbv import DplLstmHbv, DplAnnHbv
-from hydroSPB.hydroDL.hydros.dpl4xaj import DplLstmXaj, DplAnnXaj
-from hydroSPB.hydroDL.hydros.dpl4gr4j import DplLstmGr4j, DplAnnGr4j
-from hydroSPB.hydroDL.hydros.dpl4xaj_varparam import DplLstmVarParamXaj
-from hydroSPB.hydroDL.hydros.dpl4xaj_nn4et import DplLstmNnModuleXaj
 
 """
 Utility dictionaries to map a string to a class.
@@ -49,19 +34,7 @@ sequence_first_model_lst = [
     CudnnLstmModel,
     KuaiLstm,
     LinearCudnnLstmModel,
-    CNN1dLCmodel,
-    CudnnLstmModelLstmKernel,
-    SppCudnnLSTM,
     CudnnLstmModelMultiOutput,
-    DplLstmXaj,
-    DplLstmVarParamXaj,
-    DplLstmNnModuleXaj,
-    DplLstmHbv,
-    DplLstmGr4j,
-    DplAnnGr4j,
-    DplAnnHbv,
-    DplAnnXaj,
-    LinearDplModel,
 ]
 
 pytorch_model_dict = {
@@ -70,23 +43,7 @@ pytorch_model_dict = {
     "KuaiLSTM": CudnnLstmModel,
     "KuaiLstm": KuaiLstm,
     "KaiTlLSTM": LinearCudnnLstmModel,
-    "DapengCNNLSTM": CNN1dLCmodel,
-    "LSTMKernel": CudnnLstmModelLstmKernel,
     "KuaiLSTMMultiOut": CudnnLstmModelMultiOutput,
-    "DARNN": DARNN,
-    "CnnLstmEra": CnnLstmEra,
-    "CnnEraLstm": TimeDisCNNEraLSTM,
-    "SppLstm": SppLstm,
-    "SppCudnnLSTM": SppCudnnLSTM,
-    "DplXaj": DplLstmXaj,
-    "DplVarParamXaj": DplLstmVarParamXaj,
-    "DplNnModuleXaj": DplLstmNnModuleXaj,
-    "DplHbv": DplLstmHbv,
-    "DplGr4j": DplLstmGr4j,
-    "DplAttrGr4j": DplAnnGr4j,
-    "DplAttrHbv": DplAnnHbv,
-    "DplAttrXaj": DplAnnXaj,
-    "TlDplModel": LinearDplModel,
 }
 
 pytorch_model_wrapper_dict = {}

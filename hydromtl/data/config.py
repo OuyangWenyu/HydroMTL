@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2022-12-19 11:15:57
+LastEditTime: 2023-04-06 20:10:29
 LastEditors: Wenyu Ouyang
 Description: Config for hydroDL
-FilePath: \HydroSPB\hydroSPB\data\config.py
+FilePath: /HydroMTL/hydromtl/data/config.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import argparse
@@ -15,8 +15,8 @@ import os
 import pandas as pd
 import numpy as np
 import definitions
-from hydroSPB.utils import hydro_utils
-from hydroSPB.data.source.data_constant import (
+from hydromtl.utils import hydro_utils
+from hydromtl.data.source.data_constant import (
     DAYMET_NAME,
     ET_MODIS_NAME,
     PET_MODIS_NAME,
@@ -77,7 +77,6 @@ def default_config_file():
             "batch_size": 100,
             # the rho in LSTM
             "forecast_history": 30,
-            "forecast_length": 1,
             # modeled objects
             "object_ids": "ALL",
             # modeling time range
@@ -648,24 +647,24 @@ def update_cfg(cfg_file, new_args):
     if new_args.sub is not None:
         subset, subexp = new_args.sub.split("/")
         if not os.path.exists(
-            os.path.join(definitions.ROOT_DIR, "hydroSPB", "example", subset, subexp)
+            os.path.join(definitions.RESULT_DIR, subset, subexp)
         ):
             os.makedirs(
                 os.path.join(
-                    definitions.ROOT_DIR, "hydroSPB", "example", subset, subexp
+                    definitions.RESULT_DIR, subset, subexp
                 )
             )
         cfg_file["data_params"]["validation_path"] = os.path.join(
-            definitions.ROOT_DIR, "hydroSPB", "example", subset, subexp
+            definitions.RESULT_DIR, subset, subexp
         )
         cfg_file["data_params"]["test_path"] = os.path.join(
-            definitions.ROOT_DIR, "hydroSPB", "example", subset, subexp
+            definitions.RESULT_DIR, subset, subexp
         )
         if new_args.cache_path is not None:
             cfg_file["data_params"]["cache_path"] = new_args.cache_path
         else:
             cfg_file["data_params"]["cache_path"] = os.path.join(
-                definitions.ROOT_DIR, "hydroSPB", "example", subset, subexp
+                definitions.RESULT_DIR, subset, subexp
             )
     if new_args.source is not None:
         cfg_file["data_params"]["data_source_name"] = new_args.source

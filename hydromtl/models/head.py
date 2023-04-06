@@ -4,7 +4,7 @@ from typing import Dict
 import torch
 import torch.nn as nn
 
-from hydroSPB.utils.hydro_utils import hydro_logger
+from hydromtl.utils.hydro_utils import hydro_logger
 
 
 def get_head(

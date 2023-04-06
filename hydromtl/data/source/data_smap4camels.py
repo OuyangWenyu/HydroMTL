@@ -8,9 +8,9 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.data.source.data_camels import Camels
-from hydroSPB.utils import hydro_utils
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.data.source.data_camels import Camels
+from hydromtl.utils import hydro_utils
 
 
 class Smap4Camels(DataSourceBase):

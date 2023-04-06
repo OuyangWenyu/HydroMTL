@@ -5,16 +5,22 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python
+  - python=3.10
+  - numpy=1.23
   - xarray
+  - geopandas
+  - cartopy
   - seaborn
   - scikit-learn
   - tqdm
   - hydroerr
-  - pytorch
+  - pytorch=1.12
   - pytorch-scatter
   - tensorboard
   - torchvision
   - pytest
   - black
   - ipykernel
+  - pip
+  - pip:
+    - tbparse

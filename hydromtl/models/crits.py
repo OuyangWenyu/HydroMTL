@@ -1,18 +1,18 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2022-11-14 11:26:40
+LastEditTime: 2023-04-06 17:17:01
 LastEditors: Wenyu Ouyang
 Description: Loss functions
-FilePath: /HydroSPB/hydroSPB/hydroDL/crits.py
+FilePath: /HydroMTL/hydromtl/models/crits.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from typing import Union
 
 import torch
 from torch import distributions as tdist, Tensor
-from hydroSPB.hydroDL.training_utils import get_the_device
-from hydroSPB.utils.hydro_utils import deal_gap_data
+from hydromtl.models.training_utils import get_the_device
+from hydromtl.utils.hydro_utils import deal_gap_data
 
 
 class SigmaLoss(torch.nn.Module):

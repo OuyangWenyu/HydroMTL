@@ -3,7 +3,7 @@ from typing import Dict
 import torch
 from torch import nn
 from torch.nn import functional as F
-from hydroSPB.hydroDL.rnns.head import get_head
+from hydromtl.models.head import get_head
 
 
 class OfficialLstm(nn.Module):

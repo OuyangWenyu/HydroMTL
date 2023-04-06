@@ -1,14 +1,14 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-02 17:52:48
-LastEditTime: 2022-12-16 20:48:30
+LastEditTime: 2023-04-06 16:00:23
 LastEditors: Wenyu Ouyang
 Description: Some constant for data processing
-FilePath: /HydroSPB/hydroSPB/data/source/data_constant.py
+FilePath: /HydroMTL/hydromtl/data/source/data_constant.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 # TODO: only for CAMELS_CC and CAMELS_US data
-from hydroSPB.utils.hydro_constant import HydroVar
+from hydromtl.utils.hydro_constant import HydroVar
 
 
 DAYMET_NAME = "daymet"

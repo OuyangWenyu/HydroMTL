@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-01-18 09:37:07
+LastEditTime: 2023-04-06 17:13:08
 LastEditors: Wenyu Ouyang
 Description: Main function for training and testing
-FilePath: /HydroSPB/hydroSPB/hydroDL/trainer.py
+FilePath: /HydroMTL/hydromtl/models/trainer.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import fnmatch
@@ -16,15 +16,15 @@ from typing import Dict, Tuple, Union
 import pandas as pd
 import torch
 
-from hydroSPB.data.cache.cache_factory import cache_data_source
-from hydroSPB.data.data_dict import data_sources_dict
-from hydroSPB.utils import hydro_constant
-from hydroSPB.utils.hydro_constant import HydroVar
-from hydroSPB.utils.hydro_stat import stat_error
-from hydroSPB.hydroDL.evaluator import evaluate_model
-from hydroSPB.hydroDL.pytorch_training import model_train, save_model_params_log
-from hydroSPB.hydroDL.time_model import PyTorchForecast
-from hydroSPB.utils.hydro_utils import serialize_numpy, unserialize_numpy
+from hydromtl.data.cache.cache_factory import cache_data_source
+from hydromtl.data.data_dict import data_sources_dict
+from hydromtl.utils import hydro_constant
+from hydromtl.utils.hydro_constant import HydroVar
+from hydromtl.utils.hydro_stat import stat_error
+from hydromtl.models.evaluator import evaluate_model
+from hydromtl.models.pytorch_training import model_train, save_model_params_log
+from hydromtl.models.time_model import PyTorchForecast
+from hydromtl.utils.hydro_utils import serialize_numpy, unserialize_numpy
 
 
 def set_random_seed(seed):

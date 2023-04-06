@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-01-05 12:02:45
+LastEditTime: 2023-04-06 17:19:39
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
-FilePath: \HydroSPB\hydroSPB\visual\plot_stat.py
+FilePath: /HydroMTL/hydromtl/visual/plot_stat.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from typing import Union
@@ -18,7 +18,7 @@ from matplotlib import gridspec, pyplot as plt
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from hydroSPB.utils.hydro_stat import ecdf
+from hydromtl.utils.hydro_stat import ecdf
 import matplotlib.lines as mlines
 
 

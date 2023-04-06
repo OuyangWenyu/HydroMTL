@@ -2,10 +2,10 @@ from functools import wraps
 
 import torch
 
-from hydroSPB.data.cache.cache_base import DataSourceCache
-from hydroSPB.data.loader.data_scalers import wrap_t_s_dict
-from hydroSPB.data.source.data_base import DataSourceBase
-from hydroSPB.utils.hydro_utils import check_np_array_nan
+from hydromtl.data.cache.cache_base import DataSourceCache
+from hydromtl.data.loader.data_scalers import wrap_t_s_dict
+from hydromtl.data.source.data_base import DataSourceBase
+from hydromtl.utils.hydro_utils import check_np_array_nan
 
 
 @check_np_array_nan

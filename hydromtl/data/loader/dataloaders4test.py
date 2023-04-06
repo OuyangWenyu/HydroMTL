@@ -4,12 +4,11 @@ import numpy as np
 import pandas as pd
 import torch
 
-from hydroSPB.data.loader.data_loaders import (
+from hydromtl.data.loader.data_loaders import (
     BasinFlowDataModel,
     XczDataModel,
-    DplDataModel,
 )
-from hydroSPB.data.loader.data_sets import BasinFlowDataset
+from hydromtl.data.loader.data_sets import BasinFlowDataset
 
 
 class TestDataModel(object):
@@ -66,108 +65,3 @@ class TestDataModel(object):
             return x, c, z, y
         return x, c, y
 
-
-class TestDplDataModel(object):
-    """DplDataModel for test"""
-
-    def __init__(self, train_data: DplDataModel, test_data: DplDataModel):
-        """test_data is the data loader when initializing TimeSeriesModel"""
-        self.train_data = train_data
-        self.test_data = test_data
-
-    def inverse_scale(
-        self, result_data: Union[torch.Tensor, pd.Series, np.ndarray]
-    ) -> np.array:
-        """
-        This function didn't perform any calculation, just return input.
-
-        Its purpose is to keep consistent with all test data models
-
-        Parameters
-        ----------
-        result_data
-            result from model
-
-        Returns
-        -------
-        np.array
-            result from model
-        """
-        return result_data
-
-    def load_test_data(self):
-        warmup_length = self.test_data.warmup_length
-        x = self.test_data.x
-        c = self.test_data.c
-        y = self.test_data.y
-        # we use x_norm, c_norm and y_norm from training periods to generate PBM's parameters
-        x_norm = self.train_data.x_norm
-        c_norm = self.train_data.c_norm
-        y_norm = self.train_data.y_norm
-        # if we need dynamic parameters for lstm dPLt model, we need x y c in test_data
-        x_test_norm = self.test_data.x_norm
-        c_test_norm = self.test_data.c_norm
-        y_test_norm = self.test_data.y_norm
-        # Only y need warmup. For example, input: x (length = 10), warmup = 5, then output y(length=10-5=5)
-        return (
-            x_norm,  # normalized training forcing
-            c_norm,  # normalized training attrs
-            y_norm,  # normalized training target
-            x,  # not normalized test forcing
-            c,  # not normalized test attrs
-            x_test_norm,  # normalized test forcing
-            c_test_norm,  # normalized test attrs
-            y_test_norm,  # normalized test target
-            y[:, warmup_length:, :],  # not normalized test target
-        )
-
-
-class TestDplDataset(object):
-    """It is a little different for dataset to test for dpl model, so we set this class"""
-
-    def __init__(self, train_data, test_data):
-        """test_data is the data loader when initializing TimeSeriesModel"""
-        self.train_data = train_data
-        self.test_data = test_data
-
-    def inverse_scale(self, result_data) -> np.array:
-        """
-        This function didn't perform any calculation, just return input.
-
-        Its purpose is to keep consistent with all test data models
-
-        Parameters
-        ----------
-        result_data
-            result from model
-
-        Returns
-        -------
-        np.array
-            result from model
-        """
-        return result_data
-
-    def load_test_data(self):
-        warmup_length = self.test_data.warmup_length
-        x_origin = self.test_data.x_origin
-        c_origin = self.test_data.c_origin
-        y_origin = self.test_data.y_origin
-        x = self.train_data.x
-        c = self.train_data.c
-        y = self.train_data.y
-        # if we need dynamic parameters for lstm dPLt model, we need x y c in test_data
-        x_test_norm = self.test_data.x
-        c_test_norm = self.test_data.c
-        y_test_norm = self.test_data.y
-        return (
-            x,  # normalized training forcing
-            c,  # normalized training attributes
-            y,  # normalized training output
-            x_origin,  # not normalized forcing
-            c_origin,  # not normalized attributes
-            x_test_norm,  # normalized forcing for test
-            c_test_norm,  # normalized attributes for test
-            y_test_norm,  # normalized output for test
-            y_origin[:, warmup_length:, :],  # not normalized output
-        )

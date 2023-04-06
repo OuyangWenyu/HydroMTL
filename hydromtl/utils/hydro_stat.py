@@ -1,10 +1,10 @@
 """
 Author: MHPI group, Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-01-04 17:50:59
+LastEditTime: 2023-04-06 16:07:15
 LastEditors: Wenyu Ouyang
 Description: statistics calculation
-FilePath: /HydroSPB/hydroSPB/utils/hydro_stat.py
+FilePath: /HydroMTL/hydromtl/utils/hydro_stat.py
 Copyright (c) 2021-2022 MHPI group, Wenyu Ouyang. All rights reserved.
 """
 
@@ -15,7 +15,7 @@ import numpy as np
 import scipy.stats
 from scipy.stats import wilcoxon
 import pandas as pd
-from hydroSPB.utils.hydro_utils import hydro_logger
+from hydromtl.utils.hydro_utils import hydro_logger
 
 ALL_METRICS = ["Bias", "RMSE", "ubRMSE", "Corr", "R2", "NSE", "KGE", "FHV", "FLV"]
 
