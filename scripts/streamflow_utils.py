@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2023-04-06 17:09:10
+LastEditTime: 2023-04-07 09:15:10
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
-FilePath: /HydroMTL/hydromtl/scripts/streamflow_utils.py
+FilePath: /HydroMTL/scripts/streamflow_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import csv
@@ -36,7 +36,7 @@ from hydromtl.models.trainer import (
 from hydromtl.utils.hydro_stat import stat_error, ecdf
 from hydromtl.data.config import default_config_file, update_cfg, cmd
 from hydromtl.visual.plot_stat import plot_ecdfs_matplot, plot_ts, plot_rainfall_runoff
-from hydromtl.scripts.app_constant import VAR_C_CHOSEN_FROM_GAGES_II
+from app_constant import VAR_C_CHOSEN_FROM_GAGES_II
 from hydromtl.utils import hydro_constant, hydro_utils
 from hydromtl.data.source.data_camels import Camels
 from hydromtl.data.source.data_constant import (

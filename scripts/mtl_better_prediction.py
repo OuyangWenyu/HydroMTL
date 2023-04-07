@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-24 14:45:05
-LastEditTime: 2023-01-29 00:58:44
+LastEditTime: 2023-04-07 09:15:48
 LastEditors: Wenyu Ouyang
 Description: Plots for MTL valid and test results comparing with STL
-FilePath: \HydroSPB\hydroSPB\app\multi_task\mtl_better_prediction.py
+FilePath: /HydroMTL/scripts/mtl_better_prediction.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import pandas as pd
@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
-from hydromtl.scripts.mtl_results_utils import (
+from mtl_results_utils import (
     plot_mtl_results_map,
     plot_multi_metrics_for_stl_mtl,
     plot_multi_single_comp_flow_boxes,

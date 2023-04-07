@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-06 21:45:25
+ * @LastEditTime: 2023-04-07 09:56:30
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: /HydroMTL/README.md
@@ -30,6 +30,16 @@ If you feel it useful, please cite our paper:
 
 **NOTICE: a NVIDIA GPU is required to run the code!**
 
+### Clone the repository
+
+Fork this repository and clone it to your local machine.
+
+```bash
+# xxx is your github username
+git clone git@github.com:xxxx/HydroMTL.git
+cd HydroMTL
+```
+
 ### Install dependencies
 
 ```bash
@@ -37,8 +47,8 @@ If you feel it useful, please cite our paper:
 mamba env create -f environment.yml
 # after the environment is created, activate it
 conda activate MTL
-# check if your pytorch is installed correctly, if cuda is installed, it should return True
-python -c "import torch; print(torch.cuda.is_available())"
+# check if packages are installed correctly and HydroMTL is runnable
+pytest tests
 ```
 
 ### Prepare data

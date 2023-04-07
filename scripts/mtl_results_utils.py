@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-06 22:01:58
+LastEditTime: 2023-04-07 09:15:37
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
-FilePath: /HydroMTL/hydromtl/scripts/mtl_results_utils.py
+FilePath: /HydroMTL/scripts/mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import os
@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
-from hydromtl.scripts.streamflow_utils import (
+from streamflow_utils import (
     get_json_file,
     get_lastest_weight_path,
     predict_in_test_period_with_model,
@@ -44,7 +44,7 @@ from hydromtl.data.source.data_constant import (
     NLDAS_NAME,
     ERA5LAND_NAME,
 )
-from hydromtl.scripts.app_constant import (
+from app_constant import (
     VAR_C_CHOSEN_FROM_CAMELS_US,
     VAR_T_CHOSEN_FROM_NLDAS,
     VAR_C_CHOSEN_FROM_CAMELS_CC,

@@ -1,16 +1,18 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2023-04-06 17:25:33
+LastEditTime: 2023-04-07 09:24:34
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
-FilePath: /HydroMTL/hydromtl/scripts/prepare_data.py
+FilePath: /HydroMTL/scripts/prepare_data.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import os
 import pandas as pd
 import csv
-
+import sys
+from pathlib import Path
+sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import definitions
 from hydromtl.data.source_pro.select_gages_ids import (
     usgs_screen_streamflow,
