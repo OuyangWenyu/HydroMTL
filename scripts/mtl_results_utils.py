@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-07 09:15:37
+LastEditTime: 2023-04-07 10:36:13
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -42,13 +42,10 @@ from hydromtl.data.source.data_constant import (
     PET_NLDAS_NAME,
     PET_MODIS_NAME,
     NLDAS_NAME,
-    ERA5LAND_NAME,
 )
 from app_constant import (
     VAR_C_CHOSEN_FROM_CAMELS_US,
     VAR_T_CHOSEN_FROM_NLDAS,
-    VAR_C_CHOSEN_FROM_CAMELS_CC,
-    VAR_T_CHOSEN_FROM_ERA5LAND,
 )
 from hydromtl.utils import hydro_constant
 
@@ -555,6 +552,7 @@ def run_mtl_camels_flow_et(
     random_seed=1234,
     ctx=None,
     loss_func="MultiOutLoss",
+    limit_part=None,
 ):
     if ctx is None:
         ctx = [0]
@@ -570,12 +568,14 @@ def run_mtl_camels_flow_et(
             "data_gap": [0, 2],
             "device": ctx,
             "item_weight": weight_ratio,
+            "limit_part": limit_part,
         }
     elif loss_func == "UncertaintyWeights":
         loss_param = {
             "loss_funcs": "RMSESum",
             "data_gap": [0, 2],
             "device": ctx,
+            "limit_part": limit_part,
         }
     else:
         raise NotImplementedError("No such loss function")
@@ -717,78 +717,3 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow"):
         dpi=FIGURE_DPI,
         bbox_inches="tight",
     )
-
-
-def run_mtl_camels_cc_flow_et(
-    target_exp,
-    var_c=VAR_C_CHOSEN_FROM_CAMELS_CC,
-    var_t=VAR_T_CHOSEN_FROM_ERA5LAND,
-    train_period=None,
-    test_period=None,
-    weight_ratio=None,
-    gage_id_file=os.path.join(
-        definitions.ROOT_DIR,
-        "hydroSPB",
-        "example",
-        "camels",
-        "camels_cc_2014_2020_flow_screen.csv",
-    ),
-):
-    if train_period is None:
-        train_period = ["2014-10-01", "2019-10-01"]
-    if test_period is None:
-        test_period = ["2019-10-01", "2020-10-01"]
-    if weight_ratio is None:
-        weight_ratio = [0.5, 0.5]
-    weight_path_dir = os.path.join(
-        definitions.ROOT_DIR, "hydroSPB", "example", "camels", target_exp
-    )
-    weight_path = get_lastest_weight_path(weight_path_dir)
-    config_data = default_config_file()
-    args = cmd(
-        sub=f"camels/{target_exp}",
-        source="CAMELS",
-        source_region="CC",
-        source_path=os.path.join(definitions.DATASET_DIR, "camels", "camels_cc"),
-        download=0,
-        ctx=[0],
-        model_name="KuaiLSTMMultiOut",
-        model_param={
-            "model_name": "multi_output_tl",
-            "n_input_features": len(var_c) + len(var_t),
-            "n_output_features": 2,
-            "n_hidden_states": 256,
-            "layer_hidden_size": 128,
-        },
-        weight_path=weight_path,
-        loss_func="MultiOutLoss",
-        loss_param={
-            "loss_funcs": "RMSESum",
-            "data_gap": [0, 2],
-            "device": [0],
-            "item_weight": weight_ratio,
-        },
-        cache_read=1,
-        cache_write=1,
-        batch_size=10,
-        rho=365,
-        var_t=var_t,
-        var_c=var_c,
-        var_t_type=[ERA5LAND_NAME],
-        var_out=[Q_CAMELS_CC_NAME, ET_MODIS_NAME],
-        train_period=train_period,
-        test_period=test_period,
-        opt="Adadelta",
-        rs=1234,
-        data_loader="StreamflowDataModel",
-        scaler="DapengScaler",
-        n_output=2,
-        train_epoch=100,
-        save_epoch=10,
-        te=100,
-        fill_nan=["no", "mean"],
-        gage_id_file=gage_id_file,
-    )
-    update_cfg(config_data, args)
-    train_and_evaluate(config_data)
-    print("All processes are finished!")

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-04-07 09:14:45
+LastEditTime: 2023-04-07 10:41:45
 LastEditors: Wenyu Ouyang
 Description: Run MTL experiments
 FilePath: /HydroMTL/scripts/train_mtl.py
@@ -20,5 +20,5 @@ for i in range(len(mtl_exps)):
     run_mtl_camels_flow_et(
         mtl_exps[i],
         random_seed=random_seeds[i],
-        cache_dir=os.path.join(definitions.RESULT_DIR, mtl_exps[0]),
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", mtl_exps[0]),
     )
