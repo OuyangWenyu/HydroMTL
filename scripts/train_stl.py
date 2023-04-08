@@ -1,9 +1,9 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-04-07 10:47:14
+LastEditTime: 2023-04-07 20:12:23
 LastEditors: Wenyu Ouyang
-Description: Run STL experiments
+Description: Run multiple STL experiments
 FilePath: /HydroMTL/scripts/train_stl.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """

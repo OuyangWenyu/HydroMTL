@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-07 09:56:30
+ * @LastEditTime: 2023-04-08 10:42:50
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: /HydroMTL/README.md
@@ -25,6 +25,8 @@ If you feel it useful, please cite our paper:
   howpublished = {\url{}}
 }
 ```
+
+All the code of this repository is also available on [Zenodo](https://zenodo.org/record/5550000).
 
 ## How to run
 
@@ -74,12 +76,29 @@ python prepare_data.py
 After data is ready, run the following command to train the model.
 
 ```bash
-# train an MTL model
-python train_mtl.py
+# if not in the scripts folder, cd to it
+# cd scripts
+# train MTL models, you can choose one to try
+# for cache_path, mine is /home/ouyangwenyu/code/HydroMTL/results/camels/expmtl001
+python run_task.py --exp expmtl001 --loss_weight 0.5 0.5 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234
+python run_task.py --exp expmtl002 --loss_weight 0.33 0.66 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None
+# train a STL (streamflow) model
+python run_task.py --exp expstlq001 --loss_weight 1.0 0.0 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 1 --random 1234 --limit_part 1
+# train a STL (evapotranspiration) model
+python run_task.py --exp expstlet001 --loss_weight 0.0 1.0 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 1 --random 1234 --limit_part 0
 ```
+
+The trained model will be saved in `./results/` folder.
+
+If you don't want to train the model, you can download the trained model from [Kaggle]() or [Zenodo]().
 
 ### Test
 
+One can use the trained model to test in any period.
+
 ```bash
-python test.py
+# if not in the scripts folder, cd to it
+# cd scripts
+# for weight_path, mine is /home/ouyangwenyu/code/HydroMTL/results/camels/expstlq001/weights/07_April_202311_52AM_model.pth
+python evaluate_task.py --exp expstlq0010 --loss_weight 1 0  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
 ```

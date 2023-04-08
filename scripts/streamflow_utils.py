@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2023-04-07 09:15:10
+LastEditTime: 2023-04-08 11:30:06
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
 FilePath: /HydroMTL/scripts/streamflow_utils.py
@@ -297,9 +297,13 @@ def predict_in_test_period_with_model(new_exp_args, cache_cfg_dir, weight_path):
     cfg = default_config_file()
     update_cfg(cfg, new_exp_args)
     if cache_cfg_dir is not None:
-        cfg["data_params"]["cache_path"] = cache_cfg_dir
-        cfg["data_params"]["cache_read"] = True
-        cfg["data_params"]["cache_write"] = False
+        # train_data_dict.json is a flag for cache existing
+        if not os.path.exists(os.path.join(cache_cfg_dir, "train_data_dict.json")):
+            cache_cfg_dir = None
+        else:
+            cfg["data_params"]["cache_path"] = cache_cfg_dir
+            cfg["data_params"]["cache_read"] = True
+            cfg["data_params"]["cache_write"] = False
     cfg["model_params"]["continue_train"] = False
     cfg["model_params"]["weight_path"] = weight_path
     if weight_path is None:

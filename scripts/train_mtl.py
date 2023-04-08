@@ -1,9 +1,9 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-04-07 10:41:45
+LastEditTime: 2023-04-07 20:12:32
 LastEditors: Wenyu Ouyang
-Description: Run MTL experiments
+Description: Run multiple MTL experiments
 FilePath: /HydroMTL/scripts/train_mtl.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
