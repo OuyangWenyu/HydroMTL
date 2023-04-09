@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2023-04-08 11:36:34
+LastEditTime: 2023-04-09 21:54:50
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: /HydroMTL/scripts/evaluate_task.py
@@ -52,8 +52,8 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        # default="expmtl0010",
-        default="expstlq0010",
+        default="expmtl0010",
+        # default="expstlq0010",
     )
     parser.add_argument(
         "--loss_weight",
@@ -61,8 +61,8 @@ if __name__ == "__main__":
         help="weight of loss for usgsFlow or/and ET",
         nargs="+",
         type=float,
-        # default=[0.5, 0.5],
-        default=[1, 0],
+        default=[0.5, 0.5],
+        # default=[1, 0],
     )
     parser.add_argument(
         "--test_period",
@@ -76,15 +76,16 @@ if __name__ == "__main__":
         dest="cache_path",
         help="the cache file for forcings, attributes and targets data",
         type=str,
-        # default=None,
-        default="/mnt/data/owen411/code/HydroMTL/results/camels/expstlq0010",
+        default=None,
+        # default="/mnt/data/owen411/code/HydroMTL/results/camels/expstlq0010",
     )
     parser.add_argument(
         "--weight_path",
         dest="weight_path",
         help="the weight path file for trained model",
         type=str,
-        default="/mnt/data/owen411/code/HydroMTL/results/camels/expstlq001/07_April_202311_52AM_model.pth",
+        default="/mnt/data/owen411/code/HydroMTL/results/camels/expmtl001/03_August_202201_51AM_model.pth",
+        # default="/mnt/data/owen411/code/HydroMTL/results/camels/expstlq001/07_April_202311_52AM_model.pth",
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-04-06 20:10:29
+LastEditTime: 2023-04-09 10:34:59
 LastEditors: Wenyu Ouyang
 Description: Config for hydroDL
 FilePath: /HydroMTL/hydromtl/data/config.py
@@ -870,7 +870,6 @@ def update_cfg(cfg_file, new_args):
         cfg_file["training_params"]["num_workers"] = new_args.num_workers
     if new_args.train_but_not_real is not None and new_args.train_but_not_real > 0:
         cfg_file["training_params"]["train_but_not_real"] = True
-    print("the updated config:\n", json.dumps(cfg_file, indent=4, ensure_ascii=False))
 
 
 def get_config_file(cfg_dir):

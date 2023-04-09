@@ -1,13 +1,14 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-04-06 17:13:08
+LastEditTime: 2023-04-09 10:34:23
 LastEditors: Wenyu Ouyang
 Description: Main function for training and testing
 FilePath: /HydroMTL/hydromtl/models/trainer.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import fnmatch
+import json
 import os
 import random
 
@@ -61,6 +62,7 @@ def train_and_evaluate(params: Dict):
     -------
     None
     """
+    print("the updated config:\n", json.dumps(params, indent=4, ensure_ascii=False))
     random_seed = params["training_params"]["random_seed"]
     set_random_seed(random_seed)
     data_params = params["data_params"]

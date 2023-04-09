@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-08 10:42:50
+ * @LastEditTime: 2023-04-09 22:22:55
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: /HydroMTL/README.md
@@ -82,6 +82,9 @@ After data is ready, run the following command to train the model.
 # for cache_path, mine is /home/ouyangwenyu/code/HydroMTL/results/camels/expmtl001
 python run_task.py --exp expmtl001 --loss_weight 0.5 0.5 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234
 python run_task.py --exp expmtl002 --loss_weight 0.33 0.66 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None
+python run_task.py --exp expmtl003 --loss_weight 0.75 0.25 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None
+python run_task.py --exp expmtl004 --loss_weight 0.88 0.11 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None
+python run_task.py --exp expmtl005 --loss_weight 0.96 0.04 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 0 --random 1234 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None
 # train a STL (streamflow) model
 python run_task.py --exp expstlq001 --loss_weight 1.0 0.0 --train_period 2001-10-01 2011-10-01 --test_period 2011-10-01 2016-10-01 --ctx 1 --random 1234 --limit_part 1
 # train a STL (evapotranspiration) model
@@ -100,5 +103,22 @@ One can use the trained model to test in any period.
 # if not in the scripts folder, cd to it
 # cd scripts
 # for weight_path, mine is /home/ouyangwenyu/code/HydroMTL/results/camels/expstlq001/weights/07_April_202311_52AM_model.pth
+# NOTE: We set test exp as trainexp+"0", for example, train exp is expmtl001, then, test exp is expmtl0010
 python evaluate_task.py --exp expstlq0010 --loss_weight 1 0  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+python evaluate_task.py --exp expstlet0010 --loss_weight 0 1  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+python evaluate_task.py --exp expmtl0010 --loss_weight 0.5 0.5  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+python evaluate_task.py --exp expmtl0020 --loss_weight 0.33 0.66  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+python evaluate_task.py --exp expmtl0030 --loss_weight 0.75 0.25  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+python evaluate_task.py --exp expmtl0040 --loss_weight 0.88 0.11  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+python evaluate_task.py --exp expmtl0050 --loss_weight 0.96 0.04  --test_period 2016-10-01 2021-10-01 --cache_path /your/path/to/cache_directory_for_attributes_forcings_targets/or/None --weight_path /your/path/to/trained_model_pth_file
+```
+
+### Plot
+
+To show the results visually, run the following command.
+
+```bash
+# if not in the scripts folder, cd to it
+# cd scripts
+
 ```
