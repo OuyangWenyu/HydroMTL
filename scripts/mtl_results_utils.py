@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-11 09:51:11
+LastEditTime: 2023-04-11 10:51:15
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -164,6 +164,7 @@ def read_multi_single_exps_results(
         preds.append(pred[var_idx])
         obss.append(obs[var_idx])
     preds_all_lst += preds
+    obss_all_lst.append(obss[0])
     if len(exps_lst) > 2:
         if ensemble == 1:
             pred_ensemble = np.array(preds).mean(axis=0)

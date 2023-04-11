@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-24 14:45:05
-LastEditTime: 2023-04-10 18:17:29
+LastEditTime: 2023-04-11 10:52:46
 LastEditors: Wenyu Ouyang
 Description: Plots for MTL valid and test results comparing with STL
 FilePath: /HydroMTL/scripts/mtl_better_prediction.py
@@ -85,12 +85,7 @@ def plot_for_prediction_performance(args):
         "exps_et_test_obs.npy",
     )
 
-    if (
-        os.path.exists(exps_test_q_et_results_file)
-        and os.path.exists(exps_test_et_q_results_file)
-        and os.path.exists(exps_valid_q_et_results_file)
-        and os.path.exists(exps_valid_et_q_results_file)
-    ):
+    try:
         exps_q_et_results = np.load(exps_test_q_et_results_file, allow_pickle=True)
         exps_et_q_results = np.load(exps_test_et_q_results_file, allow_pickle=True)
         q_et_valid_inds = np.load(exps_valid_q_et_results_file, allow_pickle=True)
@@ -99,7 +94,7 @@ def plot_for_prediction_performance(args):
         obss_q_lst = np.load(exps_test_obs_q_file, allow_pickle=True)
         preds_et_lst = np.load(exps_test_et_pred_file, allow_pickle=True)
         obss_et_lst = np.load(exps_test_et_obs_file, allow_pickle=True)
-    else:
+    except Exception:
         et_q_valid_inds, et_q_best_index_valid_best4et = read_multi_single_exps_results(
             exps_et_q_valid, var_idx=1, single_is_flow=False, flow_idx_in_mtl=0
         )
@@ -146,11 +141,6 @@ def plot_for_prediction_performance(args):
         0
     ]
     diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
-    gage_id_file = os.path.join(
-        definitions.RESULT_DIR,
-        "camels_us_mtl_2001_2021_flow_screen.csv",
-    )
-    gage_ids = pd.read_csv(gage_id_file)
     t_lst = hydro_utils.t_range_days(["2016-10-01", "2021-10-01"])
 
     # plot the 2 better mtl and 1 better stl

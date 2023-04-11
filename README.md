@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-09 22:22:55
+ * @LastEditTime: 2023-04-11 11:24:59
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: /HydroMTL/README.md
@@ -57,11 +57,16 @@ pytest tests
 
 Firstly, download data manually from [Kaggle]() or [Zenodo]().
 
-Then, put the data in a folder and set this fold in defination.py.
+Then, put the data in a folder and set this fold in definitions.py.
+ 
+A recommeded way to config the data path is to create a file named `definitions_private.py` in the root directory of the project, and set the data path in it.
+
+You can set the data path in `definitions_private.py` as follows:
 
 ```python
-# defination.py
-DATASET_DIR = 'path/to/your/data/source/folder'
+# xxx is your path
+DATASET_DIR = xxx # This is your Data source directory
+RESULT_DIR = xxx # This is your result directory
 ```
 
 Run the following command to prepare the data.
