@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-07 10:36:13
+LastEditTime: 2023-04-11 09:51:11
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -81,9 +81,8 @@ def plot_multi_single_comp_flow_boxes(
         # TODO: see what happened here, the interface is not unified
         if type(inds_test) == list:
             inds_test = np.array(inds_test)
-        df_dict_i = {}
         str_i = cases_exps_legends_together[i]
-        df_dict_i[x_name] = np.full([inds_test.size], str_i)
+        df_dict_i = {x_name: np.full([inds_test.size], str_i)}
         df_dict_i[y_name] = inds_test
         df_i = pd.DataFrame(df_dict_i)
         frames.append(df_i)
@@ -144,37 +143,14 @@ def read_multi_single_exps_results(
     inds_all_lst = []
     preds_all_lst = []
     obss_all_lst = []
-    cfg_dir_var = os.path.join(
-        definitions.ROOT_DIR, "hydroSPB", "example", "camels", exps_lst[0]
-    )
-    cfg_var = get_json_file(cfg_dir_var)
-    var_name = (
-        hydro_constant.streamflow.name
-        if single_is_flow
-        else hydro_constant.evapotranspiration.name
-    )
-    inds_df, pred_stl, obs_stl = stat_result(
-        cfg_var["data_params"]["test_path"],
-        cfg_var["evaluate_params"]["test_epoch"],
-        fill_nan=cfg_var["evaluate_params"]["fill_nan"],
-        unit=flow_unit if single_is_flow else et_unit,
-        return_value=True,
-        var_name=var_name,
-    )
-    inds_all_lst.append(inds_df[metric].values)
-    preds_all_lst.append(pred_stl)
-    # all obs are the same, so just append this one
-    obss_all_lst.append(obs_stl)
     units = [None] * 2
     var_names = [hydro_constant.streamflow.name, hydro_constant.evapotranspiration.name]
     units[flow_idx_in_mtl] = flow_unit
     units[et_idx_in_mtl] = et_unit
     preds = []
     obss = []
-    for i in range(1, len(exps_lst)):
-        cfg_dir_flow_other = os.path.join(
-            definitions.ROOT_DIR, "hydroSPB", "example", "camels", exps_lst[i]
-        )
+    for i in range(len(exps_lst)):
+        cfg_dir_flow_other = os.path.join(definitions.RESULT_DIR, "camels", exps_lst[i])
         cfg_flow_other = get_json_file(cfg_dir_flow_other)
         inds_df1, pred, obs = stat_result(
             cfg_flow_other["data_params"]["test_path"],
@@ -187,7 +163,7 @@ def read_multi_single_exps_results(
         inds_all_lst.append(inds_df1[var_idx][metric].values)
         preds.append(pred[var_idx])
         obss.append(obs[var_idx])
-    preds_all_lst = preds_all_lst + preds
+    preds_all_lst += preds
     if len(exps_lst) > 2:
         if ensemble == 1:
             pred_ensemble = np.array(preds).mean(axis=0)
@@ -206,19 +182,18 @@ def read_multi_single_exps_results(
         if best_valid_idx is None:
             mtl_best_results = np.array(inds_all_lst[1:]).max(axis=0)
             mtl_best_results_where = np.array(inds_all_lst[1:]).argmax(axis=0)
+            preds_arr = np.array(preds)
             pred_best = np.array(
-                [
-                    np.array(preds)[idx, i, :]
-                    for i, idx in enumerate(mtl_best_results_where)
-                ]
+                [preds_arr[idx, i, :] for i, idx in enumerate(mtl_best_results_where)]
             )
         else:
             mtl_results = np.array(inds_all_lst[1:])
             mtl_best_results = np.array(
                 [mtl_results[idx, i] for i, idx in enumerate(best_valid_idx)]
             )
+            preds_arr = np.array(preds)
             pred_best = np.array(
-                [np.array(preds)[idx, i, :] for i, idx in enumerate(best_valid_idx)]
+                [preds_arr[idx, i, :] for i, idx in enumerate(best_valid_idx)]
             )
             mtl_best_results_where = np.array(inds_all_lst[1:]).argmax(axis=0)
         if mtl_mean_results is not None:

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-24 14:45:05
-LastEditTime: 2023-04-09 21:50:40
+LastEditTime: 2023-04-10 18:17:29
 LastEditors: Wenyu Ouyang
 Description: Plots for MTL valid and test results comparing with STL
 FilePath: /HydroMTL/scripts/mtl_better_prediction.py
@@ -30,6 +30,7 @@ from hydromtl.utils import hydro_utils
 
 def plot_for_prediction_performance(args):
     mtl_exps = args.mtl_exps
+    mtl_lambda = args.mtl_lambda
     stl_q_exps = args.stl_q_exps
     stl_et_exps = args.stl_et_exps
     mtl_q_et_valid_exps = mtl_exps
@@ -44,20 +45,12 @@ def plot_for_prediction_performance(args):
 
     result_dir = os.path.join(
         definitions.ROOT_DIR,
-        "hydroSPB",
-        "app",
-        "multi_task",
         "results",
+        "camels",
     )
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
-    cases_exps_legends_together = [
-        "STL",
-        "1",
-        "1/3",
-        "1/8",
-        "1/24",
-    ]
+    cases_exps_legends_together = ["$\infty$"] + mtl_lambda
 
     exps_test_q_et_results_file = os.path.join(
         result_dir,
@@ -154,10 +147,7 @@ def plot_for_prediction_performance(args):
     ]
     diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
     gage_id_file = os.path.join(
-        definitions.ROOT_DIR,
-        "hydroSPB",
-        "example",
-        "camels",
+        definitions.RESULT_DIR,
         "camels_us_mtl_2001_2021_flow_screen.csv",
     )
     gage_ids = pd.read_csv(gage_id_file)
@@ -171,10 +161,10 @@ def plot_for_prediction_performance(args):
             preds_q_lst[1, diff_q_sort_idx[-1], :],
             obss_q_lst[0, diff_q_sort_idx[-1], :],
         ],
-        leg_lst=["径流单变量模型预测", "多变量模型径流预测", "径流观测"],
+        leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
         alpha=0.5,
-        xlabel="日期",
-        ylabel="径流（m$^3$/s）",
+        xlabel="Date",
+        ylabel="Streamflow(m$^3$/s)",
     )
     plt.savefig(
         os.path.join(
@@ -191,10 +181,10 @@ def plot_for_prediction_performance(args):
             preds_et_lst[1, diff_q_sort_idx[-1], :],
             obss_et_lst[0, diff_q_sort_idx[-1], :],
         ],
-        leg_lst=["蒸散发单变量模型预测", "多变量模型蒸散发预测", "蒸散发观测"],
+        leg_lst=["STL_ET", "MTL_ET", "OBS_ET"],
         alpha=0.5,
-        xlabel="日期",
-        ylabel="蒸散发（mm/day）",
+        xlabel="Date",
+        ylabel="Evapotranspiration(mm/day)",
     )
     plt.savefig(
         os.path.join(
@@ -229,10 +219,10 @@ def plot_for_prediction_performance(args):
     plot_scatter_with_11line(
         exps_q_et_results[0],
         exps_q_et_results[1],
-        # xlabel="NSE single-task",
-        # ylabel="NSE multi-task",
-        xlabel="径流单变量学习模型预测NSE",
-        ylabel="多变量学习模型径流预测NSE",
+        xlabel="NSE of STL_Q",
+        ylabel="NSE of MTL_Q",
+        # xlabel="径流单变量学习模型预测NSE",
+        # ylabel="多变量学习模型径流预测NSE",
     )
     plt.savefig(
         os.path.join(
@@ -246,10 +236,10 @@ def plot_for_prediction_performance(args):
     plot_scatter_with_11line(
         exps_et_q_results[0],
         exps_et_q_results[1],
-        # xlabel="NSE single-task",
-        # ylabel="NSE multi-task",
-        xlabel="蒸散发单变量学习模型预测NSE",
-        ylabel="多变量学习模型蒸散发预测NSE",
+        xlabel="NSE of STL_ET",
+        ylabel="NSE of MTL_ET",
+        # xlabel="蒸散发单变量学习模型预测NSE",
+        # ylabel="多变量学习模型蒸散发预测NSE",
     )
     plt.savefig(
         os.path.join(
@@ -322,6 +312,14 @@ if __name__ == "__main__":
         nargs="+",
         type=str,
         default=["expmtl002", "expmtl001", "expmtl003", "expmtl004", "expmtl005"],
+    )
+    parser.add_argument(
+        "--mtl_lambda",
+        dest="mtl_lambda",
+        help="the ratio of the loss weight of streamflow task to ET task, such as $\infty$ (STL), 1/24 (MTL), ...",
+        nargs="+",
+        type=str,
+        default=["1/2", "1", "3", "8", "24"],
     )
     parser.add_argument(
         "--stl_q_exps",

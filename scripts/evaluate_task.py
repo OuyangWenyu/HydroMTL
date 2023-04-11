@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2023-04-09 21:54:50
+LastEditTime: 2023-04-10 14:55:12
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: /HydroMTL/scripts/evaluate_task.py
@@ -27,7 +27,7 @@ def train_and_test(args):
     loss_weight = args.loss_weight
     test_periods = args.test_period
     cache_dir = args.cache_path
-    if cache_dir is None:
+    if cache_dir is None or cache_dir=="None":
         cache_dir = os.path.join(definitions.RESULT_DIR, "camels", exp)
     predict_new_mtl_exp(
         exp=exp,
