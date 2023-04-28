@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-04-06 17:19:39
+LastEditTime: 2023-04-28 11:34:27
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: /HydroMTL/hydromtl/visual/plot_stat.py
@@ -35,6 +35,8 @@ def plot_scatter_with_11line(
     trans_ax_line=True,
     figsize=(8, 6),
     alpha=1.0,
+    line_xlim=None,
+    line_ylim=None,
 ):
     """plot a scatter plot for two varaibles with a 1:1 line
 
@@ -64,6 +66,10 @@ def plot_scatter_with_11line(
         xlim = [0.0, 1.0]
     if ylim is None:
         ylim = [0.0, 1.0]
+    if line_xlim is None:
+        line_xlim = xlim
+    if line_ylim is None:
+        line_ylim = ylim
     fig, ax = plt.subplots(figsize=figsize)
     # set background color for ax
     ax.set_facecolor("whitesmoke")
@@ -89,7 +95,7 @@ def plot_scatter_with_11line(
         ax.scatter(x, y, c=point_color, s=10)
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
-    line = mlines.Line2D(xlim, ylim, color=line_color, linestyle="--")
+    line = mlines.Line2D(line_xlim, line_ylim, color=line_color, linestyle="--")
     if trans_ax_line:
         transform = ax.transAxes
         line.set_transform(transform)

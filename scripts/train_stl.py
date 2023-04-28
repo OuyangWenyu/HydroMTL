@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-04-07 20:12:23
+LastEditTime: 2023-04-27 22:14:39
 LastEditors: Wenyu Ouyang
 Description: Run multiple STL experiments
 FilePath: /HydroMTL/scripts/train_stl.py
@@ -15,7 +15,7 @@ import sys
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import definitions
-from mtl_results_utils import run_mtl_camels_flow_et
+from scripts.mtl_results_utils import run_mtl_camels_flow_et
 
 stl_exps = [f"expstlq00{str(i + 1)}" for i in range(1)]
 # stl_exps = [f"expstlet00{str(i + 1)}" for i in range(1)]

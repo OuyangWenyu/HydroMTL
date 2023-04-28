@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-04-11 11:24:59
+ * @LastEditTime: 2023-04-24 22:03:14
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: /HydroMTL/README.md
@@ -52,6 +52,18 @@ conda activate MTL
 # check if packages are installed correctly and HydroMTL is runnable
 pytest tests
 ```
+
+Code of Discussion in the paper is in the notebooks, one can install jupyter kernel for the environment to run the notebooks.
+
+```bash
+# make sure you have installed jupyterlab in the base environment
+# if not, in base environment: run "conda install jupyterlab"
+# then, in MTL environment
+# conda activate MTL
+python -m ipykernel install --user --name MTL --display-name "MTL"
+```
+
+In VSCode, you can select the kernel `MTL` to run the notebooks in the notebooks folder.
 
 ### Prepare data
 

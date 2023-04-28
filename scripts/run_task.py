@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2023-04-08 10:26:55
+LastEditTime: 2023-04-27 22:15:05
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: /HydroMTL/scripts/run_task.py
@@ -15,7 +15,7 @@ import sys
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import definitions
-from mtl_results_utils import run_mtl_camels_flow_et
+from scripts.mtl_results_utils import run_mtl_camels_flow_et
 
 
 def train_and_test(args):

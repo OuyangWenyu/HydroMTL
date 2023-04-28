@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2023-04-08 11:30:06
+LastEditTime: 2023-04-27 22:14:25
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
 FilePath: /HydroMTL/scripts/streamflow_utils.py
@@ -24,7 +24,6 @@ from cartopy.io import shapereader as shpreader
 from matplotlib import pyplot as plt
 from tbparse import SummaryReader
 
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
 from hydromtl.utils.hydro_utils import unserialize_json
 from hydromtl.data.data_dict import data_sources_dict
@@ -36,13 +35,13 @@ from hydromtl.models.trainer import (
 from hydromtl.utils.hydro_stat import stat_error, ecdf
 from hydromtl.data.config import default_config_file, update_cfg, cmd
 from hydromtl.visual.plot_stat import plot_ecdfs_matplot, plot_ts, plot_rainfall_runoff
-from app_constant import VAR_C_CHOSEN_FROM_GAGES_II
 from hydromtl.utils import hydro_constant, hydro_utils
 from hydromtl.data.source.data_camels import Camels
 from hydromtl.data.source.data_constant import (
     ET_MODIS_NAME,
     PRCP_ERA5LAND_NAME,
 )
+from scripts.app_constant import VAR_C_CHOSEN_FROM_GAGES_II
 
 
 def get_json_file(cfg_dir):
@@ -297,13 +296,12 @@ def predict_in_test_period_with_model(new_exp_args, cache_cfg_dir, weight_path):
     cfg = default_config_file()
     update_cfg(cfg, new_exp_args)
     if cache_cfg_dir is not None:
-        # train_data_dict.json is a flag for cache existing
-        if not os.path.exists(os.path.join(cache_cfg_dir, "train_data_dict.json")):
-            cache_cfg_dir = None
-        else:
-            cfg["data_params"]["cache_path"] = cache_cfg_dir
-            cfg["data_params"]["cache_read"] = True
-            cfg["data_params"]["cache_write"] = False
+        # test_data_dict.json is a flag for cache existing,
+        # if exsits, we don't need to write cache file again
+        cfg["data_params"]["cache_write"] = not os.path.exists(
+            os.path.join(cache_cfg_dir, "test_data_dict.json")
+        )
+    cfg["data_params"]["cache_read"] = True
     cfg["model_params"]["continue_train"] = False
     cfg["model_params"]["weight_path"] = weight_path
     if weight_path is None:
@@ -432,7 +430,6 @@ def predict_new_gages_exp(
     predict_in_test_period_with_model(
         args, weight_path=weight_path, cache_cfg_dir=cache_path
     )
-
 
 
 def read_dl_models_q_for_1basin1fold(
@@ -578,6 +575,7 @@ def read_dl_models_q_metric_for_1basin(
     inds_df_trains = pd.concat(inds_df_trains_lst).mean()
     inds_df_valids = pd.concat(inds_df_valids_lst).mean()
     return inds_df_trains, inds_df_valids
+
 
 def read_dl_models_et_for_1basin1fold(exp, epoch, cv_fold_i, et_type=ET_MODIS_NAME):
     the_exp = exp + "0" + str(cv_fold_i)

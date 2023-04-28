@@ -1,26 +1,26 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-11 10:51:15
+LastEditTime: 2023-04-27 22:13:39
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import os
-import sys
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from pathlib import Path
 
-
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
 import definitions
-from streamflow_utils import (
+from scripts.streamflow_utils import (
     get_json_file,
     get_lastest_weight_path,
     predict_in_test_period_with_model,
+)
+from scripts.app_constant import (
+    VAR_C_CHOSEN_FROM_CAMELS_US,
+    VAR_T_CHOSEN_FROM_NLDAS,
 )
 from hydromtl.data.config import cmd, default_config_file, update_cfg
 from hydromtl.data.source.data_camels import Camels
@@ -42,10 +42,6 @@ from hydromtl.data.source.data_constant import (
     PET_NLDAS_NAME,
     PET_MODIS_NAME,
     NLDAS_NAME,
-)
-from app_constant import (
-    VAR_C_CHOSEN_FROM_CAMELS_US,
-    VAR_T_CHOSEN_FROM_NLDAS,
 )
 from hydromtl.utils import hydro_constant
 
@@ -142,7 +138,6 @@ def read_multi_single_exps_results(
     """
     inds_all_lst = []
     preds_all_lst = []
-    obss_all_lst = []
     units = [None] * 2
     var_names = [hydro_constant.streamflow.name, hydro_constant.evapotranspiration.name]
     units[flow_idx_in_mtl] = flow_unit
@@ -164,7 +159,7 @@ def read_multi_single_exps_results(
         preds.append(pred[var_idx])
         obss.append(obs[var_idx])
     preds_all_lst += preds
-    obss_all_lst.append(obss[0])
+    obss_all_lst = [obss[0]]
     if len(exps_lst) > 2:
         if ensemble == 1:
             pred_ensemble = np.array(preds).mean(axis=0)
@@ -495,6 +490,7 @@ def predict_new_mtl_exp(
         var_t=VAR_T_CHOSEN_FROM_NLDAS,
         var_t_type=[NLDAS_NAME],
         var_out=targets,
+        opt="Adadelta",
         train_period=train_period,
         test_period=test_period,
         data_loader="StreamflowDataModel",
