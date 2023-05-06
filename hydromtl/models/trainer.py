@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-04-09 10:34:23
+LastEditTime: 2023-05-06 10:15:01
 LastEditors: Wenyu Ouyang
 Description: Main function for training and testing
 FilePath: /HydroMTL/hydromtl/models/trainer.py
@@ -192,6 +192,9 @@ def stat_result_for1out(var_name, unit, pred, obs, fill_nan, basin_area=None):
     elif var_name == hydro_constant.evapotranspiration.name:
         var_pred.convert_var_unit(hydro_constant.evapotranspiration.unit)
         var_obs.convert_var_unit(hydro_constant.evapotranspiration.unit)
+    elif var_name == hydro_constant.surface_soil_moisture.name:
+        var_pred.convert_var_unit(hydro_constant.surface_soil_moisture.unit)
+        var_obs.convert_var_unit(hydro_constant.surface_soil_moisture.unit)
     else:
         raise ValueError(f"var_name {var_name} is not supported")
     inds = stat_error(var_obs.data, var_pred.data, fill_nan=fill_nan)

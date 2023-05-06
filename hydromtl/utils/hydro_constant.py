@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-08 09:24:54
-LastEditTime: 2022-12-16 22:31:09
+LastEditTime: 2023-05-06 16:09:18
 LastEditors: Wenyu Ouyang
 Description: some constant for hydro model
-FilePath: /HydroSPB/hydroSPB/utils/hydro_constant.py
+FilePath: /HydroMTL/hydromtl/utils/hydro_constant.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import numpy as np
@@ -66,10 +66,17 @@ class HydroVar:
 
 streamflow = HydroVar("streamflow", "m3/s", ChineseName="径流")
 evapotranspiration = HydroVar("evapotranspiration", "mm/day", ChineseName="蒸散发")
+surface_soil_moisture = HydroVar(
+    "surface_soil_moisture", "mm/day", ChineseName="表层土壤含水量"
+)
 
 
-# unify the unit of each variable
-unit = {"streamflow": "m3/s"}
+# unified default unit of each variable
+unified_default_unit = {
+    "streamflow": "m3/s",
+    "evapotranspiration": "mm/day",
+    "surface_soil_moisture": "mm/day",
+}
 
 
 def convert_unit(data, unit_now, unit_final, **kwargs):

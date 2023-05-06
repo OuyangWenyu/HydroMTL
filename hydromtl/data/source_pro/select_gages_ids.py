@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-04-05 21:45:25
+LastEditTime: 2023-04-28 15:19:31
 LastEditors: Wenyu Ouyang
 Description: Select sites according to some conditions
 FilePath: /HydroMTL/hydromtl/data/source_pro/select_gages_ids.py
@@ -13,6 +13,7 @@ import numpy as np
 from hydromtl.data.source_pro.camels_series import CamelsSeries
 from hydromtl.data.source.data_camels import Camels
 from hydromtl.data.source.data_constant import Q_CAMELS_US_NAME
+from hydromtl.data.source.data_gages import Gages
 
 
 def usgs_screen_streamflow(
@@ -20,7 +21,7 @@ def usgs_screen_streamflow(
     usgs_ids: list,
     time_range: list,
     flow_type=Q_CAMELS_US_NAME,
-    **kwargs
+    **kwargs,
 ) -> list:
     """
     according to the criteria and its ancillary condition--thresh of streamflow data,
@@ -29,7 +30,7 @@ def usgs_screen_streamflow(
     Parameters
     ----------
     gages
-        Camels, CamelsSeries, Gages or GagesPro object
+        Camels, CamelsSeries object
     usgs_ids: list
         given sites' ids
     time_range: list
@@ -54,74 +55,92 @@ def usgs_screen_streamflow(
     for i in range(sites_index.size):
         # loop for every site
         runoff = usgs_values[i, :]
-        for criteria in kwargs:
+        for criteria, thresh in kwargs.items():
             # if any criteria is not matched, we can filter this site
             if sites_chosen[sites_index[i]] == 0:
                 break
             if criteria == "missing_data_ratio":
                 nan_length = runoff[np.isnan(runoff)].size
-                # then calculate the length of consecutive nan
-                thresh = kwargs[criteria]
-                if nan_length / runoff.size > thresh:
-                    sites_chosen[sites_index[i]] = 0
-                else:
-                    sites_chosen[sites_index[i]] = 1
-
+                sites_chosen[sites_index[i]] = (
+                    0 if nan_length / runoff.size > thresh else 1
+                )
             elif criteria == "zero_value_ratio":
                 zero_length = runoff.size - np.count_nonzero(runoff)
                 thresh = kwargs[criteria]
-                if zero_length / runoff.size > thresh:
-                    sites_chosen[sites_index[i]] = 0
-                else:
-                    sites_chosen[sites_index[i]] = 1
+                sites_chosen[sites_index[i]] = (
+                    0 if zero_length / runoff.size > thresh else 1
+                )
             else:
                 print(
                     "Oops! That is not valid value. Try missing_data_ratio or zero_value_ratio ..."
                 )
-    gages_chosen_id = [
-        usgs_ids[i] for i in range(len(sites_chosen)) if sites_chosen[i] > 0
-    ]
-    # assert all(x < y for x, y in zip(gages_chosen_id, gages_chosen_id[1:]))
-    return gages_chosen_id
+    return [usgs_ids[i] for i in range(len(sites_chosen)) if sites_chosen[i] > 0]
 
 
-def choose_basins_with_area(
-    gages: Union[Camels, CamelsSeries],
-    usgs_ids: list,
-    smallest_area: float,
-    largest_area: float,
+def choose_sites_in_ecoregion(
+    gages: Gages, site_ids: list, ecoregion: Union[list, tuple]
 ) -> list:
     """
-    choose basins with not too large or too small area
+    Choose sites in ecoregions
 
     Parameters
     ----------
-    gages
-        Camels, CamelsSeries, Gages or GagesPro object
-    usgs_ids: list
-        given sites' ids
-    smallest_area
-        lower limit; unit is km2
-    largest_area
-        upper limit; unit is km2
+    gages : Gages
+        Only gages dataset has ecoregion attribute
+    site_ids : list
+        all ids of sites
+    ecoregion : Union[list, tuple]
+        which ecoregions
 
     Returns
     -------
     list
-        sites_chosen: [] -- ids of chosen gages
+        chosen sites' ids
 
+    Raises
+    ------
+    NotImplementedError
+        PLease choose 'ECO2_CODE' or 'ECO3_CODE'
+    NotImplementedError
+        must be in EC02 code list
+    NotImplementedError
+        must be in EC03 code list
     """
-    basins_areas = gages.read_basin_area(usgs_ids).flatten()
-    sites_index = np.arange(len(usgs_ids))
-    sites_chosen = np.ones(len(usgs_ids))
-    for i in range(sites_index.size):
-        # loop for every site
-        if basins_areas[i] < smallest_area or basins_areas[i] > largest_area:
-            sites_chosen[sites_index[i]] = 0
-        else:
-            sites_chosen[sites_index[i]] = 1
-    gages_chosen_id = [
-        usgs_ids[i] for i in range(len(sites_chosen)) if sites_chosen[i] > 0
-    ]
-    # assert all(x < y for x, y in zip(gages_chosen_id, gages_chosen_id[1:]))
-    return gages_chosen_id
+    if ecoregion[0] not in ["ECO2_CODE", "ECO3_CODE"]:
+        raise NotImplementedError("PLease choose 'ECO2_CODE' or 'ECO3_CODE'")
+    if ecoregion[0] == "ECO2_CODE":
+        ec02_code_lst = [
+            5.2,
+            5.3,
+            6.2,
+            7.1,
+            8.1,
+            8.2,
+            8.3,
+            8.4,
+            8.5,
+            9.2,
+            9.3,
+            9.4,
+            9.5,
+            9.6,
+            10.1,
+            10.2,
+            10.4,
+            11.1,
+            12.1,
+            13.1,
+        ]
+        if ecoregion[1] not in ec02_code_lst:
+            raise NotImplementedError(
+                f"No such EC02 code, please choose from {ec02_code_lst}"
+            )
+        attr_name = "ECO2_BAS_DOM"
+    elif ecoregion[1] in np.arange(1, 85):
+        attr_name = "ECO3_BAS_DOM"
+    else:
+        raise NotImplementedError("No such EC03 code, please choose from 1 - 85")
+    attr_lst = [attr_name]
+    data_attr = gages.read_constant_cols(site_ids, attr_lst)
+    eco_names = data_attr[:, 0]
+    return [site_ids[i] for i in range(eco_names.size) if eco_names[i] == ecoregion[1]]

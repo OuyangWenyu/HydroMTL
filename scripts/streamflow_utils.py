@@ -471,16 +471,28 @@ def read_dl_models_q_for_1basin1fold(
         cfg_flow["data_params"]["test_path"], epoch, pred_valid_name, obs_valid_name
     )
     pred_train_ = hydro_constant.convert_unit(
-        pred_train, streamflow_unit, hydro_constant.unit["streamflow"], **kwargs
+        pred_train,
+        streamflow_unit,
+        hydro_constant.unified_default_unit["streamflow"],
+        **kwargs,
     )
     pred_valid_ = hydro_constant.convert_unit(
-        pred_valid, streamflow_unit, hydro_constant.unit["streamflow"], **kwargs
+        pred_valid,
+        streamflow_unit,
+        hydro_constant.unified_default_unit["streamflow"],
+        **kwargs,
     )
     obs_train_ = hydro_constant.convert_unit(
-        obs_train, streamflow_unit, hydro_constant.unit["streamflow"], **kwargs
+        obs_train,
+        streamflow_unit,
+        hydro_constant.unified_default_unit["streamflow"],
+        **kwargs,
     )
     obs_valid_ = hydro_constant.convert_unit(
-        obs_valid, streamflow_unit, hydro_constant.unit["streamflow"], **kwargs
+        obs_valid,
+        streamflow_unit,
+        hydro_constant.unified_default_unit["streamflow"],
+        **kwargs,
     )
     return pred_train_, obs_train_, pred_valid_, obs_valid_
 

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-04-27 22:13:39
+LastEditTime: 2023-05-06 10:16:03
 LastEditors: Wenyu Ouyang
 Description: Plots utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -96,13 +96,10 @@ def read_multi_single_exps_results(
     best_valid_idx=None,
     var_idx=0,
     metric="NSE",
-    flow_unit="ft3/s",
-    et_unit="0.1mm/day",
-    single_is_flow=True,
-    flow_idx_in_mtl=0,
-    et_idx_in_mtl=1,
     ensemble=0,
     return_value=False,
+    var_names=None,
+    var_units=None,
 ):
     """
     Read results for one variable's prediction in exps_lst
@@ -114,21 +111,20 @@ def read_multi_single_exps_results(
     best_valid_idx
         if it is not None, chose best according to it
     var_idx:int
-        the variable's index in multiple variables
+        the chosen variable's index in multiple variables
     metric:str
         the metric we will use, default is NSE
-    flow_unit:str
-        unit of streamflow, default is ft3/s
-    single_is_flow:bool
-        the single task is streamflow, default is true
-    flow_idx_in_mtl
-        the idx of streamflow in mtl, default is 0
     ensemble
         if it is 1, calculate ensemble mean,
         elif 0 just calculate mean of metric, by default 0
         else don't include mean
     return_value
         if it is true, return the pred and obs values, by default False
+    var_names
+        the variable names, by default [Q_CAMELS_US_NAME, ET_MODIS_NAME]
+    var_units
+        the variable units, by default ["ft3/s", "0.1mm/day"]
+
     Returns
     -------
     list
@@ -136,12 +132,15 @@ def read_multi_single_exps_results(
         and the final two are ensemble mean and best of all mtl models' multiple arrays
         if there are not only one MTL model's result
     """
+    if var_names is None:
+        var_names = [
+            hydro_constant.streamflow.name,
+            hydro_constant.evapotranspiration.name,
+        ]
+    if var_units is None:
+        var_units = ["ft3/s", "mm/day"]
     inds_all_lst = []
     preds_all_lst = []
-    units = [None] * 2
-    var_names = [hydro_constant.streamflow.name, hydro_constant.evapotranspiration.name]
-    units[flow_idx_in_mtl] = flow_unit
-    units[et_idx_in_mtl] = et_unit
     preds = []
     obss = []
     for i in range(len(exps_lst)):
@@ -151,7 +150,7 @@ def read_multi_single_exps_results(
             cfg_flow_other["data_params"]["test_path"],
             cfg_flow_other["evaluate_params"]["test_epoch"],
             fill_nan=cfg_flow_other["evaluate_params"]["fill_nan"],
-            unit=units,
+            unit=var_units,
             return_value=True,
             var_name=var_names,
         )
@@ -397,20 +396,7 @@ def predict_new_mtl_exp(
     alpah=None,
 ):
     project_name = "camels/" + exp
-    if targets == [Q_CAMELS_US_NAME, ET_MODIS_NAME]:
-        data_gap = [0, 2]
-        fill_nan = ["no", "mean"]
-        n_output = 2
-    elif targets == [Q_CAMELS_US_NAME, SSM_SMAP_NAME]:
-        data_gap = [0, 0]
-        fill_nan = ["no", "no"]
-        n_output = 2
-    elif targets == [Q_CAMELS_US_NAME, ET_MODIS_NAME, SSM_SMAP_NAME]:
-        data_gap = [0, 2, 0]
-        fill_nan = ["no", "mean", "no"]
-        n_output = 3
-    else:
-        raise NotImplementedError("We don't have such an exp")
+    data_gap, fill_nan, n_output = config4difftargets(targets)
     if gage_id_file is None:
         gage_id = "ALL"
     else:
@@ -509,8 +495,27 @@ def predict_new_mtl_exp(
     )
 
 
+def config4difftargets(targets):
+    if targets == [Q_CAMELS_US_NAME, ET_MODIS_NAME]:
+        data_gap = [0, 2]
+        fill_nan = ["no", "mean"]
+        n_output = 2
+    elif targets == [Q_CAMELS_US_NAME, SSM_SMAP_NAME]:
+        data_gap = [0, 0]
+        fill_nan = ["no", "no"]
+        n_output = 2
+    elif targets == [Q_CAMELS_US_NAME, ET_MODIS_NAME, SSM_SMAP_NAME]:
+        data_gap = [0, 2, 0]
+        fill_nan = ["no", "mean", "no"]
+        n_output = 3
+    else:
+        raise NotImplementedError("We don't have such an exp")
+    return data_gap, fill_nan, n_output
+
+
 def run_mtl_camels_flow_et(
     target_exp,
+    targets=None,
     var_c=VAR_C_CHOSEN_FROM_CAMELS_US,
     var_t=VAR_T_CHOSEN_FROM_NLDAS,
     train_period=None,
@@ -525,7 +530,12 @@ def run_mtl_camels_flow_et(
     ctx=None,
     loss_func="MultiOutLoss",
     limit_part=None,
+    weight_path=None,
+    train_epoch=300,
 ):
+    if targets is None:
+        targets = [Q_CAMELS_US_NAME, ET_MODIS_NAME]
+    data_gap, fill_nan, n_output = config4difftargets(targets)
     if ctx is None:
         ctx = [0]
     if train_period is None:
@@ -537,7 +547,7 @@ def run_mtl_camels_flow_et(
     if loss_func == "MultiOutLoss":
         loss_param = {
             "loss_funcs": "RMSESum",
-            "data_gap": [0, 2],
+            "data_gap": data_gap,
             "device": ctx,
             "item_weight": weight_ratio,
             "limit_part": limit_part,
@@ -545,21 +555,12 @@ def run_mtl_camels_flow_et(
     elif loss_func == "UncertaintyWeights":
         loss_param = {
             "loss_funcs": "RMSESum",
-            "data_gap": [0, 2],
+            "data_gap": data_gap,
             "device": ctx,
             "limit_part": limit_part,
         }
     else:
         raise NotImplementedError("No such loss function")
-    weight_path_dir = os.path.join(definitions.RESULT_DIR, target_exp)
-    try:
-        weight_path = (
-            get_lastest_weight_path(weight_path_dir)
-            if os.path.exists(weight_path_dir)
-            else None
-        )
-    except Exception as e:
-        weight_path = None
     config_data = default_config_file()
     args = cmd(
         sub=f"camels/{target_exp}",
@@ -576,7 +577,7 @@ def run_mtl_camels_flow_et(
         model_name="KuaiLSTMMultiOut",
         model_param={
             "n_input_features": len(var_c) + len(var_t),
-            "n_output_features": 2,
+            "n_output_features": n_output,
             "n_hidden_states": 256,
             "layer_hidden_size": 128,
         },
@@ -590,7 +591,7 @@ def run_mtl_camels_flow_et(
         var_t=var_t,
         var_c=var_c,
         var_t_type=[NLDAS_NAME],
-        var_out=[Q_CAMELS_US_NAME, ET_MODIS_NAME],
+        var_out=targets,
         train_period=train_period,
         test_period=test_period,
         opt="Adadelta",
@@ -598,16 +599,19 @@ def run_mtl_camels_flow_et(
         data_loader="StreamflowDataModel",
         scaler="DapengScaler",
         n_output=2,
-        train_epoch=300,
+        train_epoch=train_epoch,
         save_epoch=20,
-        te=300,
+        te=train_epoch,  # test with trained model in the train-epoch
         # train_epoch=2,
         # save_epoch=1,
         # te=2,
-        fill_nan=["no", "mean"],
+        fill_nan=fill_nan,
         gage_id_file=gage_id_file,
     )
     update_cfg(config_data, args)
+    if weight_path is not None:
+        continue_train = True
+        config_data["model_params"]["continue_train"] = continue_train
     if cache_dir is not None:
         # train_data_dict.json is a flag for cache existing
         if not os.path.exists(os.path.join(cache_dir, "train_data_dict.json")):

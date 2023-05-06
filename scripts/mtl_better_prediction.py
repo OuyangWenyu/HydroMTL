@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-24 14:45:05
-LastEditTime: 2023-04-27 22:15:27
+LastEditTime: 2023-05-05 21:55:27
 LastEditors: Wenyu Ouyang
 Description: Plots for MTL valid and test results comparing with STL
 FilePath: /HydroMTL/scripts/mtl_better_prediction.py
