@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-05-06 10:15:01
+LastEditTime: 2023-05-10 09:13:26
 LastEditors: Wenyu Ouyang
 Description: Main function for training and testing
 FilePath: /HydroMTL/hydromtl/models/trainer.py
@@ -207,7 +207,7 @@ def stat_result(
     test_epoch: int,
     return_value: bool = False,
     fill_nan: Union[str, list, tuple] = "no",
-    unit="m3/s",
+    var_unit="m3/s",
     basin_area=None,
     var_name=hydro_constant.streamflow.name,
 ) -> Tuple[pd.DataFrame, np.array, np.array]:
@@ -234,14 +234,14 @@ def stat_result(
         statistics results, 3-dim predicitons, 3-dim observations
     """
     pred, obs = load_result(save_dirs, test_epoch)
-    if type(unit) is list:
+    if type(var_unit) is list:
         inds_df_lst = []
         pred_lst = []
         obs_lst = []
-        for i in range(len(unit)):
+        for i in range(len(var_unit)):
             inds_df_, pred_, obs_ = stat_result_for1out(
                 var_name[i],
-                unit[i],
+                var_unit[i],
                 pred[:, :, i],
                 obs[:, :, i],
                 fill_nan[i],
@@ -253,7 +253,7 @@ def stat_result(
         return inds_df_lst, pred_lst, obs_lst if return_value else inds_df_lst
     else:
         inds_df_, pred_, obs_ = stat_result_for1out(
-            var_name, unit, pred, obs, fill_nan, basin_area=basin_area
+            var_name, var_unit, pred, obs, fill_nan, basin_area=basin_area
         )
         return (inds_df_, pred_, obs_) if return_value else inds_df_
 
@@ -332,6 +332,7 @@ def stat_ensemble_result(
     pred_mean, obs_mean = load_ensemble_result(
         save_dirs, test_epoch, flow_unit=flow_unit, basin_areas=basin_areas
     )
+    # TODO: check for fill_nan
     inds = stat_error(obs_mean, pred_mean)
     inds_df = pd.DataFrame(inds)
     return (inds_df, pred_mean, obs_mean) if return_value else inds_df

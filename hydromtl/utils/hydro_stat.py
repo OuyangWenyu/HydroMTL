@@ -1,7 +1,7 @@
 """
 Author: MHPI group, Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-04-06 16:07:15
+LastEditTime: 2023-05-10 09:12:15
 LastEditors: Wenyu Ouyang
 Description: statistics calculation
 FilePath: /HydroMTL/hydromtl/utils/hydro_stat.py
@@ -238,7 +238,7 @@ def stat_error_i(targ_i, pred_i):
         hightarget = target_sort[indexhigh:]
         pbiaslow = np.sum(lowpred - lowtarget) / np.sum(lowtarget) * 100
         pbiashigh = np.sum(highpred - hightarget) / np.sum(hightarget) * 100
-        out_dict = dict(
+        return dict(
             Bias=bias,
             RMSE=rmse,
             ubRMSE=ubrmse,
@@ -249,7 +249,6 @@ def stat_error_i(targ_i, pred_i):
             FHV=pbiashigh,
             FLV=pbiaslow,
         )
-        return out_dict
     else:
         raise ValueError(
             "The number of data is less than 2, we don't calculate the statistics."

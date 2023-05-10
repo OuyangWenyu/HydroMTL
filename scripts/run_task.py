@@ -15,7 +15,7 @@ import sys
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import definitions
-from scripts.mtl_results_utils import run_mtl_camels_flow_et
+from scripts.mtl_results_utils import run_mtl_camels
 
 
 def train_and_test(args):
@@ -36,7 +36,7 @@ def train_and_test(args):
         weight_path = None
     if limit_parts == "None":
         limit_parts = None
-    run_mtl_camels_flow_et(
+    run_mtl_camels(
         exp,
         targets=output_vars,
         random_seed=random_seed,

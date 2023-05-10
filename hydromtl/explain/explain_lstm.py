@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-19 21:05:32
-LastEditTime: 2023-04-06 21:54:55
+LastEditTime: 2023-05-10 09:09:16
 LastEditors: Wenyu Ouyang
 Description: Extract information from LSTM
 FilePath: /HydroMTL/hydromtl/explain/explain_lstm.py
@@ -123,20 +123,18 @@ def calculate_all_metrics(obs: xr.DataArray, sim: xr.DataArray) -> Dict[str, flo
         If all observations or all simulations are NaN.
     """
     _check_all_nan(obs, sim)
-    if len(obs.dims) > 1:
-        # TODO: not fully tested for multi-dim obs
-        results = hydro_stat.stat_error(obs.values, sim.values)
-    else:
-        results = hydro_stat.stat_error_i(obs.values, sim.values)
-
-    return results
+    return (
+        hydro_stat.stat_error(obs.values, sim.values)
+        if len(obs.dims) > 1
+        else hydro_stat.stat_error_i(obs.values, sim.values)
+    )
 
 
 def _check_metrics(metrics: Optional[List[str]]) -> None:
     if metrics is not None:
         all_metrics = hydro_stat.ALL_METRICS
         assert all(
-            [m in all_metrics for m in metrics]
+            m in all_metrics for m in metrics
         ), f"Metrics must be one of {all_metrics}. You provided: {metrics}"
 
 

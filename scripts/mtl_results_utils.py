@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-05-06 10:16:03
+LastEditTime: 2023-05-10 09:08:36
 LastEditors: Wenyu Ouyang
-Description: Plots utils for MTL results
+Description: Reading and Plotting utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+from functools import reduce
 import os
 import numpy as np
 import pandas as pd
@@ -15,7 +16,6 @@ from matplotlib import pyplot as plt
 import definitions
 from scripts.streamflow_utils import (
     get_json_file,
-    get_lastest_weight_path,
     predict_in_test_period_with_model,
 )
 from scripts.app_constant import (
@@ -29,7 +29,6 @@ from hydromtl.utils.hydro_stat import stat_error
 from hydromtl.visual.plot_stat import (
     plot_boxes_matplotlib,
     plot_boxs,
-    plot_ts,
     plot_map_carto,
 )
 from hydromtl.data.source.data_constant import (
@@ -150,7 +149,7 @@ def read_multi_single_exps_results(
             cfg_flow_other["data_params"]["test_path"],
             cfg_flow_other["evaluate_params"]["test_epoch"],
             fill_nan=cfg_flow_other["evaluate_params"]["fill_nan"],
-            unit=var_units,
+            var_unit=var_units,
             return_value=True,
             var_name=var_names,
         )
@@ -395,7 +394,7 @@ def predict_new_mtl_exp(
     loss_func="MultiOutLoss",
     alpah=None,
 ):
-    project_name = "camels/" + exp
+    project_name = os.path.join("camels", exp)
     data_gap, fill_nan, n_output = config4difftargets(targets)
     if gage_id_file is None:
         gage_id = "ALL"
@@ -513,7 +512,7 @@ def config4difftargets(targets):
     return data_gap, fill_nan, n_output
 
 
-def run_mtl_camels_flow_et(
+def run_mtl_camels(
     target_exp,
     targets=None,
     var_c=VAR_C_CHOSEN_FROM_CAMELS_US,
@@ -544,23 +543,9 @@ def run_mtl_camels_flow_et(
         test_period = ["2011-10-01", "2016-10-01"]
     if weight_ratio is None:
         weight_ratio = [0.5, 0.5]
-    if loss_func == "MultiOutLoss":
-        loss_param = {
-            "loss_funcs": "RMSESum",
-            "data_gap": data_gap,
-            "device": ctx,
-            "item_weight": weight_ratio,
-            "limit_part": limit_part,
-        }
-    elif loss_func == "UncertaintyWeights":
-        loss_param = {
-            "loss_funcs": "RMSESum",
-            "data_gap": data_gap,
-            "device": ctx,
-            "limit_part": limit_part,
-        }
-    else:
-        raise NotImplementedError("No such loss function")
+    loss_param = loss_param_according_loss_func(
+        weight_ratio, ctx, loss_func, limit_part, data_gap
+    )
     config_data = default_config_file()
     args = cmd(
         sub=f"camels/{target_exp}",
@@ -622,6 +607,169 @@ def run_mtl_camels_flow_et(
             config_data["data_params"]["cache_write"] = False
     train_and_evaluate(config_data)
     print("All processes are finished!")
+
+
+def loss_param_according_loss_func(weight_ratio, ctx, loss_func, limit_part, data_gap):
+    if loss_func == "MultiOutLoss":
+        loss_param = {
+            "loss_funcs": "RMSESum",
+            "data_gap": data_gap,
+            "device": ctx,
+            "item_weight": weight_ratio,
+            "limit_part": limit_part,
+        }
+    elif loss_func == "UncertaintyWeights":
+        loss_param = {
+            "loss_funcs": "RMSESum",
+            "data_gap": data_gap,
+            "device": ctx,
+            "limit_part": limit_part,
+        }
+    else:
+        raise NotImplementedError("No such loss function")
+    return loss_param
+
+
+def stat_mtl_1var_ensemble_result(
+    exps,
+    var_names,
+    var_units,
+    return_value=False,
+    var_idx=0,
+):
+    """calculate the ensemble mean of the results of 1 variable in MTL experiments
+
+    Parameters
+    ----------
+    exps :
+        the list of experiments
+    var_names : list
+        the names of the multiple variables
+    var_units : list
+        the units of the multiple variables
+    return_value : bool, optional
+        if true, return the values of predictions and observations, by default False
+    var_idx : int, optional
+        the index of the chosen variable in the multiple variables, by default 0
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    preds = []
+    obss = []
+    inds = []
+    for i in range(len(exps)):
+        cfg_dir = os.path.join(definitions.RESULT_DIR, "camels", exps[i])
+        cfg_ = get_json_file(cfg_dir)
+        if i == 0:
+            fill_nan = cfg_["evaluate_params"]["fill_nan"]
+        if i > 0:
+            assert fill_nan == cfg_["evaluate_params"]["fill_nan"]
+        _, pred_i, obs_i = stat_result(
+            cfg_["data_params"]["test_path"],
+            cfg_["evaluate_params"]["test_epoch"],
+            return_value=True,
+            fill_nan=fill_nan,
+            var_name=var_names,
+            var_unit=var_units,
+        )
+        preds.append(pred_i[var_idx])
+        obss.append(obs_i[var_idx])
+        inds_i = stat_error(obs_i[var_idx], pred_i[var_idx], fill_nan=fill_nan[var_idx])
+        inds.append(inds_i)
+    preds_np = reduce(lambda a, b: np.vstack((a, b)), preds)
+    obss_np = reduce(lambda a, b: np.vstack((a, b)), obss)
+    inds_ = stat_error(obss_np, preds_np, fill_nan=fill_nan[var_idx])
+    inds_df = pd.DataFrame(inds_)
+    return (inds_df, preds_np, obss_np, inds) if return_value else inds_df
+
+
+def concat_mtl_stl_result(
+    mtl_train_exps,
+    mtl_test_exps,
+    stl_train_exps,
+    stl_test_exps,
+    ind_names,
+    var_names=None,
+    var_units=None,
+    var_idx=0,
+):
+    """concatenate MTL's results with Single-task-learning's result for trained basins and pub test basins"""
+    if var_names is None:
+        var_names = [
+            hydro_constant.streamflow.name,
+            hydro_constant.evapotranspiration.name,
+        ]
+    if var_units is None:
+        var_units = ["ft3/s", "mm/day"]
+    exps_mtl_results_trains = []
+    exps_mtl_results_tests = []
+    for _ in ind_names:
+        exps_mtl_results_train = []
+        exps_mtl_results_test = []
+        exps_mtl_results_trains.append(exps_mtl_results_train)
+        exps_mtl_results_tests.append(exps_mtl_results_test)
+    (
+        inds_df_mtl_train,
+        pred_mean_mtl_train,
+        obs_mean_mtl_train,
+        all_inds_mtl_train,
+    ) = stat_mtl_1var_ensemble_result(
+        mtl_train_exps,
+        var_names=var_names,
+        var_units=var_units,
+        return_value=True,
+        var_idx=var_idx,
+    )
+    (
+        inds_df_mtl_test,
+        pred_mean_mtl_test,
+        obs_mean_mtl_test,
+        all_inds_mtl_test,
+    ) = stat_mtl_1var_ensemble_result(
+        mtl_test_exps,
+        var_names=var_names,
+        var_units=var_units,
+        return_value=True,
+        var_idx=var_idx,
+    )
+    for i in range(len(ind_names)):
+        exps_mtl_results_trains[i].append(inds_df_mtl_train[ind_names[i]].values)
+        exps_mtl_results_tests[i].append(inds_df_mtl_test[ind_names[i]].values)
+
+    (
+        inds_df_stl_train,
+        pred_mean_stl_train,
+        obs_mean_stl_train,
+        all_inds_stl_train,
+    ) = stat_mtl_1var_ensemble_result(
+        stl_train_exps,
+        var_names=var_names,
+        var_units=var_units,
+        return_value=True,
+        var_idx=var_idx,
+    )
+    (
+        inds_df_stl_test,
+        pred_mean_stl_test,
+        obs_mean_stl_test,
+        all_inds_stl_test,
+    ) = stat_mtl_1var_ensemble_result(
+        stl_test_exps,
+        var_names=var_names,
+        var_units=var_units,
+        return_value=True,
+        var_idx=var_idx,
+    )
+    for i in range(len(ind_names)):
+        exps_mtl_results_trains[i].append(inds_df_stl_train[ind_names[i]].values)
+        exps_mtl_results_tests[i].append(inds_df_stl_test[ind_names[i]].values)
+    return [
+        exps_mtl_results_trains[i] + exps_mtl_results_tests[i]
+        for i in range(len(ind_names))
+    ]
 
 
 def plot_mtl_results_map(show_results, category_names, markers, save_file_path):
