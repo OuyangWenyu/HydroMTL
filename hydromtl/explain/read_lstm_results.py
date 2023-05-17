@@ -138,7 +138,7 @@ def load_cell_states_for_exp(exp):
     """
     two_parts = exp.split("/")
     run_dir = os.path.join(
-        definitions.ROOT_DIR, "hydroSPB", "example", two_parts[0], two_parts[1]
+        definitions.RESULT_DIR, two_parts[0], two_parts[1]
     )
     config = get_config_file(run_dir)
     model = get_trained_model(config)
@@ -163,7 +163,7 @@ def load_ts_var_data_for_exp(exp, var="ET") -> xr.Dataset:
     assert var in ["ET", "usgsFlow", "ssm"]
     two_parts = exp.split("/")
     run_dir = os.path.join(
-        definitions.ROOT_DIR, "hydroSPB", "example", two_parts[0], two_parts[1]
+        definitions.RESULT_DIR, two_parts[0], two_parts[1]
     )
 
     config = get_config_file(run_dir)

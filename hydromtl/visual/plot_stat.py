@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-04-28 11:34:27
+LastEditTime: 2023-05-17 16:05:48
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: /HydroMTL/hydromtl/visual/plot_stat.py
@@ -822,6 +822,8 @@ def plot_ts(
         _description_, by default None
     dash_lines : _type_, optional
         if dash_line, then we will plot dashed line, by default None
+    alpha : float, optional
+        the transparency of the line, by default 1
 
     Returns
     -------

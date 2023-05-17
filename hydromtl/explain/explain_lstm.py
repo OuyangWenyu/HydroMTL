@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-19 21:05:32
-LastEditTime: 2023-05-10 09:09:16
+LastEditTime: 2023-05-17 09:22:36
 LastEditors: Wenyu Ouyang
 Description: Extract information from LSTM
 FilePath: /HydroMTL/hydromtl/explain/explain_lstm.py
@@ -49,7 +49,7 @@ def get_input_target_data_for_corr_analysis(run_exp, var="ET"):
     else:
         fill_nan = "interpolate"
     exp = run_exp.split(os.sep)
-    run_dir = os.path.join(definitions.ROOT_DIR, "hydroSPB", "example", exp[0], exp[-1])
+    run_dir = os.path.join(definitions.RESULT_DIR, exp[0], exp[-1])
     input_data_nc_file = os.path.join(run_dir, "corr_analysis_input_data_cs.nc")
     target_data_nc_file = os.path.join(
         run_dir, "corr_analysis_target_data_" + var + ".nc"

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-05-09 15:10:05
+LastEditTime: 2023-05-16 22:05:10
 LastEditors: Wenyu Ouyang
 Description: Run MTL experiments for PUB experiments
 FilePath: /HydroMTL/scripts/train4pub.py
@@ -34,20 +34,20 @@ def pub_train_and_test(args):
     split_num = 2
     pub_exps = [exp + str(i + 1) for i in range(split_num)]
     for i in range(len(pub_exps)):
-        # run_mtl_camels(
-        #     pub_exps[i],
-        #     targets=targets,
-        #     weight_ratio=loss_weight,
-        #     train_period=train_periods,
-        #     test_period=test_periods,
-        #     gage_id_file=os.path.join(
-        #         definitions.RESULT_DIR,
-        #         f"exp_pub_kfold{split_num}",
-        #         f"camels_train_kfold{str(i)}.csv",
-        #     ),
-        #     limit_part=limit_parts,
-        #     ctx=ctxs,
-        # )
+        run_mtl_camels(
+            pub_exps[i],
+            targets=targets,
+            weight_ratio=loss_weight,
+            train_period=train_periods,
+            test_period=test_periods,
+            gage_id_file=os.path.join(
+                definitions.RESULT_DIR,
+                f"exp_pub_kfold{split_num}",
+                f"camels_train_kfold{str(i)}.csv",
+            ),
+            limit_part=limit_parts,
+            ctx=ctxs,
+        )
         stat_dict_file = glob.glob(
             os.path.join(definitions.RESULT_DIR, "camels", pub_exps[i], "*_stat.json")
         )[0]

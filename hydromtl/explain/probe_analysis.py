@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2023-04-06 21:55:16
+LastEditTime: 2023-05-17 16:23:12
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: /HydroMTL/hydromtl/explain/probe_analysis.py
@@ -62,7 +62,7 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
     # we only support MODIS ET, usgsFlow and SMAP ssm now
     assert var in ["ET", "usgsFlow", "ssm"]
     exp = run_exp.split(os.sep)
-    run_dir = os.path.join(definitions.ROOT_DIR, "hydroSPB", "example", exp[0], exp[1])
+    run_dir = os.path.join(definitions.RESULT_DIR, exp[0], exp[1])
     input_data, target_data = get_input_target_data_for_corr_analysis(run_exp, var)
     #  calculate raw correlations (cell state and values)
     print("-- Running RAW Correlations --")
@@ -174,12 +174,12 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
     fig, ax1 = plt.subplots()
     all_basin_corrs.plot(ax=ax1, cmap="RdBu_r")
     # https://docs.xarray.dev/en/stable/user-guide/plotting.html
-    plt.xlabel("单元", fontsize=16)
-    plt.ylabel("流域", fontsize=16)
+    plt.xlabel("Cell", fontsize=16)
+    plt.ylabel("Basin", fontsize=16)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
-    ax1.set_title("单元状态与" + var.ChineseName + "相关性", fontsize=16)
-    # ax1.set_title("Correlation between cell state and " + var.name + " for all basins")
+    # ax1.set_title("单元状态与" + var.ChineseName + "相关性", fontsize=16)
+    ax1.set_title("Correlation between cell state and " + var.name + " for all basins")
     plt.savefig(
         os.path.join(
             save_dir, exp[0] + "_" + exp[1] + "_all_basin_corrs_" + var.name + ".png"
@@ -189,9 +189,10 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
     )
     f, ax2 = plt.subplots(figsize=(12, 2))
     im = ax2.pcolormesh(ws)
-    ax2.set_ylabel(var.ChineseName, fontsize=16)
-    ax2.set_title(var.ChineseName + "线性探测器的权重（所有单元状态）", fontsize=16)
-    # ax2.set_title("Weights of linear probe for " + var.name + " (all cell states)")
+    # ax2.set_ylabel(var.ChineseName, fontsize=16)
+    ax2.set_ylabel(var.name, fontsize=16)
+    # ax2.set_title(var.ChineseName + "线性探测器的权重（所有单元状态）", fontsize=16)
+    ax2.set_title("Weights of linear probe for " + var.name + " (all cell states)")
     plt.colorbar(im, orientation="horizontal")
     plt.savefig(
         os.path.join(
@@ -208,7 +209,7 @@ def show_probe(
     legend_lst=None,
     show_probe_metric="Corr",
     retrian_probe=None,
-    save_dir=os.path.join(definitions.ROOT_DIR, "hydroSPB", "example"),
+    save_dir=definitions.RESULT_DIR,
     **kwargs,
 ):
     """Show all probe results for a list of experiments
@@ -273,14 +274,15 @@ def show_probe(
         ax1.spines["right"].set_visible(False)
         ax1.spines["top"].set_visible(False)
     ax1.legend()
-    ax1.set_title("各模型所有流域单元状态与" + var.ChineseName + "的相关性分布", fontsize=16)
-    # ax1.set_title(
-    #     "Correlation between one cell state of all basins and the observation of "
-    #     + var.name
-    # )
-    # ax1.set_xlabel("Correlation")
-    ax1.set_xlabel("相关系数", fontsize=16)
-    ax1.set_ylabel("频数", fontsize=16)
+    # ax1.set_title("各模型所有流域单元状态与" + var.ChineseName + "的相关性分布", fontsize=16)
+    ax1.set_title(
+        "Correlation between one cell state of all basins and the observation of "
+        + var.name
+    )
+    ax1.set_xlabel("Correlation")
+    # ax1.set_xlabel("相关系数", fontsize=16)
+    ax1.set_ylabel("Frequency", fontsize=16)
+    # ax1.set_ylabel("频数", fontsize=16)
     sns.despine()
     plt.savefig(
         os.path.join(save_dir, "all_corrs_" + var.name + ".png"),
@@ -311,19 +313,17 @@ def show_probe(
             color=f"C{str(i)}",
         )
     ax2.legend()
-    if show_probe_metric == "Corr":
-        # 相关系数使用中文
-        ax2.set_xlabel("相关系数", fontsize=16)
-        ax2.set_title(var.ChineseName + "探测器预测相关系数分布", fontsize=16)
-    else:
-        ax2.set_xlabel(show_probe_metric, fontsize=16)
-        ax2.set_title(var.ChineseName + "探测器预测" + show_probe_metric + "分布", fontsize=16)
-    ax2.set_ylabel("频数", fontsize=16)
-    # ax2.set_title(
-    #     show_probe_metric
-    #     + " between the prediction of probe and the observation for "
-    #     + var.name
-    # )
+
+    ax2.set_xlabel(show_probe_metric, fontsize=16)
+    # ax2.set_title(var.ChineseName + "探测器预测" + show_probe_metric + "分布", fontsize=16)
+    ax2.set_title(
+        show_probe_metric
+        + " between the prediction of probe and the observation for "
+        + var.name
+    )
+    ax2.set_ylabel("Frequency", fontsize=16)
+    # ax2.set_ylabel("频数", fontsize=16)
+
     sns.despine()
     plt.savefig(
         os.path.join(
@@ -336,7 +336,11 @@ def show_probe(
 
 
 if __name__ == "__main__":
-    run_exp_lst = ["camels"+os.sep+"exp410010", "camels"+os.sep+"exp410130", "camels"+os.sep+"exp42001"]
+    run_exp_lst = [
+        "camels" + os.sep + "exp410010",
+        "camels" + os.sep + "exp410130",
+        "camels" + os.sep + "exp42001",
+    ]
     show_probe(
         run_exp_lst=run_exp_lst,
         var=data_constant.surface_soil_moisture_smap_camels_us,

@@ -1,34 +1,66 @@
 """
 Author: Wenyu Ouyang
-Date: 2021-12-05 11:21:58
-LastEditTime: 2023-05-10 08:58:57
+Date: 2023-05-16 20:48:04
+LastEditTime: 2023-05-17 11:27:25
 LastEditors: Wenyu Ouyang
 Description: Just try some code
 FilePath: /HydroMTL/scripts/try.py
-Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
+Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 import os
 import sys
 from pathlib import Path
 
 
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
-from mtl_results_utils import stat_mtl_1var_ensemble_result
-from hydromtl.utils import hydro_constant
+sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent.parent))
+import definitions
+from hydromtl.data.source import data_constant
+from hydromtl.explain.probe_analysis import show_probe
 
-stl_test_exps = ["exppub1010", "exppub1020"]
-var_names = [hydro_constant.streamflow.name, hydro_constant.evapotranspiration.name]
-var_units = [hydro_constant.streamflow.unit, hydro_constant.evapotranspiration.unit]
-var_idx = 1
-(
-    inds_df_stl_test,
-    pred_mean_stl_test,
-    obs_mean_stl_test,
-    all_inds_stl_test,
-) = stat_mtl_1var_ensemble_result(
-    stl_test_exps,
-    var_names=var_names,
-    var_units=var_units,
-    return_value=True,
-    var_idx=var_idx,
+import time
+
+start = time.time()
+save_dir = os.path.join(
+    definitions.RESULT_DIR,
+    "figures",
 )
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+run_exp_lst = [
+    f"camels{os.sep}expstlq0010",
+    f"camels{os.sep}expmtl0030",
+    f"camels{os.sep}expstlet0010",
+]
+legend_lst = ["STL-Q", "MTL", "STL-ET"]
+
+show_probe(
+    run_exp_lst=run_exp_lst,
+    var=data_constant.surface_soil_moisture_smap_camels_us,
+    legend_lst=legend_lst,
+    show_probe_metric="Corr",
+    retrian_probe=[False, False, False],
+    num_workers=0,
+    save_dir=save_dir,
+)
+end = time.time()
+
+print(f"The code took {end - start} seconds to run.")
+# show_probe(
+#     run_exp_lst=run_exp_lst,
+#     var=data_constant.evapotranspiration_modis_camels_us,
+#     legend_lst=legend_lst,
+#     show_probe_metric="Corr",
+#     retrian_probe=[False, False, False],
+#     num_workers=0,
+#     save_dir=save_dir,
+# )
+
+# show_probe(
+#     run_exp_lst=run_exp_lst,
+#     var=data_constant.streamflow_camels_us,
+#     legend_lst=legend_lst,
+#     show_probe_metric="Corr",
+#     retrian_probe=[False, False, False],
+#     num_workers=0,
+#     save_dir=save_dir,
+# )

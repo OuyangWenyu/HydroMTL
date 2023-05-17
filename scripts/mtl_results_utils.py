@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-05-10 09:08:36
+LastEditTime: 2023-05-16 21:57:15
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -821,13 +821,13 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow"):
             )
         else:
             exp_metric_results = read_multi_single_exps_results(
-                exps_q_et, metric=ind, var_idx=1, single_is_flow=False, ensemble=-1
+                exps_q_et, metric=ind, var_idx=1, ensemble=-1
             )
         exps_metrices_results.append([exp_metric_results[0], exp_metric_results[1]])
     plot_boxes_matplotlib(
         exps_metrices_results,
         label1=show_inds,
-        label2=["单变量", "多变量"],
+        label2=["STL", "MTL"],
         colorlst=["#d62728", "#1f77b4"],
         figsize=(10, 5),
         subplots_adjust_wspace=0.35,
