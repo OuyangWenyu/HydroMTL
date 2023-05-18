@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-05-16 21:57:15
+LastEditTime: 2023-05-18 17:07:06
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -389,6 +389,7 @@ def predict_new_mtl_exp(
     test_period,
     cache_path=None,
     gage_id_file=None,
+    gage_id=None,
     stat_dict_file=None,
     scaler_params=None,
     loss_func="MultiOutLoss",
@@ -397,7 +398,8 @@ def predict_new_mtl_exp(
     project_name = os.path.join("camels", exp)
     data_gap, fill_nan, n_output = config4difftargets(targets)
     if gage_id_file is None:
-        gage_id = "ALL"
+        if gage_id is None:
+            gage_id = "ALL"
     else:
         gage_id = pd.read_csv(gage_id_file, dtype={0: str}).iloc[:, 0].values.tolist()
     if scaler_params is None:
@@ -520,6 +522,7 @@ def run_mtl_camels(
     train_period=None,
     test_period=None,
     weight_ratio=None,
+    gage_id=None,
     gage_id_file=os.path.join(
         definitions.RESULT_DIR,
         "camels_us_mtl_2001_2021_flow_screen.csv",
@@ -592,6 +595,7 @@ def run_mtl_camels(
         # te=2,
         fill_nan=fill_nan,
         gage_id_file=gage_id_file,
+        gage_id=gage_id,
     )
     update_cfg(config_data, args)
     if weight_path is not None:
