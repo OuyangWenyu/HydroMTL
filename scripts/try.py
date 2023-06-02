@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-12-14 15:05:47
-LastEditTime: 2023-05-16 22:05:10
+LastEditTime: 2023-05-22 15:08:20
 LastEditors: Wenyu Ouyang
-Description: Run MTL experiments for PUB experiments
-FilePath: /HydroMTL/scripts/train4pub.py
+Description: Try some code
+FilePath: /HydroMTL/scripts/try.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 

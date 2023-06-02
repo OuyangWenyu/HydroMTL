@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-05-16 20:48:04
-LastEditTime: 2023-05-18 17:39:46
+LastEditTime: 2023-06-02 11:17:56
 LastEditors: Wenyu Ouyang
 Description: See scaling effect of MTL and STL exps
 FilePath: /HydroMTL/scripts/scale_task.py
@@ -9,7 +9,6 @@ Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 import argparse
 import glob
-import numpy as np
 import pandas as pd
 import os
 import sys
@@ -23,17 +22,6 @@ from mtl_results_utils import predict_new_mtl_exp, run_mtl_camels
 from hydromtl.data.source.data_constant import ET_MODIS_NAME, Q_CAMELS_US_NAME
 
 
-# set some tasks to evaluate the scaling behavior of MTL and STL exps
-# each task train models on different numbers of basins: 1%, 5%, 10%, 25%, 30%, 50%, 75%, 100%
-# randomly select x% of basins from the training set
-def random_select_basins(x_percent, n_basins, random_seed=1234):
-    # Calculate number to choose
-    n_choose = int(n_basins * x_percent)
-    np.random.seed(random_seed)
-    inds = np.random.choice(n_basins, size=n_choose, replace=False)
-    return np.sort(inds)
-
-
 def scaling_exp(args):
     exp = args.exp
     targets = args.output_vars
@@ -42,20 +30,26 @@ def scaling_exp(args):
     test_periods = args.test_period
     limit_parts = args.limit_part
     ctxs = args.ctx
-    random_seed = args.random_seed
-    x_percents = args.x_percent
-    scaling_exps = [exp + str(x_percents[i]).zfill(3) for i in range(len(x_percents))]
-    all_basins = pd.read_csv(
-        os.path.join(definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"),
-        dtype={"GAGE_ID": str},
-    )
-    for i in range(len(scaling_exps)):
-        chosen_idx = random_select_basins(
-            x_percents[i] / 100, all_basins.shape[0], random_seed
-        )
-        gage_ids = all_basins.loc[chosen_idx].values[:, 0].tolist()
+    x_percent = args.x_percent
+    if x_percent < 50:
+        split_num = int(1 / (x_percent / 100))
+    else:
+        split_num = round(1 / (1 - x_percent / 100))
+    exps = [
+        exp + "percent" + str(x_percent).zfill(3) + str(i + 1).zfill(2)
+        for i in range(split_num)
+    ]
+    for i in range(split_num):
+        gage_ids = pd.read_csv(
+            os.path.join(
+                definitions.RESULT_DIR,
+                f"exp_pub_kfold_percent{str(x_percent).zfill(3)}",
+                f"camels_train_kfold{str(i)}.csv",
+            ),
+            dtype={"GAGE_ID": str},
+        ).values[:, 0].tolist()
         run_mtl_camels(
-            scaling_exps[i],
+            exps[i],
             targets=targets,
             weight_ratio=loss_weight,
             train_period=train_periods,
@@ -65,6 +59,26 @@ def scaling_exp(args):
             limit_part=limit_parts,
             ctx=ctxs,
         )
+        stat_dict_file = glob.glob(
+            os.path.join(definitions.RESULT_DIR, "camels", exps[i], "*_stat.json")
+        )[0]
+        weight_path_dir = os.path.join(definitions.RESULT_DIR, "camels", exps[i])
+        weight_path = get_lastest_weight_path(weight_path_dir)
+        # pub test
+        predict_new_mtl_exp(
+            exp=f"{exps[i]}0",
+            targets=targets,
+            loss_weights=loss_weight,
+            weight_path=weight_path,
+            train_period=train_periods,
+            test_period=test_periods,
+            gage_id_file=os.path.join(
+                definitions.RESULT_DIR,
+                f"exp_pub_kfold_percent{str(x_percent).zfill(3)}",
+                f"camels_test_kfold{str(i)}.csv",
+            ),
+            stat_dict_file=stat_dict_file,
+        )
 
 
 if __name__ == "__main__":
@@ -73,17 +87,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--exp",
         dest="exp",
-        help="the ID of the experiment, such as exppub00",
+        help="the ID of the experiment, such as expscalemtl",
         type=str,
         default="expscalemtl",
     )
+    # one running for one case
     parser.add_argument(
         "--x_percent",
         dest="x_percent",
         help="randomly select x percent of basins from the training set",
-        nargs="+",
         type=int,
-        default=[1, 5, 10, 25, 30, 50, 75, 100],
+        default=5,
     )
     parser.add_argument(
         "--random_seed",
