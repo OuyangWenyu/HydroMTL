@@ -136,3 +136,4 @@ results/
 
 # definitions
 definitions_private.py
+*.pkl

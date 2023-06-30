@@ -1,7 +1,7 @@
 """
 Author: MHPI group, Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-05-10 09:12:15
+LastEditTime: 2023-06-30 10:28:05
 LastEditors: Wenyu Ouyang
 Description: statistics calculation
 FilePath: /HydroMTL/hydromtl/utils/hydro_stat.py
@@ -10,6 +10,7 @@ Copyright (c) 2021-2022 MHPI group, Wenyu Ouyang. All rights reserved.
 
 import copy
 import itertools
+import warnings
 import HydroErr as he
 import numpy as np
 import scipy.stats
@@ -410,7 +411,11 @@ def stat_error(target: np.array, pred: np.array, fill_nan: str = "no") -> dict:
             hightarget = target_sort[indexhigh:]
             if np.sum(lowtarget) == 0:
                 num_lowtarget_zero = num_lowtarget_zero + 1
-            PBiaslow[k] = np.sum(lowpred - lowtarget) / np.sum(lowtarget) * 100
+            with warnings.catch_warnings():
+                # Sometimes the lowtarget is all 0, which will cause a warning
+                # but I know it is not an error, so I ignore it
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                PBiaslow[k] = np.sum(lowpred - lowtarget) / np.sum(lowtarget) * 100
             PBiashigh[k] = np.sum(highpred - hightarget) / np.sum(hightarget) * 100
     outDict = dict(
         Bias=Bias,
@@ -641,6 +646,7 @@ def cal_fdc(data: np.array, quantile_num=100):
 
     return fdc
 
+
 def remove_abnormal_data(data, *, q1=0.00001, q2=0.99999):
     """
     remove abnormal data
@@ -664,6 +670,7 @@ def remove_abnormal_data(data, *, q1=0.00001, q2=0.99999):
     data[data > np.quantile(data, q2)] = np.nan
     return data
 
+
 def month_stat_for_daily_df(df):
     """
     calculate monthly statistics for daily data
@@ -680,4 +687,4 @@ def month_stat_for_daily_df(df):
     """
     # guarantee the index is datetime
     df.index = pd.to_datetime(df.index)
-    return df.resample('MS').mean()
+    return df.resample("MS").mean()
