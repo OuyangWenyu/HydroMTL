@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2023-05-04 20:14:49
+LastEditTime: 2023-07-06 09:56:19
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: /HydroMTL/scripts/run_task.py
@@ -30,6 +30,12 @@ def train_and_test(args):
     cache_dir = args.cache_path
     weight_path = args.weight_path
     train_epochs = args.train_epoch
+    gage_id_file = args.gage_id_file
+    if gage_id_file is None or gage_id_file == "None":
+        gage_id_file = os.path.join(
+            definitions.RESULT_DIR,
+            "camels_us_mtl_2001_2021_flow_screen.csv",
+        )
     if cache_dir is None or cache_dir == "None":
         cache_dir = os.path.join(definitions.RESULT_DIR, "camels", exp)
     if weight_path == "None":
@@ -48,6 +54,7 @@ def train_and_test(args):
         test_period=test_periods,
         weight_path=weight_path,
         train_epoch=train_epochs,
+        gage_id_file=gage_id_file,
     )
 
 
@@ -139,6 +146,13 @@ if __name__ == "__main__":
         help="epoch of training",
         type=int,
         default=300,
+    )
+    parser.add_argument(
+        "--gage_id_file",
+        dest="gage_id_file",
+        help="the file of gage IDs",
+        type=str,
+        default=None,
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")

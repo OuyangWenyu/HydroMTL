@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-05-17 16:05:48
+LastEditTime: 2023-07-07 14:45:00
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: /HydroMTL/hydromtl/visual/plot_stat.py
@@ -20,6 +20,48 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from hydromtl.utils.hydro_stat import ecdf
 import matplotlib.lines as mlines
+
+
+def plot_simple_lines(
+    xs,
+    ys,
+    legends,
+    colors="rbkgcmy",
+    dash_lines=None,
+    x_str="x",
+    y_str="y",
+    show_legend=True,
+    legend_font_size=16,
+    fig_size=(8, 6),
+):
+    assert type(xs) == type(ys) == list
+    assert len(xs) == len(ys)
+    if legends is not None:
+        assert type(legends) == list
+        assert len(ys) == len(legends)
+    if dash_lines is not None:
+        assert type(dash_lines) == list
+    else:
+        dash_lines = np.full(len(xs), False).tolist()
+    fig = plt.figure(figsize=fig_size)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    for i in range(len(xs)):
+        (line_i,) = ax.plot(xs[i], ys[i], color=colors[i], label=legends[i])
+        if dash_lines[i]:
+            line_i.set_dashes([2, 2, 10, 2])
+
+    plt.xlabel(x_str, fontsize=18)
+    plt.ylabel(y_str, fontsize=18)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    if show_legend:
+        ax.legend()
+        plt.legend(prop={"size": legend_font_size})
+    plt.grid()
+    # Hide the right and top spines
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    return fig, ax
 
 
 def plot_scatter_with_11line(

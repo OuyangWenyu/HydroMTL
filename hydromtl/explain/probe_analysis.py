@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2023-05-17 16:23:12
+LastEditTime: 2023-07-07 17:25:05
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: /HydroMTL/hydromtl/explain/probe_analysis.py
@@ -337,15 +337,22 @@ def show_probe(
 
 if __name__ == "__main__":
     run_exp_lst = [
-        "camels" + os.sep + "exp410010",
-        "camels" + os.sep + "exp410130",
-        "camels" + os.sep + "exp42001",
+        f"camels{os.sep}expmtlrandom0010",
+        f"camels{os.sep}expmtl0030",
+        f"camels{os.sep}expstlq0010",
+    ]
+    figure_dir = os.path.join(definitions.RESULT_DIR, "figures")
+    legend_lst = [
+        "MTL_Random",
+        "MTL",
+        "STL",
     ]
     show_probe(
         run_exp_lst=run_exp_lst,
         var=data_constant.surface_soil_moisture_smap_camels_us,
-        legend_lst=["STL-Q", "MTL", "STL-ET"],
+        legend_lst=legend_lst,
         show_probe_metric="Corr",
         retrian_probe=[False, False, False],
-        num_workers=4,
+        num_workers=0,
+        save_dir=figure_dir,
     )

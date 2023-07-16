@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-05-18 17:07:06
+LastEditTime: 2023-07-05 22:05:00
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: /HydroMTL/scripts/mtl_results_utils.py
@@ -534,10 +534,16 @@ def run_mtl_camels(
     limit_part=None,
     weight_path=None,
     train_epoch=300,
+    data_gap_specify=None,
+    fill_nan_specify=None,
 ):
     if targets is None:
         targets = [Q_CAMELS_US_NAME, ET_MODIS_NAME]
     data_gap, fill_nan, n_output = config4difftargets(targets)
+    if data_gap_specify is not None:
+        data_gap = data_gap_specify
+    if fill_nan_specify is not None:
+        fill_nan = fill_nan_specify
     if ctx is None:
         ctx = [0]
     if train_period is None:
@@ -551,7 +557,7 @@ def run_mtl_camels(
     )
     config_data = default_config_file()
     args = cmd(
-        sub=f"camels/{target_exp}",
+        sub=os.path.join("camels", target_exp),
         source="CAMELS_FLOW_ET",
         source_path=[
             os.path.join(definitions.DATASET_DIR, "camelsflowet"),

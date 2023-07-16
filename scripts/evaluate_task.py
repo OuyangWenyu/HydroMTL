@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2023-04-27 22:15:36
+LastEditTime: 2023-07-06 19:18:48
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: /HydroMTL/scripts/evaluate_task.py
@@ -32,6 +32,11 @@ def train_and_test(args):
     cache_dir = args.cache_path
     if cache_dir is None or cache_dir == "None":
         cache_dir = os.path.join(definitions.RESULT_DIR, "camels", exp)
+    gage_id_file = args.gage_id_file
+    if gage_id_file is None or gage_id_file == "None":
+        gage_id_file = os.path.join(
+            definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
+        )
     predict_new_mtl_exp(
         exp=exp,
         targets=[Q_CAMELS_US_NAME, ET_MODIS_NAME],
@@ -41,9 +46,7 @@ def train_and_test(args):
         train_period=["2001-10-01", "2011-10-01"],
         test_period=test_periods,
         cache_path=cache_dir,
-        gage_id_file=os.path.join(
-            definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
-        ),
+        gage_id_file=gage_id_file,
         stat_dict_file=stat_dict_file,
     )
 
@@ -84,7 +87,6 @@ if __name__ == "__main__":
         help="the cache file for forcings, attributes and targets data",
         type=str,
         default=None,
-        # default="/mnt/data/owen411/code/HydroMTL/results/camels/expstlq0010",
     )
     parser.add_argument(
         "--weight_path",
@@ -94,6 +96,13 @@ if __name__ == "__main__":
         # default="/mnt/sdc/owen/code/HydroMTL/results/camels/expmtl001/12_April_202305_24PM_model.pth",
         # default="/mnt/sdc/owen/code/HydroMTL/results/camels/expstlq001/07_April_202311_52AM_model.pth",
         default="/mnt/sdc/owen/code/HydroMTL/results/camels/expstlet001/09_April_202303_02AM_model.pth",
+    )
+    parser.add_argument(
+        "--gage_id_file",
+        dest="gage_id_file",
+        help="the file path of gage id",
+        type=str,
+        default=None,
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")
