@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-20 20:52:08
-LastEditTime: 2022-11-24 11:31:08
+LastEditTime: 2023-08-09 11:12:45
 LastEditors: Wenyu Ouyang
 Description: Some nn models for LSTM probe
-FilePath: /HydroSPB/hydroSPB/explore/cell_state_model.py
+FilePath: /HydroMTL/hydromtl/explain/cell_state_model.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from collections import defaultdict
@@ -91,9 +91,7 @@ def train_model(
             data["x_d"] = data["x_d"].to(device)
             data["y"] = data["y"].to(device)
             y_pred = model(data)
-            y = data["y"][
-                :,
-            ]
+            y = data["y"][:,]
             loss = loss_fn(y_pred, y)
 
             # train/update the weight

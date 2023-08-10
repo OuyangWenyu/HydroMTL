@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2023-07-07 17:25:05
+LastEditTime: 2023-08-10 11:35:30
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: /HydroMTL/hydromtl/explain/probe_analysis.py
@@ -75,6 +75,17 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
         all_corrs, all_basin_corrs = calculate_raw_correlations(input_data, target_data)
         np.save(all_corrs_file, all_corrs)
         all_basin_corrs.to_netcdf(all_basin_corrs_file)
+    # Calculate the maximum absolute correlation for each basin
+    max_abs_correlation_per_basin = np.abs(all_basin_corrs).max(dim="dimension")
+    # Identify which dimension (cell state) gives the maximum absolute correlation for each basin
+    dimension_with_max_abs_corr = np.abs(all_basin_corrs).idxmax(dim="dimension")
+    # median value of the max
+    median_max_abs_corr = np.median(max_abs_correlation_per_basin.values)
+    print(
+        "median of max_abs_correlation_per_basin in " + run_exp + " for " + var + ": ",
+        median_max_abs_corr,
+    )
+    # print("dimension_with_max_abs_corr", dimension_with_max_abs_corr)
     start_date = pd.to_datetime(input_data.time.min().values)
     end_date = pd.to_datetime(input_data.time.max().values)
     probe_train_params = {
@@ -171,15 +182,28 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
         + run_exp
         + " --"
     )
+    # Find the max absolute value
+    max_abs_value = abs(all_basin_corrs).max().values
+
+    # Identify the coordinates of the max absolute value
+    location = np.where(abs(all_basin_corrs) == max_abs_value)
+
+    # Extracting the coordinates
+    station_id_coord = all_basin_corrs.station_id[location[0][0]].values
+    dimension_coord = all_basin_corrs.dimension[location[1][0]].values
+
+    print(
+        f"Max Absolute Value: {max_abs_value} at coordinates (station_id: {station_id_coord}, dimension: {dimension_coord})"
+    )
+
     fig, ax1 = plt.subplots()
-    all_basin_corrs.plot(ax=ax1, cmap="RdBu_r")
+    all_basin_corrs.plot(ax=ax1, cmap="RdBu_r", vmin=-1, vmax=1)
     # https://docs.xarray.dev/en/stable/user-guide/plotting.html
     plt.xlabel("Cell", fontsize=16)
     plt.ylabel("Basin", fontsize=16)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
-    # ax1.set_title("单元状态与" + var.ChineseName + "相关性", fontsize=16)
-    ax1.set_title("Correlation between cell state and " + var.name + " for all basins")
+    # ax1.set_title("Correlation between cell state and " + var.name + " for all basins")
     plt.savefig(
         os.path.join(
             save_dir, exp[0] + "_" + exp[1] + "_all_basin_corrs_" + var.name + ".png"
@@ -189,9 +213,7 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
     )
     f, ax2 = plt.subplots(figsize=(12, 2))
     im = ax2.pcolormesh(ws)
-    # ax2.set_ylabel(var.ChineseName, fontsize=16)
     ax2.set_ylabel(var.name, fontsize=16)
-    # ax2.set_title(var.ChineseName + "线性探测器的权重（所有单元状态）", fontsize=16)
     ax2.set_title("Weights of linear probe for " + var.name + " (all cell states)")
     plt.colorbar(im, orientation="horizontal")
     plt.savefig(
@@ -263,26 +285,37 @@ def show_probe(
     )
     f, ax1 = plt.subplots(figsize=(12, 4))
     for i, run_exp in enumerate(run_exp_lst):
-        ax1.hist(
-            all_corrs_lst[i],
+        data = all_corrs_lst[i]
+        max_abs_value = max(data, key=abs)
+        n, bins, patches = ax1.hist(
+            data,
             alpha=0.6,
             bins=100,
             label=legend_lst[i],
             color=f"C{str(i)}",
         )
-        # ax1.axvline(np.median(all_corrs_lst[i]), ls="--", color=f"C{str(i)}")
+        max_bin = np.digitize(max_abs_value, bins) - 1
+        max_bin = min(max_bin, len(patches) - 1)
+        max_height = n[max_bin]
+        ax1.annotate(
+            f"Max abs: {abs(max_abs_value):.2f}",
+            xy=(bins[max_bin], max_height),  # arrow's head
+            xytext=(bins[max_bin], max_height + (i + 2) * max_height),  # text position
+            arrowprops=dict(
+                facecolor=f"C{str(i)}", arrowstyle="->", linestyle="dashed"
+            ),
+            color=f"C{str(i)}",
+            fontsize=12,
+        )
         ax1.spines["right"].set_visible(False)
         ax1.spines["top"].set_visible(False)
     ax1.legend()
-    # ax1.set_title("各模型所有流域单元状态与" + var.ChineseName + "的相关性分布", fontsize=16)
-    ax1.set_title(
-        "Correlation between one cell state of all basins and the observation of "
-        + var.name
-    )
-    ax1.set_xlabel("Correlation")
-    # ax1.set_xlabel("相关系数", fontsize=16)
+    # ax1.set_title(
+    #     "Correlation between one cell state of all basins and the observation of "
+    #     + var.name
+    # )
+    ax1.set_xlabel("Corr", fontsize=16)
     ax1.set_ylabel("Frequency", fontsize=16)
-    # ax1.set_ylabel("频数", fontsize=16)
     sns.despine()
     plt.savefig(
         os.path.join(save_dir, "all_corrs_" + var.name + ".png"),
@@ -307,22 +340,38 @@ def show_probe(
             label=legend_lst[i],
             color=f"C{str(i)}",
         )
+        median = np.median(errors_lst[i][show_probe_metric])
         ax2.axvline(
-            np.median(errors_lst[i][show_probe_metric]),
+            median,
             ls="--",
             color=f"C{str(i)}",
+        )
+        text_pos = (
+            median - 0.2,
+            ax2.get_ylim()[1] / 2 + i * 0.2 * ax2.get_ylim()[1],
+        )
+        ax2.annotate(
+            f"Median: {median:.2f}",
+            xy=(
+                median,
+                ax2.get_ylim()[1] / 2 + i * 0.2 * ax2.get_ylim()[1],
+            ),  # arrow points to median
+            xytext=text_pos,  # text position
+            arrowprops=dict(
+                arrowstyle="-|>", color=f"C{str(i)}", ls="--"
+            ),  # arrow style, color, and linestyle
+            color=f"C{str(i)}",
+            horizontalalignment="right",
         )
     ax2.legend()
 
     ax2.set_xlabel(show_probe_metric, fontsize=16)
-    # ax2.set_title(var.ChineseName + "探测器预测" + show_probe_metric + "分布", fontsize=16)
-    ax2.set_title(
-        show_probe_metric
-        + " between the prediction of probe and the observation for "
-        + var.name
-    )
+    # ax2.set_title(
+    #     show_probe_metric
+    #     + " between the prediction of probe and the observation for "
+    #     + var.name
+    # )
     ax2.set_ylabel("Frequency", fontsize=16)
-    # ax2.set_ylabel("频数", fontsize=16)
 
     sns.despine()
     plt.savefig(
@@ -337,19 +386,19 @@ def show_probe(
 
 if __name__ == "__main__":
     run_exp_lst = [
-        f"camels{os.sep}expmtlrandom0010",
+        f"camels{os.sep}expstlet0010",
         f"camels{os.sep}expmtl0030",
         f"camels{os.sep}expstlq0010",
     ]
     figure_dir = os.path.join(definitions.RESULT_DIR, "figures")
     legend_lst = [
-        "MTL_Random",
+        "STL-ET",
         "MTL",
-        "STL",
+        "STL-Q",
     ]
     show_probe(
         run_exp_lst=run_exp_lst,
-        var=data_constant.surface_soil_moisture_smap_camels_us,
+        var=data_constant.streamflow_camels_us,
         legend_lst=legend_lst,
         show_probe_metric="Corr",
         retrian_probe=[False, False, False],
