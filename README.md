@@ -1,10 +1,10 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-05-16 21:36:17
+ * @LastEditTime: 2023-10-20 14:09:52
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
- * @FilePath: /HydroMTL/README.md
+ * @FilePath: \HydroMTL\README.md
  * Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 -->
 # HydroMTL
@@ -13,7 +13,9 @@
 
 Multi-task deep learning models for basin hydrological modeling
 
-If you feel it useful, please cite our paper:
+All the code of this repository is also available on [Zenodo](https://zenodo.org/record/5550000).
+
+If you feel it useful, please cite:
 
 ```bibtex
 @misc{ouyang2021hydroMTL,
@@ -25,8 +27,6 @@ If you feel it useful, please cite our paper:
   howpublished = {\url{}}
 }
 ```
-
-All the code of this repository is also available on [Zenodo](https://zenodo.org/record/5550000).
 
 ## How to run
 
@@ -67,7 +67,7 @@ In VSCode, you can select the kernel `MTL` to run the notebooks in the notebooks
 
 ### Prepare data
 
-Firstly, download data manually from [Kaggle]() or [Zenodo]().
+Firstly, download data manually from [Zenodo]().
 
 Then, put the data in a folder and set this fold in definitions.py.
  
