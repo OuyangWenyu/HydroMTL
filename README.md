@@ -1,13 +1,15 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-10-20 14:09:52
+ * @LastEditTime: 2023-10-20 15:22:48
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: \HydroMTL\README.md
  * Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 -->
 # HydroMTL
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10024012.svg)](https://doi.org/10.5281/zenodo.10024012)
 
 ## What is HydroMTL
 
@@ -20,11 +22,11 @@ If you feel it useful, please cite:
 ```bibtex
 @misc{ouyang2021hydroMTL,
   author = {Wenyu Ouyang},
-  title = {HydroMTL: Multi-task deep learning models for basin hydrological modeling},
+  title = {OuyangWenyu/HydroMTL: v0.0.1},
   year = {2021},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{}}
+  publisher = {Zenodo},
+  journal = {Zenodo},
+  howpublished = {\url{https://doi.org/10.5281/zenodo.10024012}}
 }
 ```
 
@@ -67,7 +69,7 @@ In VSCode, you can select the kernel `MTL` to run the notebooks in the notebooks
 
 ### Prepare data
 
-Firstly, download data manually from [Zenodo]().
+Firstly, download data manually from [Kaggle](https://www.kaggle.com/datasets/owenyy/hydromtl) or [Zenodo](https://doi.org/10.5281/zenodo.10024012) .
 
 Then, put the data in a folder and set this fold in definitions.py.
  
@@ -81,12 +83,32 @@ DATASET_DIR = xxx # This is your Data source directory
 RESULT_DIR = xxx # This is your result directory
 ```
 
-Run the following command to prepare the data.
+Put the downloaded data into the directory you set and unzip it.
+
+The directory structure should be like this:
 
 ```bash
-cd scripts
-python prepare_data.py
-```
+# xxx is your dataset directory
+xxx
+├── camels
+│   ├── camels_us
+│   ├──   |── basin_set_full_res
+│   ├──   |── basin_timeseries_v1p2_metForcing_obsFlow
+│   ├──   |── camels_streamflow
+│   ├──   |── camels_attributes_v2.0.xlsx
+│   ├──   |── camels_clim.txt
+│   ├──   |── camels_geol.txt
+│   ├──   |── camels_hydro.txt
+│   ├──   |── camels_name.txt
+│   ├──   |── camels_soil.txt
+│   ├──   |── camels_topo.txt
+│   ├──   |── camels_vege.txt
+│── modiset4camels
+│   ├── basin_mean_forcing
+├── nldas4camels
+│   ├── basin_mean_forcing
+│── smap4camels
+│   ├── NASA_USDA_SMAP_CAMELS
 
 ### Train
 
