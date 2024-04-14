@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2023-08-10 11:35:30
+LastEditTime: 2024-04-14 19:09:03
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
-FilePath: /HydroMTL/hydromtl/explain/probe_analysis.py
+FilePath: \HydroMTL\hydromtl\explain\probe_analysis.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -20,7 +21,7 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 import definitions
-from hydromtl.utils.hydro_constant import HydroVar
+from hydro_constant import HydroVar
 from hydromtl.data.source import data_constant
 from hydromtl.explain.cell_state_model import (
     get_all_models_weights,
@@ -396,6 +397,21 @@ if __name__ == "__main__":
         "MTL",
         "STL-Q",
     ]
+    streamflow_camels_us = HydroVar(
+        name=Q_CAMELS_US_NAME,
+        unit="ft3/s",
+        ChineseName="径流",
+    )
+    evapotranspiration_modis_camels_us = HydroVar(
+        name=ET_MODIS_NAME,
+        unit="mm/day",
+        ChineseName="蒸散发",
+    )
+    surface_soil_moisture_smap_camels_us = HydroVar(
+        name=SSM_SMAP_NAME,
+        unit="mm/day",
+        ChineseName="表层土壤含水量",
+    )
     show_probe(
         run_exp_lst=run_exp_lst,
         var=data_constant.streamflow_camels_us,

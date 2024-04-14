@@ -1,10 +1,22 @@
-from hydromtl.data.source.data_constant import (
-    PET_ERA5LAND_NAME,
-    PET_NLDAS_NAME,
-    PRCP_DAYMET_NAME,
-    PRCP_NLDAS_NAME,
-    PRCP_ERA5LAND_NAME,
-)
+DAYMET_NAME = "daymet"
+NLDAS_NAME = "nldas"
+ERA5LAND_NAME = "era5land"
+
+SSM_SMAP_NAME = "ssm"
+ET_MODIS_NAME = "ET"
+ET_ERA5LAND_NAME = "total_evaporation"
+
+# unify streamflow names
+Q_CAMELS_US_NAME = "streamflow"
+# Q_CAMELS_CC_NAME = "Q_fix"
+Q_CAMELS_CC_NAME = "Q"
+PRCP_DAYMET_NAME = "prcp"
+PRCP_ERA5LAND_NAME = "total_precipitation"
+PRCP_NLDAS_NAME = "total_precipitation"
+PET_MODIS_NAME = "PET"
+PET_DAYMET_NAME = "PET"
+PET_ERA5LAND_NAME = "potential_evaporation"
+PET_NLDAS_NAME = "potential_evaporation"
 
 VAR_C_CHOSEN_FROM_CAMELS_US = [
     "elev_mean",

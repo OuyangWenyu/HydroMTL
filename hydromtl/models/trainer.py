@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-05-10 09:13:26
+LastEditTime: 2024-04-14 19:11:11
 LastEditors: Wenyu Ouyang
 Description: Main function for training and testing
-FilePath: /HydroMTL/hydromtl/models/trainer.py
+FilePath: \HydroMTL\hydromtl\models\trainer.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import fnmatch
@@ -19,8 +19,8 @@ import torch
 
 from hydromtl.data.cache.cache_factory import cache_data_source
 from hydromtl.data.data_dict import data_sources_dict
-from hydromtl.utils import hydro_constant
-from hydromtl.utils.hydro_constant import HydroVar
+from . import hydro_constant
+from hydro_constant import HydroVar
 from hydromtl.utils.hydro_stat import stat_error
 from hydromtl.models.evaluator import evaluate_model
 from hydromtl.models.pytorch_training import model_train, save_model_params_log

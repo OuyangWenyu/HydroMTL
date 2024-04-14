@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2023-04-27 22:14:25
+LastEditTime: 2024-04-14 19:25:19
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
-FilePath: /HydroMTL/scripts/streamflow_utils.py
+FilePath: \HydroMTL\scripts\streamflow_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import csv
 import shutil
 from functools import reduce
@@ -24,24 +25,19 @@ from cartopy.io import shapereader as shpreader
 from matplotlib import pyplot as plt
 from tbparse import SummaryReader
 
-import definitions
-from hydromtl.utils.hydro_utils import unserialize_json
-from hydromtl.data.data_dict import data_sources_dict
-from hydromtl.models.trainer import (
-    load_result,
-    save_result,
+from hydroutils.hydro_file import unserialize_json
+from hydroutils.hydro_stat import stat_error, ecdf
+from hydroutils.hydro_plot import plot_ecdfs_matplot, plot_ts, plot_rainfall_runoff
+from torchhydro.trainers.trainer import (
     train_and_evaluate,
 )
-from hydromtl.utils.hydro_stat import stat_error, ecdf
-from hydromtl.data.config import default_config_file, update_cfg, cmd
-from hydromtl.visual.plot_stat import plot_ecdfs_matplot, plot_ts, plot_rainfall_runoff
-from hydromtl.utils import hydro_constant, hydro_utils
-from hydromtl.data.source.data_camels import Camels
-from hydromtl.data.source.data_constant import (
+from torchhydro.configs.config import default_config_file, update_cfg, cmd
+from scripts.app_constant import (
+    VAR_C_CHOSEN_FROM_GAGES_II,
     ET_MODIS_NAME,
     PRCP_ERA5LAND_NAME,
 )
-from scripts.app_constant import VAR_C_CHOSEN_FROM_GAGES_II
+from . import hydro_constant
 
 
 def get_json_file(cfg_dir):

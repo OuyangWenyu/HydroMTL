@@ -1,19 +1,33 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-07-05 22:05:00
+LastEditTime: 2024-04-14 19:28:14
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
-FilePath: /HydroMTL/scripts/mtl_results_utils.py
+FilePath: \HydroMTL\scripts\mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from functools import reduce
 import os
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-import definitions
+from hydroutils.hydro_stat import stat_error
+from hydroutils.hydro_plot import (
+    plot_boxes_matplotlib,
+    plot_boxs,
+    plot_map_carto,
+)
+
+from hydrodataset import Camels
+
+from torchhydro.configs.config import cmd, default_config_file, update_cfg
+from torchhydro.trainers.trainer import train_and_evaluate
+from torchhydro.trainers.resulter import Resulter
+from torchhydro import SETTING
+
 from scripts.streamflow_utils import (
     get_json_file,
     predict_in_test_period_with_model,
@@ -21,17 +35,6 @@ from scripts.streamflow_utils import (
 from scripts.app_constant import (
     VAR_C_CHOSEN_FROM_CAMELS_US,
     VAR_T_CHOSEN_FROM_NLDAS,
-)
-from hydromtl.data.config import cmd, default_config_file, update_cfg
-from hydromtl.data.source.data_camels import Camels
-from hydromtl.models.trainer import stat_result, train_and_evaluate
-from hydromtl.utils.hydro_stat import stat_error
-from hydromtl.visual.plot_stat import (
-    plot_boxes_matplotlib,
-    plot_boxs,
-    plot_map_carto,
-)
-from hydromtl.data.source.data_constant import (
     PRCP_DAYMET_NAME,
     PRCP_NLDAS_NAME,
     Q_CAMELS_US_NAME,
@@ -42,7 +45,7 @@ from hydromtl.data.source.data_constant import (
     PET_MODIS_NAME,
     NLDAS_NAME,
 )
-from hydromtl.utils import hydro_constant
+from scripts import hydro_constant
 
 
 def plot_multi_single_comp_flow_boxes(
@@ -143,7 +146,7 @@ def read_multi_single_exps_results(
     preds = []
     obss = []
     for i in range(len(exps_lst)):
-        cfg_dir_flow_other = os.path.join(definitions.RESULT_DIR, "camels", exps_lst[i])
+        cfg_dir_flow_other = os.path.join(RESULT_DIR, "camels", exps_lst[i])
         cfg_flow_other = get_json_file(cfg_dir_flow_other)
         inds_df1, pred, obs = stat_result(
             cfg_flow_other["data_params"]["test_path"],
@@ -524,10 +527,9 @@ def run_mtl_camels(
     weight_ratio=None,
     gage_id=None,
     gage_id_file=os.path.join(
-        definitions.RESULT_DIR,
+        "results",
         "camels_us_mtl_2001_2021_flow_screen.csv",
     ),
-    cache_dir=None,
     random_seed=1234,
     ctx=None,
     loss_func="MultiOutLoss",
@@ -555,21 +557,29 @@ def run_mtl_camels(
     loss_param = loss_param_according_loss_func(
         weight_ratio, ctx, loss_func, limit_part, data_gap
     )
+    data_origin_dir = SETTING["local_data_path"]["datasets-origin"]
+    data_interim_dir = SETTING["local_data_path"]["datasets-interim"]
     config_data = default_config_file()
     args = cmd(
         sub=os.path.join("camels", target_exp),
-        source="CAMELS_FLOW_ET",
-        source_path=[
-            os.path.join(definitions.DATASET_DIR, "camelsflowet"),
-            os.path.join(definitions.DATASET_DIR, "modiset4camels"),
-            os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
-            os.path.join(definitions.DATASET_DIR, "nldas4camels"),
-            os.path.join(definitions.DATASET_DIR, "smap4camels"),
-        ],
-        download=0,
+        source_cfgs={
+            "source_names": [
+                "usgs4camels",
+                "modiset4camels",
+                "nldas4camels",
+                "smap4camels",
+            ],
+            "source_paths": [
+                os.path.join(data_origin_dir, "camels", "camels_us"),
+                os.path.join(data_interim_dir, "camels_us", "modiset4camels"),
+                os.path.join(data_interim_dir, "camels_us", "nldas4camels"),
+                os.path.join(data_interim_dir, "camels_us", "smap4camels"),
+            ],
+        },
         ctx=ctx,
+        model_type="MTL",
         model_name="KuaiLSTMMultiOut",
-        model_param={
+        model_hyperparam={
             "n_input_features": len(var_c) + len(var_t),
             "n_output_features": n_output,
             "n_hidden_states": 256,
@@ -578,24 +588,52 @@ def run_mtl_camels(
         weight_path=weight_path,
         loss_func=loss_func,
         loss_param=loss_param,
-        cache_read=1,
-        cache_write=1,
         batch_size=100,
         rho=365,
         var_t=var_t,
         var_c=var_c,
         var_t_type=[NLDAS_NAME],
         var_out=targets,
+        var_to_source_map={
+            "temperature": "nldas4camels",
+            "specific_humidity": "nldas4camels",
+            "shortwave_radiation": "nldas4camels",
+            "potential_energy": "nldas4camels",
+            "potential_evaporation": "nldas4camels",
+            "total_precipitation": "nldas4camels",
+            "streamflow": "usgs4camels",
+            "ET": "modiset4camels",
+            "elev_mean": "usgs4camels",
+            "slope_mean": "usgs4camels",
+            "area_gages2": "usgs4camels",
+            "frac_forest": "usgs4camels",
+            "lai_max": "usgs4camels",
+            "lai_diff": "usgs4camels",
+            "dom_land_cover_frac": "usgs4camels",
+            "dom_land_cover": "usgs4camels",
+            "root_depth_50": "usgs4camels",
+            "soil_depth_statsgo": "usgs4camels",
+            "soil_porosity": "usgs4camels",
+            "soil_conductivity": "usgs4camels",
+            "max_water_content": "usgs4camels",
+            "geol_1st_class": "usgs4camels",
+            "geol_2nd_class": "usgs4camels",
+            "geol_porostiy": "usgs4camels",
+            "geol_permeability": "usgs4camels",
+        },
         train_period=train_period,
         test_period=test_period,
         opt="Adadelta",
         rs=random_seed,
-        data_loader="StreamflowDataModel",
+        dataset="FlexDataset",
+        sampler="KuaiSampler",
+        # data_loader="StreamflowDataModel",
         scaler="DapengScaler",
         n_output=2,
         train_epoch=train_epoch,
         save_epoch=20,
-        te=train_epoch,  # test with trained model in the train-epoch
+        # test with trained model in the train-epoch
+        model_loader={"load_way": "specified", "test_epoch": train_epoch},
         # train_epoch=2,
         # save_epoch=1,
         # te=2,
@@ -607,14 +645,6 @@ def run_mtl_camels(
     if weight_path is not None:
         continue_train = True
         config_data["model_params"]["continue_train"] = continue_train
-    if cache_dir is not None:
-        # train_data_dict.json is a flag for cache existing
-        if not os.path.exists(os.path.join(cache_dir, "train_data_dict.json")):
-            cache_dir = None
-        else:
-            config_data["data_params"]["cache_path"] = cache_dir
-            config_data["data_params"]["cache_read"] = True
-            config_data["data_params"]["cache_write"] = False
     train_and_evaluate(config_data)
     print("All processes are finished!")
 

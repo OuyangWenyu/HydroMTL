@@ -1,20 +1,17 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2023-07-06 09:56:19
+LastEditTime: 2024-04-14 19:20:20
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
-FilePath: /HydroMTL/scripts/run_task.py
+FilePath: \HydroMTL\scripts\run_task.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import argparse
 import os
-from pathlib import Path
-import sys
 
 
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
-import definitions
 from scripts.mtl_results_utils import run_mtl_camels
 
 
@@ -27,17 +24,14 @@ def train_and_test(args):
     limit_parts = args.limit_part
     ctxs = args.ctx
     random_seed = args.random
-    cache_dir = args.cache_path
     weight_path = args.weight_path
     train_epochs = args.train_epoch
     gage_id_file = args.gage_id_file
     if gage_id_file is None or gage_id_file == "None":
         gage_id_file = os.path.join(
-            definitions.RESULT_DIR,
+            "results",
             "camels_us_mtl_2001_2021_flow_screen.csv",
         )
-    if cache_dir is None or cache_dir == "None":
-        cache_dir = os.path.join(definitions.RESULT_DIR, "camels", exp)
     if weight_path == "None":
         weight_path = None
     if limit_parts == "None":
@@ -46,7 +40,6 @@ def train_and_test(args):
         exp,
         targets=output_vars,
         random_seed=random_seed,
-        cache_dir=cache_dir,
         ctx=ctxs,
         weight_ratio=loss_weight,
         limit_part=limit_parts,
@@ -66,7 +59,7 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        default="expmtl001",
+        default="testmtl001",
         # default="expstlet001",
         # default="expstlq201",
         # default="expmtlqssm101",
@@ -74,16 +67,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_vars",
         dest="output_vars",
-        help="the variables as output of MTL models, chosen from ['usgsFlow', 'ET', 'ssm']",
+        help="the variables as output of MTL models, chosen from ['streamflow', 'ET', 'ssm']",
         nargs="+",
         type=str,
-        default=["usgsFlow", "ET"],
-        # default=["usgsFlow", "ssm"],
+        default=["streamflow", "ET"],
+        # default=["streamflow", "ssm"],
     )
     parser.add_argument(
         "--loss_weight",
         dest="loss_weight",
-        help="weight of loss for usgsFlow or/and ET/ssm",
+        help="weight of loss for streamflow or/and ET/ssm",
         nargs="+",
         type=float,
         default=[0.5, 0.5],
@@ -124,13 +117,6 @@ if __name__ == "__main__":
         default=None,
         # default=[0],
         # default=[1],
-    )
-    parser.add_argument(
-        "--cache_path",
-        dest="cache_path",
-        help="the cache file for forcings, attributes and targets data",
-        type=str,
-        default=None,
     )
     parser.add_argument(
         "--weight_path",
