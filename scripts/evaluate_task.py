@@ -1,22 +1,19 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2023-07-06 19:18:48
+LastEditTime: 2024-04-15 10:49:07
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
-FilePath: /HydroMTL/scripts/evaluate_task.py
+FilePath: \HydroMTL\scripts\evaluate_task.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
+
 import glob
 import argparse
 import os
-from pathlib import Path
-import sys
 
 
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
-import definitions
-from hydromtl.data.source.data_constant import ET_MODIS_NAME, Q_CAMELS_US_NAME
+from scripts.app_constant import ET_MODIS_NAME, Q_CAMELS_US_NAME
 from scripts.mtl_results_utils import predict_new_mtl_exp
 
 
@@ -29,13 +26,10 @@ def train_and_test(args):
     exp = args.exp
     loss_weight = args.loss_weight
     test_periods = args.test_period
-    cache_dir = args.cache_path
-    if cache_dir is None or cache_dir == "None":
-        cache_dir = os.path.join(definitions.RESULT_DIR, "camels", exp)
     gage_id_file = args.gage_id_file
     if gage_id_file is None or gage_id_file == "None":
         gage_id_file = os.path.join(
-            definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
+            "results", "camels_us_mtl_2001_2021_flow_screen.csv"
         )
     predict_new_mtl_exp(
         exp=exp,
@@ -45,7 +39,6 @@ def train_and_test(args):
         # train_period is just used for a dummy value, not used in the prediction
         train_period=["2001-10-01", "2011-10-01"],
         test_period=test_periods,
-        cache_path=cache_dir,
         gage_id_file=gage_id_file,
         stat_dict_file=stat_dict_file,
     )
@@ -80,13 +73,6 @@ if __name__ == "__main__":
         nargs="+",
         # default=["2016-10-01", "2021-10-01"],
         default=["2011-10-01", "2021-10-01"],
-    )
-    parser.add_argument(
-        "--cache_path",
-        dest="cache_path",
-        help="the cache file for forcings, attributes and targets data",
-        type=str,
-        default=None,
     )
     parser.add_argument(
         "--weight_path",

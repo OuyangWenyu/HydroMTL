@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2024-04-14 19:25:19
+LastEditTime: 2024-04-15 08:35:17
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
 FilePath: \HydroMTL\scripts\streamflow_utils.py
@@ -28,6 +28,7 @@ from tbparse import SummaryReader
 from hydroutils.hydro_file import unserialize_json
 from hydroutils.hydro_stat import stat_error, ecdf
 from hydroutils.hydro_plot import plot_ecdfs_matplot, plot_ts, plot_rainfall_runoff
+from torchhydro import SETTING
 from torchhydro.trainers.trainer import (
     train_and_evaluate,
 )
@@ -277,27 +278,18 @@ def evaluate_a_model(
     print("Call a trained model and save its evaluation results")
 
 
-def predict_in_test_period_with_model(new_exp_args, cache_cfg_dir, weight_path):
+def predict_in_test_period_with_model(new_exp_args, weight_path):
     """Prediction in a test period with the given trained model for a new experiment
 
     Parameters
     ----------
     new_exp_args : str
         arguments for new experiment
-    cache_cfg_dir : str
-        the directory of cache file
     weight_path : str
         the path of trained model's weight file
     """
     cfg = default_config_file()
     update_cfg(cfg, new_exp_args)
-    if cache_cfg_dir is not None:
-        # test_data_dict.json is a flag for cache existing,
-        # if exsits, we don't need to write cache file again
-        cfg["data_params"]["cache_write"] = not os.path.exists(
-            os.path.join(cache_cfg_dir, "test_data_dict.json")
-        )
-    cfg["data_params"]["cache_read"] = True
     cfg["model_params"]["continue_train"] = False
     cfg["model_params"]["weight_path"] = weight_path
     if weight_path is None:
@@ -385,15 +377,18 @@ def predict_new_gages_exp(
     weight_path,
     continue_train,
     random_seed,
-    cache_path=None,
     gages_id=None,
     stat_dict_file=None,
 ):
     project_name = "gages/" + exp
     args = cmd(
         sub=project_name,
-        source_path=os.path.join(definitions.DATASET_DIR, "gages"),
-        source="GAGES",
+        source_cfgs={
+            "source_name": "gages",
+            "source_path": os.path.join(
+                SETTING["local_data_path"]["datasets-origin"], "gages"
+            ),
+        },
         download=0,
         ctx=[0],
         model_name="KuaiLSTM",
@@ -409,12 +404,11 @@ def predict_new_gages_exp(
         rs=random_seed,
         train_period=["1990-01-01", "2000-01-01"],
         test_period=["2000-01-01", "2010-01-01"],
-        cache_write=1,
-        cache_read=1,
+        sampler="KuaiSampler",
         scaler="DapengScaler",
-        data_loader="StreamflowDataModel",
+        dataset="StreamflowDataModel",
         train_epoch=300,
-        te=300,
+        model_loader={"load_way": "specified", "test_epoch": 300},
         save_epoch=50,
         batch_size=100,
         rho=365,
@@ -423,9 +417,7 @@ def predict_new_gages_exp(
         gage_id=gages_id,
         stat_dict_file=stat_dict_file,
     )
-    predict_in_test_period_with_model(
-        args, weight_path=weight_path, cache_cfg_dir=cache_path
-    )
+    predict_in_test_period_with_model(args, weight_path=weight_path)
 
 
 def read_dl_models_q_for_1basin1fold(

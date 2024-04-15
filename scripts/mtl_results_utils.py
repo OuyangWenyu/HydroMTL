@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-04-14 19:28:14
+LastEditTime: 2024-04-15 08:44:05
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -26,7 +26,6 @@ from hydrodataset import Camels
 from torchhydro.configs.config import cmd, default_config_file, update_cfg
 from torchhydro.trainers.trainer import train_and_evaluate
 from torchhydro.trainers.resulter import Resulter
-from torchhydro import SETTING
 
 from scripts.streamflow_utils import (
     get_json_file,
@@ -45,7 +44,7 @@ from scripts.app_constant import (
     PET_MODIS_NAME,
     NLDAS_NAME,
 )
-from scripts import hydro_constant
+from scripts import NLDASCAMELS_CFGS, SOURCE_CFGS, hydro_constant
 
 
 def plot_multi_single_comp_flow_boxes(
@@ -214,7 +213,6 @@ def predict_new_et_exp(
     weight_path,
     train_period,
     test_period,
-    cache_path=None,
     gage_id_file=None,
     stat_dict_file=None,
     scaler_params=None,
@@ -231,8 +229,6 @@ def predict_new_et_exp(
         _description_
     test_period : _type_
         _description_
-    cache_path : _type_, optional
-        _description_, by default None
     gage_id_file : _type_, optional
         _description_, by default None
     stat_dict_file:
@@ -282,18 +278,10 @@ def predict_new_et_exp(
         }
     args = cmd(
         sub=project_name,
-        source_path=[
-            os.path.join(definitions.DATASET_DIR, "camelsflowet"),
-            os.path.join(definitions.DATASET_DIR, "modiset4camels"),
-            os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
-            os.path.join(definitions.DATASET_DIR, "nldas4camels"),
-            os.path.join(definitions.DATASET_DIR, "smap4camels"),
-        ],
-        source="CAMELS_FLOW_ET",
-        download=0,
+        source_cfgs=SOURCE_CFGS,
         ctx=[0],
         model_name="KuaiLSTM",
-        model_param={
+        model_hyperparam={
             "n_input_features": 23,
             "n_output_features": 1,
             "n_hidden_states": 256,
@@ -305,7 +293,6 @@ def predict_new_et_exp(
             "item_weight": [1.0],
             "device": [0],
         },
-        cache_write=1,
         batch_size=100,
         rho=365,
         opt="Adadelta",
@@ -315,20 +302,18 @@ def predict_new_et_exp(
         var_out=[ET_MODIS_NAME],
         train_period=train_period,
         test_period=test_period,
-        data_loader="StreamflowDataModel",
+        dataset="FlexDataset",
         scaler="DapengScaler",
         scaler_params=scaler_params,
         n_output=1,
         train_epoch=300,
-        te=300,
+        model_loader={"load_way": "specified", "test_epoch": 300},
         save_epoch=10,
         fill_nan=["mean"],
         gage_id=gage_id,
         stat_dict_file=stat_dict_file,
     )
-    predict_in_test_period_with_model(
-        args, weight_path=weight_path, cache_cfg_dir=cache_path
-    )
+    predict_in_test_period_with_model(args, weight_path=weight_path)
 
 
 def predict_new_q_exp(
@@ -336,7 +321,6 @@ def predict_new_q_exp(
     weight_path,
     train_period,
     test_period,
-    cache_path=None,
     gage_id_file=None,
     stat_dict_file=None,
 ):
@@ -347,12 +331,7 @@ def predict_new_q_exp(
         gage_id = pd.read_csv(gage_id_file, dtype={0: str}).iloc[:, 0].values.tolist()
     args = cmd(
         sub=project_name,
-        source_path=[
-            os.path.join(definitions.DATASET_DIR, "nldas4camels"),
-            os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
-        ],
-        source="NLDAS_CAMELS",
-        download=0,
+        source_cfgs=NLDASCAMELS_CFGS,
         ctx=[0],
         model_name="KuaiLSTM",
         model_param={
@@ -363,24 +342,21 @@ def predict_new_q_exp(
         opt="Adadelta",
         loss_func="RMSESum",
         rs=1234,
-        cache_write=1,
         batch_size=100,
         rho=365,
         var_t=VAR_T_CHOSEN_FROM_NLDAS,
         var_t_type=[NLDAS_NAME],
         train_period=train_period,
         test_period=test_period,
-        data_loader="StreamflowDataModel",
+        dataset="FlexDataset",
         scaler="DapengScaler",
         train_epoch=300,
-        te=300,
+        model_loader={"load_way": "specified", "test_epoch": 300},
         save_epoch=20,
         gage_id=gage_id,
         stat_dict_file=stat_dict_file,
     )
-    predict_in_test_period_with_model(
-        args, weight_path=weight_path, cache_cfg_dir=cache_path
-    )
+    predict_in_test_period_with_model(args, weight_path=weight_path)
 
 
 def predict_new_mtl_exp(
@@ -390,7 +366,6 @@ def predict_new_mtl_exp(
     weight_path,
     train_period,
     test_period,
-    cache_path=None,
     gage_id_file=None,
     gage_id=None,
     stat_dict_file=None,
@@ -455,15 +430,7 @@ def predict_new_mtl_exp(
         }
     args = cmd(
         sub=project_name,
-        source_path=[
-            os.path.join(definitions.DATASET_DIR, "camelsflowet"),
-            os.path.join(definitions.DATASET_DIR, "modiset4camels"),
-            os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
-            os.path.join(definitions.DATASET_DIR, "nldas4camels"),
-            os.path.join(definitions.DATASET_DIR, "smap4camels"),
-        ],
-        source="CAMELS_FLOW_ET",
-        download=0,
+        source_cfgs=SOURCE_CFGS,
         ctx=[0],
         model_name="KuaiLSTMMultiOut",
         model_param={
@@ -474,7 +441,6 @@ def predict_new_mtl_exp(
         },
         loss_func=loss_func,
         loss_param=loss_param,
-        cache_write=1,
         batch_size=100,
         rho=365,
         var_t=VAR_T_CHOSEN_FROM_NLDAS,
@@ -483,20 +449,18 @@ def predict_new_mtl_exp(
         opt="Adadelta",
         train_period=train_period,
         test_period=test_period,
-        data_loader="StreamflowDataModel",
+        dataset="FlexDataset",
         scaler="DapengScaler",
         scaler_params=scaler_params,
         train_epoch=300,
-        te=300,
+        model_loader={"load_way": "specified", "test_epoch": 300},
         save_epoch=20,
         fill_nan=fill_nan,
         n_output=n_output,
         gage_id=gage_id,
         stat_dict_file=stat_dict_file,
     )
-    predict_in_test_period_with_model(
-        args, weight_path=weight_path, cache_cfg_dir=cache_path
-    )
+    predict_in_test_period_with_model(args, weight_path=weight_path)
 
 
 def config4difftargets(targets):
@@ -557,25 +521,10 @@ def run_mtl_camels(
     loss_param = loss_param_according_loss_func(
         weight_ratio, ctx, loss_func, limit_part, data_gap
     )
-    data_origin_dir = SETTING["local_data_path"]["datasets-origin"]
-    data_interim_dir = SETTING["local_data_path"]["datasets-interim"]
     config_data = default_config_file()
     args = cmd(
         sub=os.path.join("camels", target_exp),
-        source_cfgs={
-            "source_names": [
-                "usgs4camels",
-                "modiset4camels",
-                "nldas4camels",
-                "smap4camels",
-            ],
-            "source_paths": [
-                os.path.join(data_origin_dir, "camels", "camels_us"),
-                os.path.join(data_interim_dir, "camels_us", "modiset4camels"),
-                os.path.join(data_interim_dir, "camels_us", "nldas4camels"),
-                os.path.join(data_interim_dir, "camels_us", "smap4camels"),
-            ],
-        },
+        source_cfgs=SOURCE_CFGS,
         ctx=ctx,
         model_type="MTL",
         model_name="KuaiLSTMMultiOut",
