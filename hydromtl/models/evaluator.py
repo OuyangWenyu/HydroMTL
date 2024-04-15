@@ -62,8 +62,8 @@ def evaluate_model(model: PyTorchForecast) -> Tuple[Dict, np.array, np.array]:
         # TODO: better refactor this part, because sometimes we save multi models for multi hyperparameters
         model_filepath = model.params["data_params"]["test_path"]
         model.model = model.load_model(
-            model.params["model_params"]["model_name"],
-            model.params["model_params"],
+            model.params["model_cfgs"]["model_name"],
+            model.params["model_cfgs"],
             weight_path=os.path.join(model_filepath, f"model_Ep{str(test_epoch)}.pth"),
         )
     pred, obs, test_data = infer_on_torch_model(model)

@@ -1,0 +1,31 @@
+name: HydroMTL
+channels:
+  - pyg
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - geopandas
+  - scikit-learn
+  - fsspec
+  - intake
+  - pytorch=1.12
+  - pytorch-scatter
+  - tensorboard
+  # have to specify pillow version because of an issue for pytorch<1.13
+  # https://github.com/Project-MONAI/MONAI/issues/6683
+  - pillow=9.5.0
+  - torchvision
+  - shap
+  - pytest
+  - black
+  - flake8
+  - pip
+  - pip:
+    - tbparse
+    - setuptools
+    - wheel
+    - twine
+    - bump2version
+    - hydrodatasource

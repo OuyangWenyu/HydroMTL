@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-04-15 08:44:05
+LastEditTime: 2024-04-15 19:29:27
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -10,6 +10,8 @@ Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 
 from functools import reduce
 import os
+import sys
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -27,6 +29,9 @@ from torchhydro.configs.config import cmd, default_config_file, update_cfg
 from torchhydro.trainers.trainer import train_and_evaluate
 from torchhydro.trainers.resulter import Resulter
 
+
+dir_root = os.path.dirname(Path(os.path.abspath(__file__)).parent)
+sys.path.append(dir_root)
 from scripts.streamflow_utils import (
     get_json_file,
     predict_in_test_period_with_model,
@@ -44,7 +49,7 @@ from scripts.app_constant import (
     PET_MODIS_NAME,
     NLDAS_NAME,
 )
-from scripts import NLDASCAMELS_CFGS, SOURCE_CFGS, hydro_constant
+from . import NLDASCAMELS_CFGS, SOURCE_CFGS, hydro_constant
 
 
 def plot_multi_single_comp_flow_boxes(
@@ -242,7 +247,7 @@ def predict_new_et_exp(
     if scaler_params is None:
         # same with config.py file
         scaler_params = {
-            "basin_norm_cols": [
+            "prcp_norm_cols": [
                 Q_CAMELS_US_NAME,
                 "streamflow",
                 Q_CAMELS_CC_NAME,
@@ -334,7 +339,7 @@ def predict_new_q_exp(
         source_cfgs=NLDASCAMELS_CFGS,
         ctx=[0],
         model_name="KuaiLSTM",
-        model_param={
+        model_hyperparam={
             "n_input_features": 23,
             "n_output_features": 1,
             "n_hidden_states": 256,
@@ -383,7 +388,8 @@ def predict_new_mtl_exp(
     if scaler_params is None:
         # same with config.py file
         scaler_params = {
-            "basin_norm_cols": [
+            # we have renamed "basin_norm_cols" to "prcp_norm_cols"
+            "prcp_norm_cols": [
                 Q_CAMELS_US_NAME,
                 "streamflow",
                 Q_CAMELS_CC_NAME,
@@ -414,6 +420,7 @@ def predict_new_mtl_exp(
                 "ssma",
                 "susma",
             ],
+            "pbm_norm": False,
         }
     if loss_func == "MultiOutWaterBalanceLoss":
         loss_param = {
@@ -432,8 +439,9 @@ def predict_new_mtl_exp(
         sub=project_name,
         source_cfgs=SOURCE_CFGS,
         ctx=[0],
+        model_type="MTL",
         model_name="KuaiLSTMMultiOut",
-        model_param={
+        model_hyperparam={
             "n_input_features": 23,
             "n_output_features": n_output,
             "n_hidden_states": 256,
@@ -446,6 +454,33 @@ def predict_new_mtl_exp(
         var_t=VAR_T_CHOSEN_FROM_NLDAS,
         var_t_type=[NLDAS_NAME],
         var_out=targets,
+        var_to_source_map={
+            "temperature": "nldas4camels",
+            "specific_humidity": "nldas4camels",
+            "shortwave_radiation": "nldas4camels",
+            "potential_energy": "nldas4camels",
+            "potential_evaporation": "nldas4camels",
+            "total_precipitation": "nldas4camels",
+            "streamflow": "usgs4camels",
+            "ET": "modiset4camels",
+            "elev_mean": "usgs4camels",
+            "slope_mean": "usgs4camels",
+            "area_gages2": "usgs4camels",
+            "frac_forest": "usgs4camels",
+            "lai_max": "usgs4camels",
+            "lai_diff": "usgs4camels",
+            "dom_land_cover_frac": "usgs4camels",
+            "dom_land_cover": "usgs4camels",
+            "root_depth_50": "usgs4camels",
+            "soil_depth_statsgo": "usgs4camels",
+            "soil_porosity": "usgs4camels",
+            "soil_conductivity": "usgs4camels",
+            "max_water_content": "usgs4camels",
+            "geol_1st_class": "usgs4camels",
+            "geol_2nd_class": "usgs4camels",
+            "geol_porostiy": "usgs4camels",
+            "geol_permeability": "usgs4camels",
+        },
         opt="Adadelta",
         train_period=train_period,
         test_period=test_period,
@@ -491,6 +526,7 @@ def run_mtl_camels(
     weight_ratio=None,
     gage_id=None,
     gage_id_file=os.path.join(
+        dir_root,
         "results",
         "camels_us_mtl_2001_2021_flow_screen.csv",
     ),
@@ -593,7 +629,7 @@ def run_mtl_camels(
     update_cfg(config_data, args)
     if weight_path is not None:
         continue_train = True
-        config_data["model_params"]["continue_train"] = continue_train
+        config_data["model_cfgs"]["continue_train"] = continue_train
     train_and_evaluate(config_data)
     print("All processes are finished!")
 

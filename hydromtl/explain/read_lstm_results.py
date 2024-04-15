@@ -28,20 +28,20 @@ def get_trained_model(config):
     _type_
         _description_
     """
-    config["model_params"]["continue_train"] = False
+    config["model_cfgs"]["continue_train"] = False
     epoch = config["evaluate_params"]["test_epoch"]
     weight_path = os.path.join(
-        config["data_params"]["test_path"], "model_Ep" + str(epoch) + ".pth"
+        config["data_params"]["test_path"], f"model_Ep{str(epoch)}.pth"
     )
     if not os.path.isfile(weight_path):
-        weight_path = config["model_params"]["weight_path"]
-    config["model_params"]["weight_path"] = weight_path
-    config["data_params"]["cache_read"] = True
-    config["data_params"]["cache_write"] = False
-    if config["data_params"]["cache_path"] is None:
-        config["data_params"]["cache_path"] = config["data_params"]["test_path"]
+        weight_path = config["model_cfgs"]["weight_path"]
+    config["model_cfgs"]["weight_path"] = weight_path
+    config["data_cfgs"]["cache_read"] = True
+    config["data_cfgs"]["cache_write"] = False
+    if config["data_cfgs"]["cache_path"] is None:
+        config["data_cfgs"]["cache_path"] = config["data_cfgs"]["test_path"]
     data_params = config["data_params"]
-    config["data_params"]["stat_dict_file"] = None
+    config["data_cfgs"]["stat_dict_file"] = None
     data_source_name = data_params["data_source_name"]
     if data_source_name in ["CAMELS", "CAMELS_SERIES"]:
         # there are many different regions for CAMELS datasets
@@ -54,8 +54,7 @@ def get_trained_model(config):
         data_source = data_sources_dict[data_source_name](
             data_params["data_path"], data_params["download"]
         )
-    model = PyTorchForecast(config["model_params"]["model_name"], data_source, config)
-    return model
+    return PyTorchForecast(config["model_cfgs"]["model_name"], data_source, config)
 
 
 def convert_to_xarray(
@@ -137,9 +136,7 @@ def load_cell_states_for_exp(exp):
         _description_
     """
     two_parts = exp.split("/")
-    run_dir = os.path.join(
-        definitions.RESULT_DIR, two_parts[0], two_parts[1]
-    )
+    run_dir = os.path.join(definitions.RESULT_DIR, two_parts[0], two_parts[1])
     config = get_config_file(run_dir)
     model = get_trained_model(config)
     cell_states = get_cell_states(model)
@@ -162,9 +159,7 @@ def load_ts_var_data_for_exp(exp, var="ET") -> xr.Dataset:
     # we only support MODIS ET, usgsFlow and SMAP ssm now
     assert var in ["ET", "usgsFlow", "ssm"]
     two_parts = exp.split("/")
-    run_dir = os.path.join(
-        definitions.RESULT_DIR, two_parts[0], two_parts[1]
-    )
+    run_dir = os.path.join(definitions.RESULT_DIR, two_parts[0], two_parts[1])
 
     config = get_config_file(run_dir)
     obs_nc_file = os.path.join(config["data_params"]["test_path"], "obs_" + var + ".nc")

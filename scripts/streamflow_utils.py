@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2024-04-15 08:35:17
+LastEditTime: 2024-04-15 16:13:42
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
 FilePath: \HydroMTL\scripts\streamflow_utils.py
@@ -33,7 +33,7 @@ from torchhydro.trainers.trainer import (
     train_and_evaluate,
 )
 from torchhydro.configs.config import default_config_file, update_cfg, cmd
-from scripts.app_constant import (
+from .app_constant import (
     VAR_C_CHOSEN_FROM_GAGES_II,
     ET_MODIS_NAME,
     PRCP_ERA5LAND_NAME,
@@ -221,7 +221,7 @@ def evaluate_a_model(
         cfg_flow["data_params"]["test_path"] = cfg_dir_flow
         cfg_flow["data_params"]["cache_path"] = cfg_dir_flow
         cfg_flow["data_params"]["validation_path"] = cfg_dir_flow
-    cfg_flow["model_params"]["continue_train"] = False
+    cfg_flow["model_cfgs"]["continue_train"] = False
     if train_period is not None:
         cfg_flow["data_params"]["t_range_train"] = train_period
         cfg_flow["data_params"]["cache_read"] = False
@@ -248,14 +248,14 @@ def evaluate_a_model(
         weight_path = os.path.join(cfg_dir_flow, f"model_Ep{str(epoch)}.pth")
     if not os.path.isfile(weight_path):
         weight_path = os.path.join(cfg_dir_flow, f"model_Ep{str(epoch)}.pt")
-    cfg_flow["model_params"]["weight_path"] = weight_path
+    cfg_flow["model_cfgs"]["weight_path"] = weight_path
     if cfg_flow["data_params"]["cache_read"]:
         cfg_flow["data_params"]["cache_write"] = False
     if is_tl:
         # we evaluate a tl model, so we need to set tl_tag to False to avoid it perform tl modeling again
-        cfg_flow["model_params"]["model_param"]["tl_tag"] = False
+        cfg_flow["model_cfgs"]["model_param"]["tl_tag"] = False
     if dpl_param is not None:
-        cfg_flow["model_params"]["model_param"].update(dpl_param)
+        cfg_flow["model_cfgs"]["model_param"].update(dpl_param)
     train_and_evaluate(cfg_flow)
     # new name for results, becuase we will evaluate the model with different settings in the same directory
     pred, obs = load_result(
@@ -290,10 +290,12 @@ def predict_in_test_period_with_model(new_exp_args, weight_path):
     """
     cfg = default_config_file()
     update_cfg(cfg, new_exp_args)
-    cfg["model_params"]["continue_train"] = False
-    cfg["model_params"]["weight_path"] = weight_path
+    cfg["training_cfgs"]["train_mode"] = False
+    cfg["model_cfgs"]["continue_train"] = False
+    cfg["model_cfgs"]["weight_path"] = weight_path
     if weight_path is None:
-        cfg["model_params"]["continue_train"] = True
+        cfg["model_cfgs"]["continue_train"] = True
+        cfg["training_cfgs"]["train_mode"] = True
     train_and_evaluate(cfg)
     print("Call a trained model and test it in a new period")
 

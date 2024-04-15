@@ -1,16 +1,20 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2024-04-14 19:20:20
+LastEditTime: 2024-04-15 19:28:27
 LastEditors: Wenyu Ouyang
-Description: Generate commands to run scripts in Linux Screen
+Description: run task
 FilePath: \HydroMTL\scripts\run_task.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
 import argparse
 import os
+import sys
+from pathlib import Path
 
+dir_root = os.path.dirname(Path(os.path.abspath(__file__)).parent)
+sys.path.append(dir_root)
 
 from scripts.mtl_results_utils import run_mtl_camels
 
@@ -29,6 +33,7 @@ def train_and_test(args):
     gage_id_file = args.gage_id_file
     if gage_id_file is None or gage_id_file == "None":
         gage_id_file = os.path.join(
+            dir_root,
             "results",
             "camels_us_mtl_2001_2021_flow_screen.csv",
         )

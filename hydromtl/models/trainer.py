@@ -80,12 +80,12 @@ def train_and_evaluate(params: Dict):
         )
     if data_params["cache_write"]:
         cache_data_source(data_params, data_source)
-    model = PyTorchForecast(params["model_params"]["model_name"], data_source, params)
+    model = PyTorchForecast(params["model_cfgs"]["model_name"], data_source, params)
     if params["training_params"]["train_mode"]:
         if (
-            "weight_path" in params["model_params"]
-            and params["model_params"]["continue_train"]
-        ) or ("weight_path" not in params["model_params"]):
+            "weight_path" in params["model_cfgs"]
+            and params["model_cfgs"]["continue_train"]
+        ) or ("weight_path" not in params["model_cfgs"]):
             model_train(model)
         test_acc = evaluate_model(model)
         print("summary test_accuracy", test_acc[0])
