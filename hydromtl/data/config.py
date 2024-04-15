@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-04-09 10:34:59
+LastEditTime: 2024-04-15 20:28:44
 LastEditors: Wenyu Ouyang
 Description: Config for hydroDL
-FilePath: /HydroMTL/hydromtl/data/config.py
+FilePath: \HydroMTL\hydromtl\data\config.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import argparse
@@ -645,7 +645,7 @@ def update_cfg(cfg_file, new_args):
     """
     print("update config file")
     if new_args.sub is not None:
-        subset, subexp = new_args.sub.split("/")
+        subset, subexp = new_args.sub.split(os.sep)
         if not os.path.exists(
             os.path.join(definitions.RESULT_DIR, subset, subexp)
         ):

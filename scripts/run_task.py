@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2023-07-06 09:56:19
+LastEditTime: 2024-04-15 20:02:45
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
-FilePath: /HydroMTL/scripts/run_task.py
+FilePath: \HydroMTL\scripts\run_task.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 import argparse
@@ -66,7 +66,8 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        default="expmtl001",
+        default="testmtl001",
+        # default="expmtl001",
         # default="expstlet001",
         # default="expstlq201",
         # default="expmtlqssm101",
@@ -109,7 +110,7 @@ if __name__ == "__main__":
         # default=["2018-10-01", "2021-10-01"],
     )
     parser.add_argument(
-        "--ctx", dest="ctx", help="CUDA IDs", nargs="+", type=int, default=[0]
+        "--ctx", dest="ctx", help="CUDA IDs", nargs="+", type=int, default=[1]
     )
     parser.add_argument(
         "--random", dest="random", help="random seed", type=int, default=1234
