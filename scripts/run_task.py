@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2024-04-15 20:02:45
+LastEditTime: 2024-04-16 08:56:28
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: \HydroMTL\scripts\run_task.py
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         # default=["2018-10-01", "2021-10-01"],
     )
     parser.add_argument(
-        "--ctx", dest="ctx", help="CUDA IDs", nargs="+", type=int, default=[1]
+        "--ctx", dest="ctx", help="CUDA IDs", nargs="+", type=int, default=[0]
     )
     parser.add_argument(
         "--random", dest="random", help="random seed", type=int, default=1234

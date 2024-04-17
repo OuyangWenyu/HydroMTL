@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 import os
 
+from app_constant import VAR_T_CHOSEN_FROM_NLDAS
 import definitions
 from hydromtl.models.time_model import PyTorchForecast
 from hydromtl.models.evaluator import generate_predictions
@@ -31,7 +32,7 @@ def get_trained_model(config):
     config["model_params"]["continue_train"] = False
     epoch = config["evaluate_params"]["test_epoch"]
     weight_path = os.path.join(
-        config["data_params"]["test_path"], "model_Ep" + str(epoch) + ".pth"
+        config["data_params"]["test_path"], f"model_Ep{str(epoch)}.pth"
     )
     if not os.path.isfile(weight_path):
         weight_path = config["model_params"]["weight_path"]
@@ -54,8 +55,7 @@ def get_trained_model(config):
         data_source = data_sources_dict[data_source_name](
             data_params["data_path"], data_params["download"]
         )
-    model = PyTorchForecast(config["model_params"]["model_name"], data_source, config)
-    return model
+    return PyTorchForecast(config["model_params"]["model_name"], data_source, config)
 
 
 def convert_to_xarray(
@@ -102,8 +102,7 @@ def get_cell_states(t_model: PyTorchForecast):
         "cell_states.npy",
     )
     if os.path.exists(cell_states_nc_file):
-        cell_states = xr.open_dataset(cell_states_nc_file)
-        return cell_states
+        return xr.open_dataset(cell_states_nc_file)
     elif os.path.exists(cell_states_npy_file):
         cell_states = np.load(cell_states_npy_file)
     else:
@@ -136,14 +135,11 @@ def load_cell_states_for_exp(exp):
     _type_
         _description_
     """
-    two_parts = exp.split("/")
-    run_dir = os.path.join(
-        definitions.RESULT_DIR, two_parts[0], two_parts[1]
-    )
+    two_parts = exp.split(os.sep)
+    run_dir = os.path.join(definitions.RESULT_DIR, two_parts[0], two_parts[1])
     config = get_config_file(run_dir)
     model = get_trained_model(config)
-    cell_states = get_cell_states(model)
-    return cell_states
+    return get_cell_states(model)
 
 
 def load_ts_var_data_for_exp(exp, var="ET") -> xr.Dataset:
@@ -153,25 +149,21 @@ def load_ts_var_data_for_exp(exp, var="ET") -> xr.Dataset:
     ----------
     exp : str
         for example, camels/exp41013
+    var : str or list of str
+        variable(s) to load
 
     Returns
     -------
     xr.Dataset
         _description_
     """
-    # we only support MODIS ET, usgsFlow and SMAP ssm now
-    assert var in ["ET", "usgsFlow", "ssm"]
-    two_parts = exp.split("/")
-    run_dir = os.path.join(
-        definitions.RESULT_DIR, two_parts[0], two_parts[1]
-    )
+    if isinstance(var, str):
+        var = [var]
+
+    two_parts = exp.split(os.sep)
+    run_dir = os.path.join(definitions.RESULT_DIR, two_parts[0], two_parts[1])
 
     config = get_config_file(run_dir)
-    obs_nc_file = os.path.join(config["data_params"]["test_path"], "obs_" + var + ".nc")
-    if os.path.exists(obs_nc_file):
-        obs = xr.open_dataset(obs_nc_file)
-        return obs
-
     basins = config["data_params"]["object_ids"]
     time_range = config["data_params"]["t_range_test"]
     source_path = [
@@ -182,21 +174,51 @@ def load_ts_var_data_for_exp(exp, var="ET") -> xr.Dataset:
         os.path.join(definitions.DATASET_DIR, "smap4camels"),
     ]
     camels_pro = CamelsPro(source_path)
-    obs_ = camels_pro.read_target_cols(
-        basins,
-        time_range,
-        [var],
-    )
-    if var == "usgsFlow":
-        # Transform to mm/day to avoid basin area's effect
-        basin_areas = camels_pro.read_basin_area(basins)
-        basin_areas = np.repeat(basin_areas, obs_.shape[1], axis=0).reshape(obs_.shape)
-        # ft3/s -> mm/day
-        obs_ = obs_ / 35.314666721489 / (basin_areas * 1e6) * 86400
 
-    obs = convert_to_xarray(obs_, basins, time_range, key="obs", dim=[var])
-    obs.to_netcdf(obs_nc_file)
-    return obs
+    datasets = []
+    for v in var:
+        if v in ["ET", "usgsFlow", "ssm"]:
+            obs_nc_file = os.path.join(
+                config["data_params"]["test_path"], "obs_" + v + ".nc"
+            )
+            if os.path.exists(obs_nc_file):
+                datasets.append(xr.open_dataset(obs_nc_file))
+            else:
+                obs_ = camels_pro.read_target_cols(
+                    basins,
+                    time_range,
+                    [v],
+                )
+                if v == "usgsFlow":
+                    basin_areas = camels_pro.read_basin_area(basins)
+                    basin_areas = np.repeat(basin_areas, obs_.shape[1], axis=0).reshape(
+                        obs_.shape
+                    )
+                    obs_ = obs_ / 35.314666721489 / (basin_areas * 1e6) * 86400
+
+                obs = convert_to_xarray(obs_, basins, time_range, key="obs", dim=[v])
+                obs.to_netcdf(obs_nc_file)
+                datasets.append(obs)
+        elif v in VAR_T_CHOSEN_FROM_NLDAS:
+            forcing_nc_file = os.path.join(
+                config["data_params"]["test_path"], "forcing_" + v + ".nc"
+            )
+            if os.path.exists(forcing_nc_file):
+                datasets.append(xr.open_dataset(forcing_nc_file))
+            else:
+                forcing_ = camels_pro.read_relevant_cols(
+                    basins,
+                    time_range,
+                    [v],
+                    forcing_type="nldas",
+                )
+                forcing = convert_to_xarray(
+                    forcing_, basins, time_range, key="forcing", dim=[v]
+                )
+                forcing.to_netcdf(forcing_nc_file)
+                datasets.append(forcing)
+
+    return xr.merge(datasets)
 
 
 def normalize_cell_states(
@@ -208,19 +230,22 @@ def normalize_cell_states(
     s = StandardScaler()
     n_dims = len(cell_state.shape)
     # note tested for 3-dim (basins, target_time, dimensions)
-    if n_dims == 3:
-        for ix in tqdm(range(cell_state.shape[-1]), desc=desc):
-            store.append(s.fit_transform(cell_state[:, :, ix]))
-
-        c_state = np.stack(store)
-        c_state = c_state.transpose(1, 2, 0)
-        assert c_state.shape == original_shape
-
-    elif n_dims == 2:
-        for ix in tqdm(range(cell_state.shape[-1]), desc=desc):
-            store.append(s.fit_transform(cell_state[:, ix].reshape(-1, 1)))
+    if n_dims == 2:
+        store.extend(
+            s.fit_transform(cell_state[:, ix].reshape(-1, 1))
+            for ix in tqdm(range(cell_state.shape[-1]), desc=desc)
+        )
         c_state = np.stack(store)[:, :, 0]
         c_state = c_state.T
+        assert c_state.shape == original_shape
+
+    elif n_dims == 3:
+        store.extend(
+            s.fit_transform(cell_state[:, :, ix])
+            for ix in tqdm(range(cell_state.shape[-1]), desc=desc)
+        )
+        c_state = np.stack(store)
+        c_state = c_state.transpose(1, 2, 0)
         assert c_state.shape == original_shape
 
     else:

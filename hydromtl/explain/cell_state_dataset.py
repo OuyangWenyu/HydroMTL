@@ -13,40 +13,39 @@ def _fill_gaps_da(da: xr.DataArray, fill_nan: Optional[str] = None) -> xr.DataAr
     assert isinstance(da, xr.DataArray), "Expect da to be DataArray (not dataset)"
     if fill_nan is None:
         return da
+    # fill gaps
+    if fill_nan == "et_ssm_ignore":
+        # only for MODIS ET or SMAP ssm -- ignore normal nan values and interpolate npn-normal nan values
+        all_non_nan_idx = []
+        for i in range(da.shape[0]):
+            non_nan_idx_tmp = np.where(~np.isnan(da[i].values))
+            all_non_nan_idx = all_non_nan_idx + non_nan_idx_tmp[0].tolist()
+        # some NaN data appear in different dates in different basins
+        non_nan_idx = np.unique(all_non_nan_idx).tolist()
+        for i in range(da.shape[0]):
+            targ_i = da[i][non_nan_idx]
+            da[i][non_nan_idx] = targ_i.interpolate_na(
+                dim="date", fill_value="extrapolate"
+            )
+    elif fill_nan == "median":
+        # fill median
+        da = da.fillna(da.median())
+    elif fill_nan == "interpolate":
+        # fill interpolation
+        for i in range(da.shape[0]):
+            da[i] = da[i].interpolate_na(dim="date", fill_value="extrapolate")
     else:
-        # fill gaps
-        if fill_nan == "et_ssm_ignore":
-            # only for MODIS ET or SMAP ssm -- ignore normal nan values and interpolate npn-normal nan values
-            all_non_nan_idx = []
-            for i in range(da.shape[0]):
-                non_nan_idx_tmp = np.where(~np.isnan(da[i].values))
-                all_non_nan_idx = all_non_nan_idx + non_nan_idx_tmp[0].tolist()
-            # some NaN data appear in different dates in different basins
-            non_nan_idx = np.unique(all_non_nan_idx).tolist()
-            for i in range(da.shape[0]):
-                targ_i = da[i][non_nan_idx]
-                da[i][non_nan_idx] = targ_i.interpolate_na(
-                    dim="date", fill_value="extrapolate"
-                )
-        elif fill_nan == "median":
-            # fill median
-            da = da.fillna(da.median())
-        elif fill_nan == "interpolate":
-            # fill interpolation
-            for i in range(da.shape[0]):
-                da[i] = da[i].interpolate_na(dim="date", fill_value="extrapolate")
-        else:
-            raise NotImplementedError(f"fill_nan {fill_nan} not implemented")
+        raise NotImplementedError(f"fill_nan {fill_nan} not implemented")
     return da
 
 
-def choose_data_like_et_or_ssm(da, da_target, var="ET"):
+def choose_data_like_et_or_ssm(da_input, da_target, var="ET"):
     """select data from ds at the time of ds_target non-nan data
     and we will use them as input and output of a ML model
 
     Parameters
     ----------
-    da : xr.DataArray
+    da_input : xr.DataArray
         data to be chosen
     da_target : xr.DataArray
         the template data
@@ -56,16 +55,16 @@ def choose_data_like_et_or_ssm(da, da_target, var="ET"):
     non_nan_idx = np.where(~np.isnan(da_target[0].values))[0].tolist()
     assert type(non_nan_idx) == list, "non_nan_idx should be list"
     chosen_date = da_target[0].date.values[non_nan_idx]
-    input_data = da.sel(date=chosen_date)
+    input_data = da_input.sel(date=chosen_date)
     output_data = da_target.sel(date=chosen_date)
     if var == "ssm":
         return input_data, output_data
     elif var == "ET":
         # calculate mean of values in multiple dates between two non-nan values for ET
-        for i in range(da.shape[0]):
-            cs_i_sum = np.add.reduceat(da[i].values, non_nan_idx, axis=0)
-            if non_nan_idx[-1] < da[i].date.size:
-                idx4mean = non_nan_idx + [da[i].date.size]
+        for i in range(da_input.shape[0]):
+            cs_i_sum = np.add.reduceat(da_input[i].values, non_nan_idx, axis=0)
+            if non_nan_idx[-1] < da_input[i].date.size:
+                idx4mean = non_nan_idx + [da_input[i].date.size]
             else:
                 idx4mean = copy.copy(non_nan_idx)
             idx_interval = [y - x for x, y in zip(idx4mean, idx4mean[1:])]
@@ -205,16 +204,14 @@ class CellStateDataset(Dataset):
         try:
             self.samples = np.array(self.samples)[sort_idx]
         except TypeError:
-            self.samples = np.array([(x, y) for (x, y) in self.samples])[sort_idx]
+            self.samples = np.array(list(self.samples))[sort_idx]
         self.basin_samples = np.array(self.basin_samples)[sort_idx]
 
     def __getitem__(self, item: int) -> Tuple[Tuple[str, Any], Tuple[torch.Tensor]]:
         basin = str(self.basin_samples[item])
         time = self.time_samples[item]
         x, y = self.samples[item]
-        data = {"x_d": x, "y": y, "meta": {"basin": basin, "time": time}}
-
-        return data
+        return {"x_d": x, "y": y, "meta": {"basin": basin, "time": time}}
 
 
 def train_validation_split(
@@ -253,7 +250,7 @@ def get_train_test_dataset(
     #  test data is from final_sequence : end
     test_dataset = Subset(dataset, range(test_index, all_data_size))
     # train data is from start : test_index
-    train_dataset = Subset(dataset, range(0, test_index))
+    train_dataset = Subset(dataset, range(test_index))
     #  sense-check
     assert len(train_dataset) + len(test_dataset) == all_data_size
 

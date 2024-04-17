@@ -1,20 +1,21 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2023-07-06 19:18:48
+LastEditTime: 2024-04-16 08:41:41
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
-FilePath: /HydroMTL/scripts/evaluate_task.py
+FilePath: \HydroMTL\scripts\evaluate_task.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
+
 import glob
 import argparse
 import os
 from pathlib import Path
 import sys
 
-
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
+dir_root = os.path.dirname(Path(os.path.abspath(__file__)).parent)
+sys.path.append(dir_root)
 import definitions
 from hydromtl.data.source.data_constant import ET_MODIS_NAME, Q_CAMELS_US_NAME
 from scripts.mtl_results_utils import predict_new_mtl_exp
@@ -24,7 +25,7 @@ def train_and_test(args):
     weight_path = args.weight_path
     if weight_path is None:
         raise ValueError("weight_path is required")
-    train_exp_dir = os.sep.join(weight_path.split("/")[:-1])
+    train_exp_dir = os.sep.join(weight_path.split(os.sep)[:-1])
     stat_dict_file = glob.glob(os.path.join(train_exp_dir, "*_stat.json"))[0]
     exp = args.exp
     loss_weight = args.loss_weight
@@ -59,9 +60,9 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        # default="expmtl0011",
+        default="expmtl0011",
         # default="expstlq0011",
-        default="expstlet0011",
+        # default="expstlet0011",
     )
     parser.add_argument(
         "--loss_weight",
@@ -93,9 +94,17 @@ if __name__ == "__main__":
         dest="weight_path",
         help="the weight path file for trained model",
         type=str,
-        # default="/mnt/sdc/owen/code/HydroMTL/results/camels/expmtl001/12_April_202305_24PM_model.pth",
+        default=os.path.join(
+            dir_root, "results", "camels", "expmtl001", "12_April_202305_24PM_model.pth"
+        ),
         # default="/mnt/sdc/owen/code/HydroMTL/results/camels/expstlq001/07_April_202311_52AM_model.pth",
-        default="/mnt/sdc/owen/code/HydroMTL/results/camels/expstlet001/09_April_202303_02AM_model.pth",
+        # default=os.path.join(
+        # dir_root,
+        # "results",
+        # "camels",
+        # "expstlet001",
+        # "09_April_202303_02AM_model.pth",
+        # ),
     )
     parser.add_argument(
         "--gage_id_file",

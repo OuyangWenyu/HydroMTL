@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2023-08-10 11:35:30
+LastEditTime: 2024-04-17 11:07:49
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
-FilePath: /HydroMTL/hydromtl/explain/probe_analysis.py
+FilePath: \HydroMTL\hydromtl\explain\probe_analysis.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -30,13 +31,15 @@ from hydromtl.explain.cell_state_model import (
     LinearModel,
 )
 from hydromtl.explain.explain_lstm import (
+    abbreviate_and_join,
     calculate_all_error_metrics,
-    get_input_target_data_for_corr_analysis,
+    _get_input_target_data_for_corr_analysis,
 )
 from hydromtl.models.training_utils import get_the_device
+from scripts.app_constant import VAR_T_CHOSEN_FROM_NLDAS
 
 
-def train_probe(run_exp, var="ET", retrain=False, **kwargs):
+def train_probe(run_exp, var="ET", retrain=False, probe_input="state", **kwargs):
     """train a linear probe model for an experiment
 
     refer to: https://github.com/tommylees112/neuralhydrology/tree/pixel/notebooks
@@ -49,6 +52,8 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
         _description_, by default "ET"
     retrain : bool, optional
         whether to retrain the probe model, by default False
+    probe_input : str, optional
+        must be "state" or forcing variable, by default "state"
     kwargs : dict
         other parameters for training the probe model
         key-values include: {
@@ -63,11 +68,31 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
     assert var in ["ET", "usgsFlow", "ssm"]
     exp = run_exp.split(os.sep)
     run_dir = os.path.join(definitions.RESULT_DIR, exp[0], exp[1])
-    input_data, target_data = get_input_target_data_for_corr_analysis(run_exp, var)
+    if (
+        set(probe_input).issubset(set(VAR_T_CHOSEN_FROM_NLDAS))
+        or probe_input == "state"
+    ):
+        input_data, target_data = _get_input_target_data_for_corr_analysis(
+            run_exp, var, probe_input=probe_input
+        )
+    else:
+        raise ValueError("probe_input must be state or vars_list from forcing")
     #  calculate raw correlations (cell state and values)
     print("-- Running RAW Correlations --")
-    all_corrs_file = os.path.join(run_dir, "all_corrs_cs_" + var + ".npy")
-    all_basin_corrs_file = os.path.join(run_dir, "all_basin_corrs_cs_" + var + ".nc")
+    if probe_input == "state":
+        all_corrs_file = os.path.join(run_dir, "all_corrs_cs_" + var + ".npy")
+        all_basin_corrs_file = os.path.join(
+            run_dir, "all_basin_corrs_cs_" + var + ".nc"
+        )
+    else:
+        all_corrs_file = os.path.join(
+            run_dir,
+            "all_corrs_" + abbreviate_and_join(probe_input) + "_" + var + ".npy",
+        )
+        all_basin_corrs_file = os.path.join(
+            run_dir,
+            "all_basin_corrs_" + abbreviate_and_join(probe_input) + "_" + var + ".nc",
+        )
     if os.path.exists(all_corrs_file) and os.path.exists(all_basin_corrs_file):
         all_corrs = np.load(all_corrs_file)
         all_basin_corrs = xr.open_dataarray(all_basin_corrs_file)
@@ -94,15 +119,21 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
         "num_workers": 4,
         "device": -1,
         "drop_out": 0.0,
-    }
-    probe_train_params.update(kwargs)
+    } | kwargs
     device = get_the_device(probe_train_params["device"])
     drop_out = probe_train_params["drop_out"]
 
     print("-- Get Probe Predictions --")
-    linear_probe_preds_file = os.path.join(run_dir, "linear_probe_preds_" + var + ".nc")
+    if probe_input == "state":
+        # to be compatible with the original code
+        probe_var_file_name = var
+    else:
+        probe_var_file_name = abbreviate_and_join(probe_input) + "_" + var
+    linear_probe_preds_file = os.path.join(
+        run_dir, "linear_probe_preds_" + probe_var_file_name + ".nc"
+    )
     linear_probe_model_file = os.path.join(
-        run_dir, "linear_probe_model_" + var + ".pth"
+        run_dir, "linear_probe_model_" + probe_var_file_name + ".pth"
     )
     if (
         (not retrain)
@@ -115,7 +146,7 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
         model = LinearModel(D_in=d_in, dropout=drop_out)
         model.load_state_dict(checkpoint, strict=True)
     else:
-        print("-- Training Model for " + var + " --")
+        print("-- Training Model for " + probe_var_file_name + " --")
         train_losses, model, test_loader = train_model_loop(
             input_data=input_data,
             target_data=target_data,  #  needs to be xr.DataArray
@@ -136,7 +167,9 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
         preds.to_netcdf(linear_probe_preds_file)
 
     print("-- Get metrics of probe predictions --")
-    linear_probe_error_file = os.path.join(run_dir, "linear_probe_error_" + var + ".nc")
+    linear_probe_error_file = os.path.join(
+        run_dir, "linear_probe_error_" + probe_var_file_name + ".nc"
+    )
     if os.path.exists(linear_probe_error_file):
         errors = xr.open_dataset(linear_probe_error_file)
     else:
@@ -152,10 +185,10 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
     # extract weights and biases
     print("-- Extracting probe's weights and biases --")
     linear_probe_weights_file = os.path.join(
-        run_dir, "linear_probe_weights_" + var + ".npy"
+        run_dir, "linear_probe_weights_" + probe_var_file_name + ".npy"
     )
     linear_probe_biases_file = os.path.join(
-        run_dir, "linear_probe_biases_" + var + ".npy"
+        run_dir, "linear_probe_biases_" + probe_var_file_name + ".npy"
     )
     if os.path.exists(linear_probe_weights_file) and os.path.exists(
         linear_probe_biases_file
@@ -169,9 +202,11 @@ def train_probe(run_exp, var="ET", retrain=False, **kwargs):
     return all_corrs, all_basin_corrs, errors, ws, bs
 
 
-def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
+def plot_one_probe(
+    run_exp, var: HydroVar, probe_input, all_basin_corrs, ws, save_dir=None
+):
     exp = run_exp.split(os.sep)
-    run_dir = os.path.join(definitions.ROOT_DIR, "hydroSPB", "example", exp[0], exp[1])
+    run_dir = os.path.join(definitions.ROOT_DIR, "results", exp[0], exp[1])
     if save_dir is None:
         save_dir = run_dir
     FIGURE_DPI = 600
@@ -197,6 +232,16 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
     )
 
     fig, ax1 = plt.subplots()
+    # Check if 'dimension' is already of numeric type
+    if not np.issubdtype(all_basin_corrs["dimension"].dtype, np.number):
+        # If 'dimension' is not of numeric type, perform conversion
+        dimension_mapping = {
+            dim: i for i, dim in enumerate(all_basin_corrs["dimension"].values)
+        }
+        all_basin_corrs["dimension"] = [
+            dimension_mapping[dim] for dim in all_basin_corrs["dimension"].values
+        ]
+
     all_basin_corrs.plot(ax=ax1, cmap="RdBu_r", vmin=-1, vmax=1)
     # https://docs.xarray.dev/en/stable/user-guide/plotting.html
     plt.xlabel("Cell", fontsize=16)
@@ -204,9 +249,13 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     # ax1.set_title("Correlation between cell state and " + var.name + " for all basins")
+    if probe_input == "state":
+        plot_name = var.name
+    else:
+        plot_name = abbreviate_and_join(probe_input) + "_" + var.name
     plt.savefig(
         os.path.join(
-            save_dir, exp[0] + "_" + exp[1] + "_all_basin_corrs_" + var.name + ".png"
+            save_dir, exp[0] + "_" + exp[1] + "_all_basin_corrs_" + plot_name + ".png"
         ),
         dpi=FIGURE_DPI,
         bbox_inches="tight",
@@ -214,11 +263,13 @@ def plot_one_probe(run_exp, var: HydroVar, all_basin_corrs, ws, save_dir=None):
     f, ax2 = plt.subplots(figsize=(12, 2))
     im = ax2.pcolormesh(ws)
     ax2.set_ylabel(var.name, fontsize=16)
-    ax2.set_title("Weights of linear probe for " + var.name + " (all cell states)")
+    ax2.set_title(
+        "Weights of linear probe for " + var.name + " (all cell states or inputs)"
+    )
     plt.colorbar(im, orientation="horizontal")
     plt.savefig(
         os.path.join(
-            save_dir, exp[0] + "_" + exp[1] + "_linear_probe_ws_" + var.name + ".png"
+            save_dir, exp[0] + "_" + exp[1] + "_linear_probe_ws_" + plot_name + ".png"
         ),
         dpi=FIGURE_DPI,
         bbox_inches="tight",
@@ -232,6 +283,7 @@ def show_probe(
     show_probe_metric="Corr",
     retrian_probe=None,
     save_dir=definitions.RESULT_DIR,
+    probe_input="state",
     **kwargs,
 ):
     """Show all probe results for a list of experiments
@@ -248,6 +300,10 @@ def show_probe(
         metric to show, by default "Corr"
     retrian_probe : list, optional
         whether to retrain the probe, by default [False, False]
+    probe_input : str, optional
+        must be "state" or some forcing vars, by default "state"
+        forcing means we use real input of LSTM models to find the corr between forcings and outputs
+        state means we use cell states of LSTM models to find the corr between states and outputs
     kwargs : dict
         other arguments for probe training parameters
         key-values include:
@@ -271,14 +327,20 @@ def show_probe(
     bs_lst = []
     for i, run_exp in enumerate(run_exp_lst):
         all_corrs, all_basin_corrs, errors, ws, bs = train_probe(
-            run_exp=run_exp, var=var.name, retrain=retrian_probe[i], **kwargs
+            run_exp=run_exp,
+            var=var.name,
+            retrain=retrian_probe[i],
+            probe_input=probe_input,
+            **kwargs,
         )
         all_corrs_lst.append(all_corrs)
         all_basin_corrs_lst.append(all_basin_corrs)
         errors_lst.append(errors)
         ws_lst.append(ws)
         bs_lst.append(bs)
-        plot_one_probe(run_exp, var, all_basin_corrs, ws, save_dir=save_dir)
+        plot_one_probe(
+            run_exp, var, probe_input, all_basin_corrs, ws, save_dir=save_dir
+        )
     FIGURE_DPI = 600
     print(
         "-- Comparing cs~" + var.name + " correlations for " + str(run_exp_lst) + " --"
@@ -317,8 +379,14 @@ def show_probe(
     ax1.set_xlabel("Corr", fontsize=16)
     ax1.set_ylabel("Frequency", fontsize=16)
     sns.despine()
+
+    if probe_input == "state":
+        plot_name = var.name
+    else:
+        plot_name = abbreviate_and_join(probe_input) + "_" + var.name
+
     plt.savefig(
-        os.path.join(save_dir, "all_corrs_" + var.name + ".png"),
+        os.path.join(save_dir, "all_corrs_" + plot_name + ".png"),
         dpi=FIGURE_DPI,
         bbox_inches="tight",
     )
@@ -377,7 +445,7 @@ def show_probe(
     plt.savefig(
         os.path.join(
             save_dir,
-            "linear_probe_preds_" + var.name + "_" + show_probe_metric + ".png",
+            "linear_probe_preds_" + plot_name + "_" + show_probe_metric + ".png",
         ),
         dpi=FIGURE_DPI,
         bbox_inches="tight",

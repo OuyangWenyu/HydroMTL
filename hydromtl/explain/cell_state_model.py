@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-20 20:52:08
-LastEditTime: 2023-08-09 11:12:45
+LastEditTime: 2024-04-17 10:15:37
 LastEditors: Wenyu Ouyang
 Description: Some nn models for LSTM probe
-FilePath: /HydroMTL/hydromtl/explain/cell_state_model.py
+FilePath: \HydroMTL\hydromtl\explain\cell_state_model.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -59,7 +60,7 @@ def train_model(
     #  TRAIN
     train_losses_ALL = []
     val_losses_ALL = []
-    for epoch in tqdm(range(n_epochs), desc=desc):
+    for _ in tqdm(range(n_epochs), desc=desc):
         train_losses = []
         val_losses = []
 
@@ -201,6 +202,7 @@ def train_model_loop(
         val_split=train_val,
         desc=desc,
         l2_penalty=l2_penalty,
+        num_workers=num_workers,
     )
 
     # 5. Save outputs (losses: List[float], model: BaseModel, dataloader: DataLoader)
@@ -229,10 +231,10 @@ def get_all_models_weights(models: List[nn.Linear]) -> Tuple[np.ndarray]:
         w, b = get_model_weights(models[sw_ix])
         model_outputs[f"swvl{sw_ix+1}"]["w"] = w
         model_outputs[f"swvl{sw_ix+1}"]["b"] = b
-    ws_np = np.stack([model_outputs[swl]["w"] for swl in model_outputs.keys()])
+    ws_np = np.stack([model_outputs[swl]["w"] for swl in model_outputs])
     # TODO: not fully test for multiple models
     ws = ws_np.reshape(len(models), ws_np.shape[-1])
-    bs = np.stack([model_outputs[swl]["b"] for swl in model_outputs.keys()])
+    bs = np.stack([model_outputs[swl]["b"] for swl in model_outputs])
     return ws, bs
 
 
@@ -278,7 +280,7 @@ def calculate_raw_correlations(
     input_data["station_id"] = [int(sid) for sid in input_data["station_id"]]
     all_basin_correlations = xr.corr(input_data, target_data, dim="time")
     # Calculate the correlations for each level
-    all_correlations = np.zeros(256)
+    all_correlations = np.zeros(input_data.dimension.size)
 
     #  get the DATA for that feature
     all_cs_data = np.array(
