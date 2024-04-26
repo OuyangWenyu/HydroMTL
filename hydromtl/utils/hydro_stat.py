@@ -380,7 +380,7 @@ def stat_error(target: np.array, pred: np.array, fill_nan: str = "no") -> dict:
     PBiashigh = np.full(ngrid, np.nan)
     PBias = np.full(ngrid, np.nan)
     num_lowtarget_zero = 0
-    for k in range(0, ngrid):
+    for k in range(ngrid):
         x = pred[k, :]
         y = target[k, :]
         ind = np.where(np.logical_and(~np.isnan(x), ~np.isnan(y)))[0]
