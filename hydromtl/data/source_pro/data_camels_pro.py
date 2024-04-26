@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-01 23:35:07
-LastEditTime: 2022-11-10 15:16:14
+LastEditTime: 2024-04-26 21:04:58
 LastEditors: Wenyu Ouyang
 Description: A data source class for CAMELS with more data (such as NLDAS, MODIS-ET, SMAP) model
-FilePath: /HydroSPB/hydroSPB/data/source_pro/data_camels_pro.py
+FilePath: \HydroMTL\hydromtl\data\source_pro\data_camels_pro.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
@@ -20,7 +20,7 @@ from hydromtl.utils import hydro_utils
 
 
 class CamelsPro(DataSourceBase):
-    def __init__(self, data_path: list, download=False):
+    def __init__(self, data_path: list, download=False, et_product="MOD16A2V006"):
         """
         A data source class for camels attrs, forcings and streamflow + ET data + SMAP data
 
@@ -36,7 +36,7 @@ class CamelsPro(DataSourceBase):
         # camels_flow_et is a virtual data_source, not from any real data sources, just for this class
         super().__init__(data_path[0])
         self.modiset4basins = ModisEt4Camels(
-            [data_path[1], data_path[2]], download=download
+            [data_path[1], data_path[2]], download=download, et_product=et_product
         )
         self.nldas4camels = Nldas4Camels([data_path[3], data_path[2]])
         self.smap4camels = Smap4Camels([data_path[4], data_path[2]])
@@ -120,16 +120,20 @@ class CamelsPro(DataSourceBase):
         flow_vars = self.modiset4basins.camels.get_target_cols()
         et_vars = self.modiset4basins.get_target_cols()
         smap_vars = self.smap4camels.get_target_cols()
+        et_product = kwargs.get("et_product", "MOD16A2V006")
         for i in range(len(target_cols)):
             if target_cols[i] in flow_vars:
-                q_or_et_or_smap[
-                    :, :, i : i + 1
-                ] = self.modiset4basins.camels.read_target_cols(
-                    object_ids, t_range_list, target_cols[i : i + 1]
+                q_or_et_or_smap[:, :, i : i + 1] = (
+                    self.modiset4basins.camels.read_target_cols(
+                        object_ids, t_range_list, target_cols[i : i + 1]
+                    )
                 )
             elif target_cols[i] in et_vars:
                 q_or_et_or_smap[:, :, i : i + 1] = self.modiset4basins.read_target_cols(
-                    object_ids, t_range_list, target_cols[i : i + 1]
+                    object_ids,
+                    t_range_list,
+                    target_cols[i : i + 1],
+                    et_product=et_product,
                 )
             elif target_cols[i] in smap_vars:
                 q_or_et_or_smap[:, :, i : i + 1] = self.smap4camels.read_target_cols(

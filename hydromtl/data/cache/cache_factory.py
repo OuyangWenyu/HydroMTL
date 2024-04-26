@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-17 18:02:27
-LastEditTime: 2023-04-06 17:13:19
+LastEditTime: 2024-04-26 21:01:37
 LastEditors: Wenyu Ouyang
 Description: serialize data so that we can access them quickly
-FilePath: /HydroMTL/hydromtl/data/cache/cache_factory.py
+FilePath: \HydroMTL\hydromtl\data\cache\cache_factory.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from hydromtl.data.cache.cache_base import DataSourceCache
 from hydromtl.data.loader.data_scalers import wrap_t_s_dict
 
@@ -28,9 +29,8 @@ def cache_data_source(data_params, data_source):
     """
     modes = ["train", "valid", "test"]
     for mode in modes:
-        if mode == "valid":
-            if data_params["t_range_valid"] is None:
-                continue
+        if mode == "valid" and data_params["t_range_valid"] is None:
+            continue
         cache = DataSourceCache(data_params["test_path"], mode, data_source)
         t_s_dict = wrap_t_s_dict(data_source, data_params, mode)
         basins_id = t_s_dict["sites_id"]

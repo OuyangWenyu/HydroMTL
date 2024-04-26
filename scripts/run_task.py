@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2024-04-16 08:56:28
+LastEditTime: 2024-04-26 21:23:30
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: \HydroMTL\scripts\run_task.py
@@ -31,6 +31,7 @@ def train_and_test(args):
     weight_path = args.weight_path
     train_epochs = args.train_epoch
     gage_id_file = args.gage_id_file
+    et_product = args.et_product
     if gage_id_file is None or gage_id_file == "None":
         gage_id_file = os.path.join(
             definitions.RESULT_DIR,
@@ -55,6 +56,7 @@ def train_and_test(args):
         weight_path=weight_path,
         train_epoch=train_epochs,
         gage_id_file=gage_id_file,
+        et_product=et_product,
     )
 
 
@@ -66,7 +68,7 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        default="testmtl001",
+        default="testmtl002",
         # default="expmtl001",
         # default="expstlet001",
         # default="expstlq201",
@@ -154,6 +156,14 @@ if __name__ == "__main__":
         help="the file of gage IDs",
         type=str,
         default=None,
+    )
+    parser.add_argument(
+        "--et_product",
+        dest="et_product",
+        help="the product of ET",
+        type=str,
+        # default="MOD16A2V006",
+        default="MOD16A2V105",
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")

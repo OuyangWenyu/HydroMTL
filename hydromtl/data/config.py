@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2024-04-15 20:28:44
+LastEditTime: 2024-04-26 21:11:15
 LastEditors: Wenyu Ouyang
 Description: Config for hydroDL
 FilePath: \HydroMTL\hydromtl\data\config.py
@@ -171,6 +171,7 @@ def default_config_file():
                 ],
             },
             "stat_dict_file": None,
+            "et_product": "MOD16A2V006",
         },
         "training_params": {
             # if train_mode is False, don't train and evaluate
@@ -260,6 +261,7 @@ def cmd(
     model_wrapper_param=None,
     num_workers=None,
     train_but_not_real=None,
+    et_product=None,
 ):
     """input args from cmd"""
     parser = argparse.ArgumentParser(
@@ -621,6 +623,13 @@ def cmd(
         default=train_but_not_real,
         type=int,
     )
+    parser.add_argument(
+        "--et_product",
+        dest="et_product",
+        help="The ET product we want to use",
+        default=et_product,
+        type=str,
+    )
     # To make pytest work in PyCharm, here we use the following code instead of "args = parser.parse_args()":
     # https://blog.csdn.net/u014742995/article/details/100119905
     args, unknown = parser.parse_known_args()
@@ -870,6 +879,8 @@ def update_cfg(cfg_file, new_args):
         cfg_file["training_params"]["num_workers"] = new_args.num_workers
     if new_args.train_but_not_real is not None and new_args.train_but_not_real > 0:
         cfg_file["training_params"]["train_but_not_real"] = True
+    if new_args.et_product is not None:
+        cfg_file["data_params"]["et_product"] = new_args.et_product
 
 
 def get_config_file(cfg_dir):

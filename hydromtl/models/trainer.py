@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-05-10 09:13:26
+LastEditTime: 2024-04-26 21:04:02
 LastEditors: Wenyu Ouyang
 Description: Main function for training and testing
-FilePath: /HydroMTL/hydromtl/models/trainer.py
+FilePath: \HydroMTL\hydromtl\models\trainer.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import fnmatch
 import json
 import os
@@ -73,6 +74,10 @@ def train_and_evaluate(params: Dict):
             data_params["data_path"],
             data_params["download"],
             data_params["data_region"],
+        )
+    elif data_source_name in ["CAMELS_FLOW_ET"]:
+        data_source = data_sources_dict[data_source_name](
+            data_params["data_path"], data_params["download"], data_params["et_product"]
         )
     else:
         data_source = data_sources_dict[data_source_name](

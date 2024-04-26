@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2022-11-11 10:55:47
+LastEditTime: 2024-04-26 21:21:33
 LastEditors: Wenyu Ouyang
 Description: A data source class for ET basin mean data (from MODIS) of CAMELS-basins
-FilePath: /HydroSPB/hydroSPB/data/source/data_modiset4camels.py
+FilePath: \HydroMTL\hydromtl\data\source\data_modiset4camels.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import collections
 import logging
 import os
@@ -30,7 +31,7 @@ class ModisEt4Camels(DataSourceBase):
         MODIS16A2v105 (https://developers.google.com/earth-engine/datasets/catalog/MODIS_NTSG_MOD16A2_105?hl=en#description)
     """
 
-    def __init__(self, data_path: list, download=False):
+    def __init__(self, data_path: list, download=False, et_product="MOD16A2V006"):
         """
         Initialize a ModisEt4Camels instance.
 
@@ -44,6 +45,7 @@ class ModisEt4Camels(DataSourceBase):
         """
         super().__init__(data_path[0])
         self.camels = Camels(data_path[1])
+        self.et_product = et_product
         self.data_source_description = self.set_data_source_describe()
         if download:
             self.download_data_source()
@@ -56,8 +58,12 @@ class ModisEt4Camels(DataSourceBase):
         et_db = self.data_source_dir
         # ET
         et_basin_mean_dir = os.path.join(et_db, "basin_mean_forcing")
-        modisa16v105_dir = os.path.join(et_basin_mean_dir, "MOD16A2_105_CAMELS")
-        modisa16v006_dir = os.path.join(et_basin_mean_dir, "MOD16A2_006_CAMELS")
+        if self.et_product == "MOD16A2V105":
+            modisa16_dir = os.path.join(et_basin_mean_dir, "MOD16A2_105_CAMELS")
+        elif self.et_product == "MOD16A2V006":
+            modisa16_dir = os.path.join(et_basin_mean_dir, "MOD16A2_006_CAMELS")
+        else:
+            raise NotImplementedError("No such product now")
         pmlv2_dir = os.path.join(et_basin_mean_dir, "PML_V2_CAMELS")
         if not os.path.isdir(et_basin_mean_dir):
             raise NotADirectoryError(
@@ -66,7 +72,7 @@ class ModisEt4Camels(DataSourceBase):
         return collections.OrderedDict(
             MODIS_ET_CAMELS_DIR=et_db,
             MODIS_ET_CAMELS_MEAN_DIR=et_basin_mean_dir,
-            MOD16A2_CAMELS_DIR=modisa16v006_dir,
+            MOD16A2_CAMELS_DIR=modisa16_dir,
             PMLV2_CAMELS_DIR=pmlv2_dir,
         )
 
@@ -113,7 +119,7 @@ class ModisEt4Camels(DataSourceBase):
         t_range=None,
         target_cols=None,
         reduce_way="mean",
-        **kwargs
+        **kwargs,
     ):
         """
         Read ET data.
@@ -147,7 +153,10 @@ class ModisEt4Camels(DataSourceBase):
             # 1. directly read data: the data is sum of 8 days
             # 2. calculate daily mean value of 8 days
             data = self.read_basin_mean_modiset(
-                usgs_id_lst[k], target_cols, t_range_list, reduce_way=reduce_way
+                usgs_id_lst[k],
+                target_cols,
+                t_range_list,
+                reduce_way=reduce_way,
             )
             x[k, :, :] = data
         return x
@@ -177,15 +186,23 @@ class ModisEt4Camels(DataSourceBase):
         logging.debug("reading %s forcing data", usgs_id)
         gage_id_df = self.camels671_sites
         huc = gage_id_df[gage_id_df["gauge_id"] == usgs_id]["huc_02"].values[0]
-
+        et_product = self.et_product
         modis16a2_data_folder = self.data_source_description["MOD16A2_CAMELS_DIR"]
+        if et_product == "MOD16A2V006":
+            modis16a2_data_file = os.path.join(
+                modis16a2_data_folder, huc, f"{usgs_id}_lump_modis16a2v006_et.txt"
+            )
+        elif et_product == "MOD16A2V105":
+            modis16a2_data_file = os.path.join(
+                modis16a2_data_folder, huc, f"{usgs_id}_lump_modis16a2v105_et.txt"
+            )
+        else:
+            raise NotImplementedError("No such product now")
         pmlv2_data_folder = self.data_source_description["PMLV2_CAMELS_DIR"]
         pmlv2_data_file = os.path.join(
-            pmlv2_data_folder, huc, "%s_lump_pmlv2_et.txt" % usgs_id
+            pmlv2_data_folder, huc, f"{usgs_id}_lump_pmlv2_et.txt"
         )
-        modis16a2_data_file = os.path.join(
-            modis16a2_data_folder, huc, "%s_lump_modis16a2v006_et.txt" % usgs_id
-        )
+
         pmlv2_data_temp = pd.read_csv(pmlv2_data_file, header=None, skiprows=1)
         modis16a2_data_temp = pd.read_csv(modis16a2_data_file, header=None, skiprows=1)
         pmlv2_lst = [
@@ -300,7 +317,7 @@ class ModisEt4Camels(DataSourceBase):
             else:
                 raise NotImplementedError("No such var type now")
         # unit is 0.1mm/day(or 8/5/6days), so multiply it with 0.1 to transform to mm/day(or 8/5/6days))
-        # TODO: only valid for MODIS, for PMLV2, we need to check the unit 
+        # TODO: only valid for MODIS, for PMLV2, we need to check the unit
         out = out * 0.1
         return out
 
@@ -327,7 +344,7 @@ class ModisEt4Camels(DataSourceBase):
         usgs_id_lst: list = None,
         t_range: list = None,
         var_lst: list = None,
-        **kwargs
+        **kwargs,
     ) -> np.array:
         """
         Read CAMELS forcing data

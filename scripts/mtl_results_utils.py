@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2023-07-05 22:05:00
+LastEditTime: 2024-04-26 21:18:58
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
-FilePath: /HydroMTL/scripts/mtl_results_utils.py
+FilePath: \HydroMTL\scripts\mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from functools import reduce
@@ -536,6 +536,7 @@ def run_mtl_camels(
     train_epoch=300,
     data_gap_specify=None,
     fill_nan_specify=None,
+    et_product="MOD16A2V006",
 ):
     if targets is None:
         targets = [Q_CAMELS_US_NAME, ET_MODIS_NAME]
@@ -602,6 +603,7 @@ def run_mtl_camels(
         fill_nan=fill_nan,
         gage_id_file=gage_id_file,
         gage_id=gage_id,
+        et_product=et_product,
     )
     update_cfg(config_data, args)
     if weight_path is not None:
