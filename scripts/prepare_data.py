@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-04-26 11:07:12
+LastEditTime: 2024-04-27 17:09:54
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -12,6 +12,7 @@ import os
 import numpy as np
 import pandas as pd
 import csv
+import matplotlib.pyplot as plt
 import sys
 from pathlib import Path
 
@@ -105,6 +106,41 @@ def _read_nldas_data(nldas_camels_file, nldas_gee_file):
     return nldas_camels, nldas_madeingee
 
 
+def see_basin_area():
+    camels_dir = os.path.join(definitions.DATASET_DIR, "camels", "camels_us")
+    camels = Camels(camels_dir)
+    basin_ids = pd.read_csv(ID_FILE_PATH, dtype={"GAGE_ID": str})["GAGE_ID"].tolist()
+    basin_areas = camels.read_basin_area(basin_ids)
+    print(basin_areas)
+    data = basin_areas.flatten()
+    one_nldas_cell_area = 13915 * 13915 / 1e6
+    greater_than_one_grid = np.sum(data >= one_nldas_cell_area)
+    print(f"Basins with area greater than one NLDAS grid: {greater_than_one_grid}")
+    greater_than_four_grids = np.sum(data >= (4 * one_nldas_cell_area))
+    print(f"Basins with area greater than four NLDAS grids: {greater_than_four_grids}")
+
+    # Calculate the threshold of 0.5% times the area of one NLDAS grid cell in square kilometers
+    threshold_area = one_nldas_cell_area * 0.005
+    # Find the indices of watersheds with area less than the threshold area
+    indices_less_than_threshold = np.where(data < threshold_area)[0]
+    indices_less_than_threshold.tolist()  # Convert to list for easier reading if necessary
+
+    min_basin = basin_ids[np.argmin(data)]
+    min_basin_area = np.min(data)
+    print(f"Basin with minimum area: {min_basin} with area: {min_basin_area}")
+
+    log_data = np.log(data)
+    # Create a histogram with logarithmic data
+    plt.figure(figsize=(10, 6))
+    plt.hist(log_data, bins=30, color="blue", alpha=0.7)
+    plt.title("Log-scaled Histogram of Watershed Areas")
+    plt.xlabel("Log of Area")
+    plt.ylabel("Frequency")
+    plt.grid(True)
+    plt.show()
+
+
 if __name__ == "__main__":
     # select_basins()
-    compare_nldas()
+    # compare_nldas()
+    see_basin_area()
