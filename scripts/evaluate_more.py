@@ -73,14 +73,6 @@ def one_metric_data_reader(metric="NSE"):
         result_cache_dir,
         f"exps_et_q_test_results_{metric}.npy",
     )
-    exps_valid_q_et_results_file = os.path.join(
-        result_cache_dir,
-        f"exps_q_et_valid_results_{metric}.npy",
-    )
-    exps_valid_et_q_results_file = os.path.join(
-        result_cache_dir,
-        f"exps_et_q_valid_results_{metric}.npy",
-    )
     exps_test_pred_q_file = os.path.join(
         result_cache_dir,
         f"exps_q_test_pred_{metric}.npy",
@@ -98,31 +90,16 @@ def one_metric_data_reader(metric="NSE"):
         f"exps_et_test_obs_{metric}.npy",
     )
 
-    if (
-        os.path.exists(exps_test_q_et_results_file)
-        and os.path.exists(exps_test_et_q_results_file)
-        and os.path.exists(exps_valid_q_et_results_file)
-        and os.path.exists(exps_valid_et_q_results_file)
+    if os.path.exists(exps_test_q_et_results_file) and os.path.exists(
+        exps_test_et_q_results_file
     ):
         exps_q_et_results = np.load(exps_test_q_et_results_file, allow_pickle=True)
         exps_et_q_results = np.load(exps_test_et_q_results_file, allow_pickle=True)
-        q_et_valid_inds = np.load(exps_valid_q_et_results_file, allow_pickle=True)
-        et_q_valid_inds = np.load(exps_valid_et_q_results_file, allow_pickle=True)
         preds_q_lst = np.load(exps_test_pred_q_file, allow_pickle=True)
         obss_q_lst = np.load(exps_test_obs_q_file, allow_pickle=True)
         preds_et_lst = np.load(exps_test_et_pred_file, allow_pickle=True)
         obss_et_lst = np.load(exps_test_et_obs_file, allow_pickle=True)
     else:
-        et_q_valid_inds, et_q_best_index_valid_best4et = read_multi_single_exps_results(
-            exps_et_q_valid,
-            var_idx=1,
-            metric=metric,
-        )
-        q_et_valid_inds, q_et_best_index_valid = read_multi_single_exps_results(
-            exps_q_et_valid,
-            metric=metric,
-        )
-
         # q when best4q
         (
             exps_q_et_results,
@@ -130,21 +107,18 @@ def one_metric_data_reader(metric="NSE"):
             preds_q_lst,
             obss_q_lst,
         ) = read_multi_single_exps_results(
-            exps_q_et_test, q_et_best_index_valid, return_value=True, metric=metric
+            exps_q_et_test, return_value=True, metric=metric
         )
 
         # et when best4q
         exps_et_q_results, _, preds_et_lst, obss_et_lst = (
             read_multi_single_exps_results(
                 exps_et_q_test,
-                q_et_best_index_valid,
                 var_idx=1,
                 return_value=True,
                 metric=metric,
             )
         )
-        np.save(exps_valid_q_et_results_file, q_et_valid_inds, allow_pickle=True)
-        np.save(exps_valid_et_q_results_file, et_q_valid_inds, allow_pickle=True)
         np.save(exps_test_q_et_results_file, exps_q_et_results, allow_pickle=True)
         np.save(exps_test_et_q_results_file, exps_et_q_results, allow_pickle=True)
         np.save(exps_test_pred_q_file, preds_q_lst, allow_pickle=True)
