@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-04-26 21:18:58
+LastEditTime: 2024-04-29 13:58:51
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from functools import reduce
 import os
 import numpy as np
@@ -138,6 +139,18 @@ def read_multi_single_exps_results(
         ]
     if var_units is None:
         var_units = ["ft3/s", "mm/day"]
+    if metric not in [
+        "Bias",
+        "RMSE",
+        "ubRMSE",
+        "Corr",
+        "R2",
+        "NSE",
+        "KGE",
+        "FHV",
+        "FLV",
+    ]:
+        raise NotImplementedError("We don't have such a metric")
     inds_all_lst = []
     preds_all_lst = []
     preds = []

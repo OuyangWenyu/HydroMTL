@@ -13,6 +13,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import sys
+import argparse
+from tqdm import tqdm
 
 # Get the current directory of the notebook
 project_dir = os.path.abspath("")
@@ -49,6 +51,7 @@ result_cache_dir = os.path.join(
 figure_dir = os.path.join(
     definitions.RESULT_DIR,
     "figures",
+    "evaluate_more",
 )
 if not os.path.exists(result_cache_dir):
     os.makedirs(result_cache_dir)
@@ -61,6 +64,14 @@ cases_exps_legends_together = [
     "1/3",
     "1/8",
     "1/24",
+]
+figure_weight_ratios_names = [
+    "STL",
+    "2",
+    "1",
+    "one3rd",
+    "one8th",
+    "one24th",
 ]
 
 
@@ -107,16 +118,13 @@ def one_metric_data_reader(metric="NSE"):
             preds_q_lst,
             obss_q_lst,
         ) = read_multi_single_exps_results(
-            exps_q_et_test, return_value=True, metric=metric
+            exps_q_et_test, return_value=True, metric=metric, ensemble=-1
         )
 
         # et when best4q
         exps_et_q_results, _, preds_et_lst, obss_et_lst = (
             read_multi_single_exps_results(
-                exps_et_q_test,
-                var_idx=1,
-                return_value=True,
-                metric=metric,
+                exps_et_q_test, var_idx=1, return_value=True, metric=metric, ensemble=-1
             )
         )
         np.save(exps_test_q_et_results_file, exps_q_et_results, allow_pickle=True)
@@ -129,7 +137,7 @@ def one_metric_data_reader(metric="NSE"):
 
 
 def plot_scatter_with_11line_for_1metric1lossweightratio(
-    exps_q_et_results, exps_et_q_results, chosen_idx
+    exps_q_et_results, exps_et_q_results, chosen_idx, metric="NSE", maxdiff_label=False
 ):
     """_summary_
 
@@ -142,6 +150,10 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
     chosen_idx : int
         each number means a loss weight ratio;
         0 means STL, 1 means 2, 2 means 1, 3 means 1/3, 4 means 1/8, 5 means 1/24
+    metric
+        the metric to be evaluated
+    maxdiff_label
+        whether to label the point with the most significant difference
     """
     chosen_mtl4q_test_result = exps_q_et_results[chosen_idx]
     chosen_mtl4et_test_result = exps_et_q_results[chosen_idx]
@@ -152,51 +164,54 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
         chosen_mtl4q_test_result,
         # xlabel="NSE single-task",
         # ylabel="NSE multi-task",
-        xlabel="STL_Q NSE",
-        ylabel="MTL_Q NSE",
+        xlabel=f"STL_Q {metric}",
+        ylabel=f"MTL_Q {metric}",
     )
+    if maxdiff_label:
+        mark_color = "darkred"
 
-    mark_color = "darkred"
+        # Extract the first and second 1-D arrays
+        x = exps_q_et_results[0]
+        y = chosen_mtl4q_test_result
+        # Filter the data to only include points where both x and y are in the range [0, 1]
+        mask = (x >= 0) & (x <= 1) & (y >= 0) & (y <= 1)
+        filtered_x = x[mask]
+        filtered_y = y[mask]
 
-    # Extract the first and second 1-D arrays
-    x = exps_q_et_results[0]
-    y = chosen_mtl4q_test_result
-    # Filter the data to only include points where both x and y are in the range [0, 1]
-    mask = (x >= 0) & (x <= 1) & (y >= 0) & (y <= 1)
-    filtered_x = x[mask]
-    filtered_y = y[mask]
+        # Calculate the difference for the filtered data
+        filtered_diff = np.abs(filtered_x - filtered_y)
 
-    # Calculate the difference for the filtered data
-    filtered_diff = np.abs(filtered_x - filtered_y)
+        # Find the index of the point with the most significant difference in the filtered data
+        filtered_max_diff_index = np.argmax(filtered_diff)
 
-    # Find the index of the point with the most significant difference in the filtered data
-    filtered_max_diff_index = np.argmax(filtered_diff)
-
-    # Highlight the point with the most significant difference with a red circle
-    plt.gca().add_artist(
-        plt.Circle(
-            (filtered_x[filtered_max_diff_index], filtered_y[filtered_max_diff_index]),
-            0.02,
-            fill=False,
-            color=mark_color,
-            linewidth=2,
+        # Highlight the point with the most significant difference with a red circle
+        plt.gca().add_artist(
+            plt.Circle(
+                (
+                    filtered_x[filtered_max_diff_index],
+                    filtered_y[filtered_max_diff_index],
+                ),
+                0.02,
+                fill=False,
+                color=mark_color,
+                linewidth=2,
+            )
         )
-    )
-    # Label the plot
-    plt.text(
-        filtered_x[filtered_max_diff_index],
-        filtered_y[filtered_max_diff_index],
-        " Max diff",
-        verticalalignment="bottom",
-        horizontalalignment="left",
-        color=mark_color,
-        fontsize=18,
-    )
+        # Label the plot
+        plt.text(
+            filtered_x[filtered_max_diff_index],
+            filtered_y[filtered_max_diff_index],
+            " Max diff",
+            verticalalignment="bottom",
+            horizontalalignment="left",
+            color=mark_color,
+            fontsize=18,
+        )
 
     plt.savefig(
         os.path.join(
             figure_dir,
-            "mtl_stl_flow_scatter_plot_with_11line.png",
+            f"mtl_stl_flow_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -207,50 +222,42 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
         chosen_mtl4et_test_result,
         # xlabel="NSE single-task",
         # ylabel="NSE multi-task",
-        xlabel="STL_ET NSE",
-        ylabel="MTL_ET NSE",
+        xlabel=f"STL_ET {metric}",
+        ylabel=f"MTL_ET {metric}",
     )
-    # Get the values of the point with max difference
-    max_diff_x_value = filtered_x[filtered_max_diff_index]
-    max_diff_y_value = filtered_y[filtered_max_diff_index]
+    if maxdiff_label:
+        # Extract the first and second 1-D arrays from the second 2-D array
+        x2 = exps_et_q_results[0]
+        y2 = chosen_mtl4et_test_result
 
-    # Extract the first and second 1-D arrays from the second 2-D array
-    x2 = exps_et_q_results[0]
-    y2 = chosen_mtl4et_test_result
-
-    # Filter the data to only include points where both x and y are in the range [0, 1]
-    mask2 = (x2 >= 0) & (x2 <= 1) & (y2 >= 0) & (y2 <= 1)
-    filtered_x2 = x2[mask2]
-    filtered_y2 = y2[mask2]
-
-    # Find the index of the point with the max difference in the first plot in the second plot
-    index_in_second_plot = np.where(mask)[0][filtered_max_diff_index]
-    # Highlight the point with the same index as the point with the max difference in the first plot
-    plt.gca().add_artist(
-        plt.Circle(
-            (x2[index_in_second_plot], y2[index_in_second_plot]),
-            0.01,
-            fill=False,
-            color=mark_color,
-            linewidth=2,
+        # Find the index of the point with the max difference in the first plot in the second plot
+        index_in_second_plot = np.where(mask)[0][filtered_max_diff_index]
+        # Highlight the point with the same index as the point with the max difference in the first plot
+        plt.gca().add_artist(
+            plt.Circle(
+                (x2[index_in_second_plot], y2[index_in_second_plot]),
+                0.01,
+                fill=False,
+                color=mark_color,
+                linewidth=2,
+            )
         )
-    )
 
-    # Label the plot
-    plt.text(
-        x2[index_in_second_plot],
-        y2[index_in_second_plot],
-        " Max diff \n in fig(a)",
-        verticalalignment="top",
-        horizontalalignment="left",
-        color=mark_color,
-        fontsize=18,
-    )
+        # Label the plot
+        plt.text(
+            x2[index_in_second_plot],
+            y2[index_in_second_plot],
+            " Max diff \n in fig(a)",
+            verticalalignment="top",
+            horizontalalignment="left",
+            color=mark_color,
+            fontsize=18,
+        )
 
     plt.savefig(
         os.path.join(
             figure_dir,
-            "mtl_stl_et_scatter_plot_with_11line.png",
+            f"mtl_stl_et_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -258,9 +265,30 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
 
 
 if __name__ == "__main__":
-    exps_q_et_results, exps_et_q_results = one_metric_data_reader("NSE")
-    for chosen_idx in range(6):
-        plot_scatter_with_11line_for_1metric1lossweightratio(
-            exps_q_et_results, exps_et_q_results, chosen_idx
-        )
-    plt.show()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--metric", type=str, default="NSE", help="Performance metric")
+    args = parser.parse_args()
+
+    available_metrics = [
+        "Bias",
+        "RMSE",
+        "ubRMSE",
+        "Corr",
+        "R2",
+        "NSE",
+        "KGE",
+        "FHV",
+        "FLV",
+    ]
+    if args.metric not in available_metrics:
+        print("Invalid metric. Please choose from the available metrics:")
+        print(available_metrics)
+    else:
+        print("Reading data...")
+        exps_q_et_results, exps_et_q_results = one_metric_data_reader(args.metric)
+        print("Data reading complete.")
+        # 1 to 5 means 5 weight ratios
+        for chosen_idx in tqdm(range(1, 6)):
+            plot_scatter_with_11line_for_1metric1lossweightratio(
+                exps_q_et_results, exps_et_q_results, chosen_idx, args.metric
+            )
