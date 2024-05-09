@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-04-27 17:09:54
+LastEditTime: 2024-05-09 11:53:46
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -109,6 +109,8 @@ def _read_nldas_data(nldas_camels_file, nldas_gee_file):
 def see_basin_area():
     camels_dir = os.path.join(definitions.DATASET_DIR, "camels", "camels_us")
     camels = Camels(camels_dir)
+    if not os.path.exists(ID_FILE_PATH):
+        select_basins()
     basin_ids = pd.read_csv(ID_FILE_PATH, dtype={"GAGE_ID": str})["GAGE_ID"].tolist()
     basin_areas = camels.read_basin_area(basin_ids)
     print(basin_areas)
