@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2023-07-07 14:45:00
+LastEditTime: 2024-05-10 11:05:18
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
-FilePath: /HydroMTL/hydromtl/visual/plot_stat.py
+FilePath: \HydroMTL\hydromtl\visual\plot_stat.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 from typing import Union
@@ -1505,8 +1505,8 @@ def plot_rainfall_runoff(
         ax.set_ylabel(ylabel, fontsize=18)
     if xlabel is not None:
         ax.set_xlabel(xlabel, fontsize=18)
-    ax2.set_ylabel("降水（mm/day）", fontsize=8, loc="top")
-    # ax2.set_ylabel("precipitation (mm/day)", fontsize=12, loc='top')
+    # ax2.set_ylabel("降水（mm/day）", fontsize=8, loc="top")
+    ax2.set_ylabel("precipitation (mm/day)", fontsize=12, loc='top')
     # https://github.com/matplotlib/matplotlib/issues/12318
     ax.tick_params(axis="x", labelsize=16)
     ax.tick_params(axis="y", labelsize=16)

@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2023-04-27 22:14:25
+LastEditTime: 2024-05-10 14:20:43
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
-FilePath: /HydroMTL/scripts/streamflow_utils.py
+FilePath: \HydroMTL\scripts\streamflow_utils.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import csv
 import shutil
 from functools import reduce
@@ -301,6 +302,7 @@ def predict_in_test_period_with_model(new_exp_args, cache_cfg_dir, weight_path):
         cfg["data_params"]["cache_write"] = not os.path.exists(
             os.path.join(cache_cfg_dir, "test_data_dict.json")
         )
+        cfg["data_params"]["cache_path"] = cache_cfg_dir
     cfg["data_params"]["cache_read"] = True
     cfg["model_params"]["continue_train"] = False
     cfg["model_params"]["weight_path"] = weight_path

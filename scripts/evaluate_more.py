@@ -1,12 +1,16 @@
-# Add more results evaluation
 """
-According to reviewers' feedback, we add more results evaluation to the original notebook evaluate.ipynb.
-
-The performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights
-We create a comprehensive scatter diagram that displays the performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights.
-There are multiple figures to present the results. We plot three performance metrics (RMSE, NSE, and correlation) for ET and Q across different weights.
-For each weight, we calculate the RMSE, NSE, and correlation for ET and Q. We then plot the results in scatter diagrams.
-We have five varying weights in total: 2, 1, 1/3, 1/8, and 1/24; two variables and three performance metrics. Therefore, we have 5 * 2 * 3 = 30 scatter diagrams in total.
+Author: Wenyu Ouyang
+Date: 2024-04-29 08:46:00
+LastEditTime: 2024-05-10 13:27:10
+LastEditors: Wenyu Ouyang
+Description: According to reviewers' feedback, we add more results evaluation to the original notebook evaluate.ipynb.
+    The performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights
+    We create a comprehensive scatter diagram that displays the performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights.
+    There are multiple figures to present the results. We plot three performance metrics (RMSE, NSE, and correlation) for ET and Q across different weights.
+    For each weight, we calculate the RMSE, NSE, and correlation for ET and Q. We then plot the results in scatter diagrams.
+    We have five varying weights in total: 2, 1, 1/3, 1/8, and 1/24; two variables and three performance metrics. Therefore, we have 5 * 2 * 3 = 30 scatter diagrams in total.
+FilePath: \HydroMTL\scripts\evaluate_more.py
+Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
 from matplotlib import pyplot as plt
@@ -16,7 +20,7 @@ import sys
 import argparse
 from tqdm import tqdm
 
-# Get the current directory of the notebook
+# Get the current directory
 project_dir = os.path.abspath("")
 # import the module using a relative path
 sys.path.append(project_dir)
