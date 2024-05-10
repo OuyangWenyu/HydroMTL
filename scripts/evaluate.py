@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-10 16:39:43
+LastEditTime: 2024-05-10 17:39:57
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -34,6 +34,8 @@ from hydromtl.visual.plot_stat import (
     plot_rainfall_runoff,
 )
 
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 # ---------------------------------- Read Results ---------------------------------------
 # MTL exps with different λ: 2, 1, 1/3, 1/8, 1/24
 mtl_q_et_valid_exps = ["expmtl002", "expmtl001", "expmtl003", "expmtl004", "expmtl005"]
@@ -509,7 +511,7 @@ def plot_ts_figures(
         ],
         leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
         xlabel="Date",
-        ylabel="Streamflow($m^3$/s)",
+        ylabel="Streamflow(m$^3$/s)",
         fig_size=(18, 6),
         # red/blue/black in seaborn pastel
         c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
@@ -530,7 +532,7 @@ def plot_ts_figures(
         ],
         leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
         xlabel="Date",
-        ylabel="Streamflow($m^3$/s)",
+        ylabel="Streamflow(m$^3$/s)",
         c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
         fig_size=(18, 6),
     )
@@ -580,7 +582,7 @@ def plot_ts_figures(
         ],
         leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
         xlabel="Date",
-        ylabel="Streamflow($m^3$/s)",
+        ylabel="Streamflow(m$^3$/s)",
         fig_size=(18, 6),
         c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
     )
@@ -602,7 +604,7 @@ def plot_ts_figures(
         ],
         leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
         xlabel="Date",
-        ylabel="Streamflow($m^3$/s)",
+        ylabel="Streamflow(m$^3$/s)",
         c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
     )
     plt.savefig(
@@ -649,24 +651,41 @@ plot_ts_figures(
     chosen_mtl4q_test_result,
 )
 
+
 # ----------------------  Plot maps -------------------------
 # plot map
-plot_mtl_results_map(
-    [exps_q_et_results[0], chosen_mtl4q_test_result],
-    ["Q", "MTL-Q"],
-    ["o", "x"],
-    os.path.join(
-        figure_dir,
-        "better_flow_stl_mtl_cases_map.png",
-    ),
-)
-# plot map
-plot_mtl_results_map(
-    [exps_et_q_results[0], chosen_mtl4et_test_result],
-    ["ET", "MTL-ET"],
-    ["o", "x"],
-    os.path.join(
-        figure_dir,
-        "better_et_stl_mtl_cases_map.png",
-    ),
+def plot_map_figures(
+    figure_dir,
+    exps_q_et_results,
+    exps_et_q_results,
+    chosen_mtl4q_test_result,
+    chosen_mtl4et_test_result,
+):
+    plot_mtl_results_map(
+        [exps_q_et_results[0], chosen_mtl4q_test_result],
+        ["Q", "MTL-Q"],
+        ["o", "x"],
+        os.path.join(
+            figure_dir,
+            "better_flow_stl_mtl_cases_map.png",
+        ),
+    )
+    # plot map
+    plot_mtl_results_map(
+        [exps_et_q_results[0], chosen_mtl4et_test_result],
+        ["ET", "MTL-ET"],
+        ["o", "x"],
+        os.path.join(
+            figure_dir,
+            "better_et_stl_mtl_cases_map.png",
+        ),
+    )
+
+
+plot_map_figures(
+    figure_dir,
+    exps_q_et_results,
+    exps_et_q_results,
+    chosen_mtl4q_test_result,
+    chosen_mtl4et_test_result,
 )
