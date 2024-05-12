@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-10 17:39:57
+LastEditTime: 2024-05-10 18:05:11
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -682,10 +682,10 @@ def plot_map_figures(
     )
 
 
-plot_map_figures(
-    figure_dir,
-    exps_q_et_results,
-    exps_et_q_results,
-    chosen_mtl4q_test_result,
-    chosen_mtl4et_test_result,
-)
+# plot_map_figures(
+#     figure_dir,
+#     exps_q_et_results,
+#     exps_et_q_results,
+#     chosen_mtl4q_test_result,
+#     chosen_mtl4et_test_result,
+# )
