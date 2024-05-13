@@ -55,7 +55,7 @@ for i in range(len(mtl_scale_exps)):
     ]
     all_mtl_scale_temporal_exps.append(mtl_scale_temporal_exps)
     all_et_scale_temporal_exps.append(et_scale_temporal_exps)
-    all_q_scale_temporal_exps.extend((q_scale_temporal_exps, q_scale_temporal_exps))
+    all_q_scale_temporal_exps.append(q_scale_temporal_exps)
 
 
 def read_metric_of_all_sub_exps(
@@ -110,25 +110,28 @@ def read_metric_of_all_sub_exps(
 
 
 # Then, we can read results of all the sub-experiments
+cache_dir = os.path.join(definitions.RESULT_DIR, "cache")
 # For streamflow of MTL exps:
 mtlq_temporal_metric_lst = read_metric_of_all_sub_exps(
-    all_mtl_scale_temporal_exps, save_file="mtlq_temporal_metric_lst.pkl"
+    all_mtl_scale_temporal_exps,
+    save_file=os.path.join(cache_dir, "mtlq_temporal_metric_lst.pkl"),
 )
 # For streamflow of STL exps:
 stlq_temporal_metric_lst = read_metric_of_all_sub_exps(
-    all_q_scale_temporal_exps, save_file="stlq_temporal_metric_lst.pkl"
+    all_q_scale_temporal_exps,
+    save_file=os.path.join(cache_dir, "stlq_temporal_metric_lst.pkl"),
 )
 # For evapotranspiration of MTL exps:
 mtlet_temporal_metric_lst = read_metric_of_all_sub_exps(
     all_mtl_scale_temporal_exps,
     var_idx=1,
-    save_file="mtlet_temporal_metric_lst.pkl",
+    save_file=os.path.join(cache_dir, "mtlet_temporal_metric_lst.pkl"),
 )
 # For evapotranspiration of STL exps:
 stlet_temporal_metric_lst = read_metric_of_all_sub_exps(
     all_et_scale_temporal_exps,
     var_idx=1,
-    save_file="stlet_temporal_metric_lst.pkl",
+    save_file=os.path.join(cache_dir, "stlet_temporal_metric_lst.pkl"),
 )
 
 # 2. Spatial generalization sub-experiments
@@ -156,20 +159,22 @@ for i in range(len(mtl_scale_exps)):
 
 # Read metrics:
 mtlq_spatial_metric_lst = read_metric_of_all_sub_exps(
-    all_mtl_scale_spatial_exps, save_file="mtlq_spatial_metric_lst.pkl"
+    all_mtl_scale_spatial_exps,
+    save_file=os.path.join(cache_dir, "mtlq_spatial_metric_lst.pkl"),
 )
 stlq_spatial_metric_lst = read_metric_of_all_sub_exps(
-    all_q_scale_spatial_exps, save_file="stlq_spatial_metric_lst.pkl"
+    all_q_scale_spatial_exps,
+    save_file=os.path.join(cache_dir, "stlq_spatial_metric_lst.pkl"),
 )
 mtlet_spatial_metric_lst = read_metric_of_all_sub_exps(
     all_mtl_scale_spatial_exps,
     var_idx=1,
-    save_file="mtlet_spatial_metric_lst.pkl",
+    save_file=os.path.join(cache_dir, "mtlet_spatial_metric_lst.pkl"),
 )
 stlet_spatial_metric_lst = read_metric_of_all_sub_exps(
     all_et_scale_spatial_exps,
     var_idx=1,
-    save_file="stlet_spatial_metric_lst.pkl",
+    save_file=os.path.join(cache_dir, "stlet_spatial_metric_lst.pkl"),
 )
 
 
