@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2024-04-26 21:23:30
+LastEditTime: 2024-05-15 11:43:16
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: \HydroMTL\scripts\run_task.py
@@ -162,8 +162,8 @@ if __name__ == "__main__":
         dest="et_product",
         help="the product of ET",
         type=str,
-        # default="MOD16A2V006",
-        default="MOD16A2V105",
+        default="MOD16A2V006",
+        # default="MOD16A2V105",
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")
