@@ -1,12 +1,3 @@
-"""
-Author: Wenyu Ouyang
-Date: 2021-12-31 11:08:29
-LastEditTime: 2022-12-19 19:52:03
-LastEditors: Wenyu Ouyang
-Description: Util functions
-FilePath: /HydroSPB/hydroSPB/utils/hydro_utils.py
-Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
-"""
 import json
 import os
 import re
@@ -846,7 +837,7 @@ def select_subset_batch_first(
     return out
 
 
-def deal_gap_data(output, target, data_gap, device):
+def deal_gap_data_old(output, target, data_gap, device):
     """
     How to handle with gap data
 
@@ -922,3 +913,114 @@ def deal_gap_data(output, target, data_gap, device):
     p = torch.cat(seg_p_lst)
     t = torch.cat(seg_t_lst)
     return p, t
+
+
+def deal_gap_data_opt(output, target, data_gap, device):
+    seg_p_lst = []
+    seg_t_lst = []
+    for j in range(target.shape[1]):
+        non_nan_idx = torch.nonzero(
+            ~torch.isnan(target[:, j]), as_tuple=False
+        ).squeeze()
+        if len(non_nan_idx) < 1:
+            raise ArithmeticError("All NaN elements, please check your data")
+
+        # 使用 cumsum 生成 scatter_index
+        is_not_nan = ~torch.isnan(target[:, j])
+        cumsum_is_not_nan = torch.cumsum(is_not_nan.to(torch.int), dim=0)
+        first_non_nan = non_nan_idx[0]
+        scatter_index = torch.full_like(
+            target[:, j], fill_value=-1, dtype=torch.long
+        )  # 将所有值初始化为 -1
+        scatter_index[first_non_nan:] = cumsum_is_not_nan[first_non_nan:] - 1
+        scatter_index = scatter_index.to(device=device)
+
+        # 创建掩码，只保留有效的索引
+        valid_mask = scatter_index >= 0
+
+        if data_gap == 1:
+            seg = torch.zeros(
+                len(non_nan_idx), device=device, dtype=output.dtype
+            ).scatter_add_(0, scatter_index[valid_mask], output[valid_mask, j])
+            # for sum, better exclude final non-nan value as it didn't include all necessary periods
+            seg_p_lst.append(seg[:-1])
+            seg_t_lst.append(target[non_nan_idx[:-1], j])
+
+        elif data_gap == 2:
+            counts = torch.zeros(
+                len(non_nan_idx), device=device, dtype=output.dtype
+            ).scatter_add_(
+                0,
+                scatter_index[valid_mask],
+                torch.ones_like(output[valid_mask, j], dtype=output.dtype),
+            )
+            seg = torch.zeros(
+                len(non_nan_idx), device=device, dtype=output.dtype
+            ).scatter_add_(0, scatter_index[valid_mask], output[valid_mask, j])
+            seg = seg / counts.clamp(min=1)
+            # for mean, we can include all periods
+            seg_p_lst.append(seg)
+            seg_t_lst.append(target[non_nan_idx, j])
+        else:
+            raise NotImplementedError(
+                "We have not provided this reduce way now!! Please choose 1 or 2!!"
+            )
+
+    p = torch.cat(seg_p_lst)
+    t = torch.cat(seg_t_lst)
+    return p, t
+
+
+def compute_valid_and_scatter_indices(target, device):
+    # 初始化 valid_mask 和 scatter_index
+    seq_len, batch_size = target.shape
+    valid_mask = torch.zeros(seq_len, batch_size, dtype=torch.bool, device=device)
+    scatter_index = torch.full(
+        (seq_len, batch_size), fill_value=-1, dtype=torch.long, device=device
+    )
+
+    non_nan_idx = torch.nonzero(~torch.isnan(target), as_tuple=False).squeeze()
+    if len(non_nan_idx) < 1:
+        raise ArithmeticError("All NaN elements, please check your data")
+
+    # 使用 cumsum 生成 scatter_index
+    is_not_nan = ~torch.isnan(target)
+    cumsum_is_not_nan = torch.cumsum(is_not_nan.to(torch.int), dim=0)
+    first_non_nan = non_nan_idx[0, 0]  # 获取第一个非NaN索引的时间步
+    scatter_index[first_non_nan:] = cumsum_is_not_nan[first_non_nan:] - 1
+    valid_mask = scatter_index >= 0
+
+    return valid_mask, scatter_index
+
+
+def deal_gap_data(output, target, data_gap, device):
+    valid_mask, scatter_index = compute_valid_and_scatter_indices(target, device)
+
+    if data_gap == 1:
+        seg = torch.zeros(
+            len(torch.nonzero(valid_mask)), device=device, dtype=output.dtype
+        ).scatter_add_(0, scatter_index[valid_mask], output[valid_mask])
+        # for sum, better exclude final non-nan value as it didn't include all necessary periods
+        seg_p = seg[:-1]
+        seg_t = target[torch.nonzero(valid_mask)[:-1].squeeze()]
+    elif data_gap == 2:
+        counts = torch.zeros(
+            len(torch.nonzero(valid_mask)), device=device, dtype=output.dtype
+        ).scatter_add_(
+            0,
+            scatter_index[valid_mask],
+            torch.ones_like(output[valid_mask], dtype=output.dtype),
+        )
+        seg = torch.zeros(
+            len(torch.nonzero(valid_mask)), device=device, dtype=output.dtype
+        ).scatter_add_(0, scatter_index[valid_mask], output[valid_mask])
+        seg = seg / counts.clamp(min=1)
+        # for mean, we can include all periods
+        seg_p = seg
+        seg_t = target[torch.nonzero(valid_mask).squeeze()]
+    else:
+        raise NotImplementedError(
+            "We have not provided this reduce way now!! Please choose 1 or 2!!"
+        )
+
+    return seg_p, seg_t

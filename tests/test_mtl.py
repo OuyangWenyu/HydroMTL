@@ -1,50 +1,115 @@
 """
 Author: Wenyu Ouyang
-Date: 2023-04-06 14:45:34
-LastEditTime: 2023-04-07 09:56:18
+Date: 2024-05-15 18:28:53
+LastEditTime: 2024-05-15 18:37:43
 LastEditors: Wenyu Ouyang
-Description: Test the multioutput model
-FilePath: /HydroMTL/tests/test_mtl.py
-Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
+Description: Test for multioutput model
+FilePath: \HydroMTL\tests\test_mtl.py
+Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
-import numpy as np
-import torch
+
 import os
-import sys
 from pathlib import Path
+import sys
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
-from hydromtl.models.crits import MultiOutLoss, RMSELoss
+import definitions
+from hydromtl.models.trainer import train_and_evaluate
+from hydromtl.data.config import cmd, update_cfg, default_config_file
 
 
-def test_cuda_available():
-    assert torch.cuda.is_available()
+def test_data_syn_flow_et():
+    """
+    Test for flow and et
 
+    Parameters
+    ----------
+    config_data
 
-def test_multiout_loss_nan_gap():
-    data0 = torch.tensor([2.0]).repeat(8, 3, 1)
-    data1 = torch.tensor(np.full((8, 3, 1), np.nan))
-    data1[0, 0, :] = 1.0
-    data1[3, 0, :] = 2.0
-    data1[6, 0, :] = 3.0
-    data1[1, 1, :] = 4.0
-    data1[4, 1, :] = 5.0
-    data1[7, 1, :] = 6.0
-    data1[2, 2, :] = 7.0
-    data1[5, 2, :] = 8.0
-    targ = torch.cat((data0, data1), dim=-1)
-    pred = torch.tensor(np.full((8, 3, 2), 1.0))
-    # device = torch.device('cpu')
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    targ = targ.to(device)
-    pred = pred.to(device)
-    rmse = RMSELoss()
-    r = MultiOutLoss(rmse, data_gap=[0, 1], device=[0], item_weight=[1, 1])
-    # for sum, we ignore last interval
-    expect_value = rmse(
-        torch.tensor(np.array([1.0, 2.0, 4.0, 5.0, 7.0]).astype(float)),
-        torch.tensor([3.0, 3.0, 3.0, 3.0, 3.0]),
-    ) + rmse(data0, torch.tensor(np.full((8, 3, 1), 1.0)))
-    np.testing.assert_almost_equal(
-        r(pred, targ).cpu().detach().numpy(), expect_value.cpu().detach().numpy()
+    Returns
+    -------
+
+    """
+    project_name = os.path.join("test_camels", "exp001")
+    config_data = default_config_file()
+    args = cmd(
+        sub=project_name,
+        source_path=[
+            os.path.join(definitions.DATASET_DIR, "camelsflowet"),
+            os.path.join(definitions.DATASET_DIR, "modiset4camels"),
+            os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
+            os.path.join(definitions.DATASET_DIR, "nldas4camels"),
+            os.path.join(definitions.DATASET_DIR, "smap4camels"),
+        ],
+        source="CAMELS_FLOW_ET",
+        download=0,
+        ctx=[0],
+        model_name="KuaiLSTMMultiOut",
+        model_param={
+            "n_input_features": 23,
+            "n_output_features": 2,
+            "n_hidden_states": 256,
+            # when layer_hidden_size is None, it is same with KuaiLSTM
+            # "layer_hidden_size": None,
+            "layer_hidden_size": 128,
+        },
+        loss_func="MultiOutLoss",
+        loss_param={
+            "loss_funcs": "RMSESum",
+            "data_gap": [0, 2],
+            "item_weight": [0.5, 0.5],
+        },
+        cache_write=1,
+        cache_read=1,
+        gage_id=[
+            "01013500",
+            "01022500",
+            "01030500",
+            "01031500",
+            "01047000",
+            "01052500",
+            "01054200",
+            "01055000",
+            "01057000",
+            "01170100",
+        ],
+        batch_size=5,
+        rho=30,  # batch_size=100, rho=365,
+        var_t=[
+            "temperature",
+            "specific_humidity",
+            "shortwave_radiation",
+            "potential_energy",
+            "potential_evaporation",
+            "total_precipitation",
+        ],
+        var_t_type=["nldas"],
+        var_out=["usgsFlow", "ET"],
+        train_period=["2001-10-01", "2002-10-01"],
+        test_period=["2002-10-01", "2003-10-01"],
+        data_loader="StreamflowDataModel",
+        scaler="DapengScaler",
+        scaler_params={
+            "basin_norm_cols": [
+                "usgsFlow",
+                "ET",
+            ],
+            "gamma_norm_cols": [
+                "prcp",
+                "pr",
+                "total_precipitation",
+                "pre",
+                # pet may be negative, but we set negative as 0 because of gamma_norm_cols
+                # https://earthscience.stackexchange.com/questions/12031/does-negative-reference-evapotranspiration-make-sense-using-fao-penman-monteith
+                "pet",
+                "potential_evaporation",
+                "PET",
+            ],
+        },
+        train_epoch=20,
+        te=20,
+        fill_nan=["no", "mean"],
+        n_output=2,
     )
+    update_cfg(config_data, args)
+    train_and_evaluate(config_data)

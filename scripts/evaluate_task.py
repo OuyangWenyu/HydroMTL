@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2024-04-16 08:41:41
+LastEditTime: 2024-05-15 11:18:44
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: \HydroMTL\scripts\evaluate_task.py
@@ -14,8 +14,8 @@ import os
 from pathlib import Path
 import sys
 
-dir_root = os.path.dirname(Path(os.path.abspath(__file__)).parent)
-sys.path.append(dir_root)
+project_dir = os.path.dirname(Path(os.path.abspath(__file__)).parent)
+sys.path.append(project_dir)
 import definitions
 from hydromtl.data.source.data_constant import ET_MODIS_NAME, Q_CAMELS_US_NAME
 from scripts.mtl_results_utils import predict_new_mtl_exp
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        default="expmtl0011",
+        default="expmtl2020",
         # default="expstlq0011",
         # default="expstlet0011",
     )
@@ -71,23 +71,29 @@ if __name__ == "__main__":
         nargs="+",
         type=float,
         # default=[0.5, 0.5],
+        default=[0.75, 0.25],
         # default=[1, 0],
-        default=[0, 1],
+        # default=[0, 1],
     )
     parser.add_argument(
         "--test_period",
         dest="test_period",
         help="testing period, such as ['2011-10-01', '2016-10-01']",
         nargs="+",
-        # default=["2016-10-01", "2021-10-01"],
-        default=["2011-10-01", "2021-10-01"],
+        default=["2016-10-01", "2021-10-01"],
+        # default=["2011-10-01", "2021-10-01"],
     )
     parser.add_argument(
         "--cache_path",
         dest="cache_path",
         help="the cache file for forcings, attributes and targets data",
         type=str,
-        default=None,
+        # default=None,
+        default=os.path.join(
+            definitions.RESULT_DIR,
+            "camels",
+            "expstlq0010",  # no matter mtl or stl, cache is for both vars
+        ),
     )
     parser.add_argument(
         "--weight_path",
@@ -95,16 +101,11 @@ if __name__ == "__main__":
         help="the weight path file for trained model",
         type=str,
         default=os.path.join(
-            dir_root, "results", "camels", "expmtl001", "12_April_202305_24PM_model.pth"
+            definitions.RESULT_DIR,
+            "camels",
+            "expmtl202",
+            "22_April_202408_32PM_model.pth",
         ),
-        # default="/mnt/sdc/owen/code/HydroMTL/results/camels/expstlq001/07_April_202311_52AM_model.pth",
-        # default=os.path.join(
-        # dir_root,
-        # "results",
-        # "camels",
-        # "expstlet001",
-        # "09_April_202303_02AM_model.pth",
-        # ),
     )
     parser.add_argument(
         "--gage_id_file",
