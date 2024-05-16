@@ -915,7 +915,7 @@ def deal_gap_data_old(output, target, data_gap, device):
     return p, t
 
 
-def deal_gap_data_opt(output, target, data_gap, device):
+def deal_gap_data(output, target, data_gap, device):
     seg_p_lst = []
     seg_t_lst = []
     for j in range(target.shape[1]):
@@ -991,36 +991,3 @@ def compute_valid_and_scatter_indices(target, device):
     valid_mask = scatter_index >= 0
 
     return valid_mask, scatter_index
-
-
-def deal_gap_data(output, target, data_gap, device):
-    valid_mask, scatter_index = compute_valid_and_scatter_indices(target, device)
-
-    if data_gap == 1:
-        seg = torch.zeros(
-            len(torch.nonzero(valid_mask)), device=device, dtype=output.dtype
-        ).scatter_add_(0, scatter_index[valid_mask], output[valid_mask])
-        # for sum, better exclude final non-nan value as it didn't include all necessary periods
-        seg_p = seg[:-1]
-        seg_t = target[torch.nonzero(valid_mask)[:-1].squeeze()]
-    elif data_gap == 2:
-        counts = torch.zeros(
-            len(torch.nonzero(valid_mask)), device=device, dtype=output.dtype
-        ).scatter_add_(
-            0,
-            scatter_index[valid_mask],
-            torch.ones_like(output[valid_mask], dtype=output.dtype),
-        )
-        seg = torch.zeros(
-            len(torch.nonzero(valid_mask)), device=device, dtype=output.dtype
-        ).scatter_add_(0, scatter_index[valid_mask], output[valid_mask])
-        seg = seg / counts.clamp(min=1)
-        # for mean, we can include all periods
-        seg_p = seg
-        seg_t = target[torch.nonzero(valid_mask).squeeze()]
-    else:
-        raise NotImplementedError(
-            "We have not provided this reduce way now!! Please choose 1 or 2!!"
-        )
-
-    return seg_p, seg_t
