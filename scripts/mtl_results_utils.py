@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-04-29 13:58:51
+LastEditTime: 2024-05-17 11:35:34
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -549,6 +549,8 @@ def run_mtl_camels(
     train_epoch=300,
     data_gap_specify=None,
     fill_nan_specify=None,
+    n_hidden_states=256,
+    layer_hidden_size=128,
     et_product="MOD16A2V006",
 ):
     if targets is None:
@@ -586,8 +588,8 @@ def run_mtl_camels(
         model_param={
             "n_input_features": len(var_c) + len(var_t),
             "n_output_features": n_output,
-            "n_hidden_states": 256,
-            "layer_hidden_size": 128,
+            "n_hidden_states": n_hidden_states,
+            "layer_hidden_size": layer_hidden_size,
         },
         weight_path=weight_path,
         loss_func=loss_func,

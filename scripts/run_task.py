@@ -7,6 +7,7 @@ Description: Generate commands to run scripts in Linux Screen
 FilePath: \HydroMTL\scripts\run_task.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import argparse
 import os
 from pathlib import Path
@@ -31,6 +32,8 @@ def train_and_test(args):
     weight_path = args.weight_path
     train_epochs = args.train_epoch
     gage_id_file = args.gage_id_file
+    n_hidden_states = args.n_hidden_states
+    layer_hidden_size = args.layer_hidden_size
     et_product = args.et_product
     if gage_id_file is None or gage_id_file == "None":
         gage_id_file = os.path.join(
@@ -56,6 +59,8 @@ def train_and_test(args):
         weight_path=weight_path,
         train_epoch=train_epochs,
         gage_id_file=gage_id_file,
+        n_hidden_states=n_hidden_states,
+        layer_hidden_size=layer_hidden_size,
         et_product=et_product,
     )
 
@@ -164,6 +169,20 @@ if __name__ == "__main__":
         type=str,
         default="MOD16A2V006",
         # default="MOD16A2V105",
+    )
+    parser.add_argument(
+        "--n_hidden_states",
+        dest="n_hidden_states",
+        help="the number of hidden states in LSTM model",
+        type=int,
+        default=256,
+    )
+    parser.add_argument(
+        "--layer_hidden_size",
+        dest="layer_hidden_size",
+        help="the size of neurons in output layer",
+        type=int,
+        default=128,
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")
