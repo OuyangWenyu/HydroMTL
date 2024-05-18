@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-05-17 11:35:34
+LastEditTime: 2024-05-18 16:51:58
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -13,6 +13,7 @@ import os
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import cartopy.crs as ccrs
 
 import definitions
 from scripts.streamflow_utils import (
@@ -407,6 +408,8 @@ def predict_new_mtl_exp(
     scaler_params=None,
     loss_func="MultiOutLoss",
     alpah=None,
+    n_hidden_states=256,
+    layer_hidden_size=128,
 ):
     project_name = os.path.join("camels", exp)
     data_gap, fill_nan, n_output = config4difftargets(targets)
@@ -479,8 +482,8 @@ def predict_new_mtl_exp(
         model_param={
             "n_input_features": 23,
             "n_output_features": n_output,
-            "n_hidden_states": 256,
-            "layer_hidden_size": 128,
+            "n_hidden_states": n_hidden_states,
+            "layer_hidden_size": layer_hidden_size,
         },
         loss_func=loss_func,
         loss_param=loss_param,
@@ -799,22 +802,28 @@ def concat_mtl_stl_result(
     ]
 
 
-def plot_mtl_results_map(show_results, category_names, markers, save_file_path):
+def plot_mtl_results_map(
+    basin_ids,
+    show_results,
+    category_names,
+    markers,
+    save_file_path,
+    highlight_idx=None,
+    highlight_label=None,
+):
     # get index of the best result in all cases (single or multiple task) for each basin
     best_results = np.array(show_results).max(axis=0)
     s_m_indices = np.array(show_results).argmax(axis=0)
     # get those sites whose best NSE>0
     nse_pos_idx = np.argwhere(best_results > 0).flatten()
     camels = Camels(os.path.join(definitions.DATASET_DIR, "camels", "camels_us"))
-    lat_lon = camels.read_constant_cols(
-        camels.camels_sites["gauge_id"].values, ["gauge_lat", "gauge_lon"]
-    )
+    lat_lon = camels.read_constant_cols(basin_ids, ["gauge_lat", "gauge_lon"])
     idx_lst_plot = [
         np.argwhere(s_m_indices == i).flatten()
         for i in range(min(s_m_indices), max(s_m_indices) + 1)
     ]
     idx_lst_plot_final = [np.intersect1d(nse_pos_idx, lst) for lst in idx_lst_plot]
-    plot_map_carto(
+    ax = plot_map_carto(
         best_results,
         lat=lat_lon[:, 0],
         lon=lat_lon[:, 1],
@@ -826,6 +835,31 @@ def plot_mtl_results_map(show_results, category_names, markers, save_file_path):
         marker_size=10,
         legend_font_size=10,
     )
+    # Highlight a specific point if specified
+    if highlight_idx is not None:
+        highlight_lat = lat_lon[highlight_idx, 0]
+        highlight_lon = lat_lon[highlight_idx, 1]
+
+        # Adjust these offsets based on the specific layout of points or desired aesthetics
+        offset_lat = (
+            highlight_lat - 1
+        )  # Slightly larger offset to move the text further away
+        offset_lon = highlight_lon - 1
+
+        # Draw an arrow pointing to the highlighted point with text at the start of the arrow
+        ax.annotate(
+            highlight_label,
+            xy=(highlight_lon, highlight_lat),
+            xycoords=ccrs.PlateCarree(),
+            xytext=(offset_lon, offset_lat),
+            textcoords=ccrs.PlateCarree(),
+            arrowprops=dict(arrowstyle="->", color="red", lw=1.5),
+            horizontalalignment="right",
+            verticalalignment="top",
+            fontsize=16,
+            color="red",
+        )
+
     FIGURE_DPI = 600
     plt.savefig(
         save_file_path,

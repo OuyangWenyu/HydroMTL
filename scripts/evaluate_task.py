@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2024-05-15 11:18:44
+LastEditTime: 2024-05-18 11:45:10
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: \HydroMTL\scripts\evaluate_task.py
@@ -38,6 +38,8 @@ def train_and_test(args):
         gage_id_file = os.path.join(
             definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
         )
+    n_hidden_states = args.n_hidden_states
+    layer_hidden_size = args.layer_hidden_size
     predict_new_mtl_exp(
         exp=exp,
         targets=[Q_CAMELS_US_NAME, ET_MODIS_NAME],
@@ -49,6 +51,8 @@ def train_and_test(args):
         cache_path=cache_dir,
         gage_id_file=gage_id_file,
         stat_dict_file=stat_dict_file,
+        n_hidden_states=n_hidden_states,
+        layer_hidden_size=layer_hidden_size,
     )
 
 
@@ -60,9 +64,9 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        default="expmtl2020",
-        # default="expstlq0011",
-        # default="expstlet0011",
+        # default="expmtl2030",
+        default="expstlq2030",
+        # default="expstlet0030",
     )
     parser.add_argument(
         "--loss_weight",
@@ -71,8 +75,8 @@ if __name__ == "__main__":
         nargs="+",
         type=float,
         # default=[0.5, 0.5],
-        default=[0.75, 0.25],
-        # default=[1, 0],
+        # default=[0.75, 0.25],
+        default=[1, 0],
         # default=[0, 1],
     )
     parser.add_argument(
@@ -103,8 +107,8 @@ if __name__ == "__main__":
         default=os.path.join(
             definitions.RESULT_DIR,
             "camels",
-            "expmtl202",
-            "22_April_202408_32PM_model.pth",
+            "expstlq203",
+            "18_May_202410_44AM_model.pth",
         ),
     )
     parser.add_argument(
@@ -113,6 +117,22 @@ if __name__ == "__main__":
         help="the file path of gage id",
         type=str,
         default=None,
+    )
+    parser.add_argument(
+        "--n_hidden_states",
+        dest="n_hidden_states",
+        help="the number of hidden states for LSTM model",
+        type=int,
+        default=256,
+        # default=64,
+    )
+    parser.add_argument(
+        "--layer_hidden_size",
+        dest="layer_hidden_size",
+        help="the number of hidden size for output layer",
+        type=int,
+        default=128,
+        # default=32,
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")

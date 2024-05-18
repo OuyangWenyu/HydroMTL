@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-10 18:05:11
+LastEditTime: 2024-05-18 16:54:30
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -474,29 +474,20 @@ def plot_ts_figures(
         os.path.join(definitions.DATASET_DIR, "smap4camels"),
     ]
     camels_pro = CamelsPro(source_path)
-    # precipitation from NLDAS 2
-    gage_id_file = os.path.join(
-        definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
+    gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
+        exps_q_et_results, chosen_mtl4q_test_result
     )
-    gage_ids = pd.read_csv(gage_id_file)
     time_range = ["2016-10-01", "2021-10-01"]
     t_lst = hydro_utils.t_range_days(time_range)
-
-    diff_q = chosen_mtl4q_test_result - exps_q_et_results[0]
-    diff_q_sort = np.argsort(diff_q)
-    both_positive_q = np.where(
-        (chosen_mtl4q_test_result > 0) & (exps_q_et_results[0] > 0)
-    )[0]
-    diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
-
     # plot the 2 better mtl and 1 better stl
     # plot rainfall runoff to see the timeseries from training period
     # we need evaluate train_period results firstly using evaluate_task.py
     # just set the test period as the training period
     train_time_range = ["2001-10-01", "2011-10-01"]
     t_lst_train = hydro_utils.t_range_days(train_time_range)
+    # precipitation from NLDAS 2
     prcp_train = camels_pro.read_relevant_cols(
-        object_ids=[str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)],
+        object_ids=[max_diff_gage_id],
         t_range_list=train_time_range,
         relevant_cols=["total_precipitation"],
         forcing_type="nldas",
@@ -636,20 +627,36 @@ def plot_ts_figures(
     )
 
 
-plot_ts_figures(
-    figure_dir,
-    exps_q_et_results,
-    preds_q_lst,
-    obss_q_lst,
-    preds_et_lst,
-    obss_et_lst,
-    preds_q_train_lst,
-    obss_q_train_lst,
-    preds_et_train_lst,
-    obss_et_train_lst,
-    chosen_idx,
-    chosen_mtl4q_test_result,
-)
+def _find_max_diff(exps_q_et_results, chosen_mtl4q_test_result):
+    gage_id_file = os.path.join(
+        definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
+    )
+    gage_ids = pd.read_csv(gage_id_file, dtype={"GAGE_ID": str})
+
+    diff_q = chosen_mtl4q_test_result - exps_q_et_results[0]
+    diff_q_sort = np.argsort(diff_q)
+    both_positive_q = np.where(
+        (chosen_mtl4q_test_result > 0) & (exps_q_et_results[0] > 0)
+    )[0]
+    diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
+    max_diff_gage_id = str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)
+    return gage_ids, diff_q_sort_idx, max_diff_gage_id
+
+
+# plot_ts_figures(
+#     figure_dir,
+#     exps_q_et_results,
+#     preds_q_lst,
+#     obss_q_lst,
+#     preds_et_lst,
+#     obss_et_lst,
+#     preds_q_train_lst,
+#     obss_q_train_lst,
+#     preds_et_train_lst,
+#     obss_et_train_lst,
+#     chosen_idx,
+#     chosen_mtl4q_test_result,
+# )
 
 
 # ----------------------  Plot maps -------------------------
@@ -661,7 +668,11 @@ def plot_map_figures(
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
 ):
+    gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
+        exps_q_et_results, chosen_mtl4q_test_result
+    )
     plot_mtl_results_map(
+        gage_ids["GAGE_ID"].values,
         [exps_q_et_results[0], chosen_mtl4q_test_result],
         ["Q", "MTL-Q"],
         ["o", "x"],
@@ -669,9 +680,12 @@ def plot_map_figures(
             figure_dir,
             "better_flow_stl_mtl_cases_map.png",
         ),
+        highlight_idx=diff_q_sort_idx[-1],
+        highlight_label=f"max-diff basin: {max_diff_gage_id}",
     )
     # plot map
     plot_mtl_results_map(
+        gage_ids["GAGE_ID"].values,
         [exps_et_q_results[0], chosen_mtl4et_test_result],
         ["ET", "MTL-ET"],
         ["o", "x"],
@@ -679,13 +693,15 @@ def plot_map_figures(
             figure_dir,
             "better_et_stl_mtl_cases_map.png",
         ),
+        highlight_idx=diff_q_sort_idx[-1],
+        highlight_label=f"max-Q-diff basin: {max_diff_gage_id}",
     )
 
 
-# plot_map_figures(
-#     figure_dir,
-#     exps_q_et_results,
-#     exps_et_q_results,
-#     chosen_mtl4q_test_result,
-#     chosen_mtl4et_test_result,
-# )
+plot_map_figures(
+    figure_dir,
+    exps_q_et_results,
+    exps_et_q_results,
+    chosen_mtl4q_test_result,
+    chosen_mtl4et_test_result,
+)

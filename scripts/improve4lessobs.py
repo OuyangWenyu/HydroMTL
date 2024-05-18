@@ -2,6 +2,7 @@
 import os
 import sys
 from matplotlib import pyplot as plt
+import pandas as pd
 
 # Get the current directory of the project
 project_dir = os.path.abspath("")
@@ -60,7 +61,12 @@ plot_ecdf_func(
     colors=["red", "blue", "black"],
 )
 # plot map
+gage_id_file = os.path.join(
+    definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
+)
+basin_ids = pd.read_csv(gage_id_file, dtype={"GAGE_ID": str})
 plot_mtl_results_map(
+    basin_ids["GAGE_ID"].values,
     [q_ssm_inds[0], q_ssm_inds[2]],
     ["STL", "MTL_Pretrained"],
     ["o", "x"],

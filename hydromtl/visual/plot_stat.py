@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2024-05-10 11:05:18
+LastEditTime: 2024-05-18 15:01:41
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: \HydroMTL\hydromtl\visual\plot_stat.py
@@ -1317,7 +1317,7 @@ def plot_map_carto(
         category="cultural",
         scale="50m",
         facecolor="none",
-        name="admin_1_states_provinces_shp",
+        name="admin_1_states_provinces",
     )
     ax.add_feature(states, linewidth=0.5, edgecolor="black")
     ax.coastlines("50m", linewidth=0.8)
