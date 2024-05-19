@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-05-09 11:53:46
+LastEditTime: 2024-05-19 14:20:38
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -19,12 +19,13 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import definitions
-from hydromtl.utils import hydro_stat
+from hydromtl.utils import hydro_stat, hydro_utils
 from hydromtl.data.source_pro.select_gages_ids import (
     usgs_screen_streamflow,
 )
 from hydromtl.data.source.data_camels import Camels
 from hydromtl.data.source_pro.data_camels_pro import CamelsPro
+from hydromtl.visual.plot_stat import plot_ts
 from scripts.app_constant import VAR_T_CHOSEN_FROM_NLDAS
 
 ID_FILE_PATH = os.path.join(
@@ -32,6 +33,8 @@ ID_FILE_PATH = os.path.join(
 )
 AUGDATA_TRANGE = ["2001-10-01", "2021-10-01"]
 COMP_TRANGE = ["2001-10-01", "2014-10-01"]
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 
 
 def select_basins():
@@ -142,7 +145,64 @@ def see_basin_area():
     plt.show()
 
 
+def see_basin_streamflow_data():
+    camels_dir = os.path.join(definitions.DATASET_DIR, "camels", "camels_us")
+    camels = Camels(camels_dir)
+    if not os.path.exists(ID_FILE_PATH):
+        select_basins()
+    all_basins = camels.read_object_ids()
+    chosen_basins = pd.read_csv(ID_FILE_PATH, dtype={"GAGE_ID": str})[
+        "GAGE_ID"
+    ].tolist()
+    # Use NumPy to find unchosen basins
+    unchosen_basins = np.setdiff1d(all_basins, chosen_basins)
+    unchosen_flow = camels.read_target_cols(
+        unchosen_basins, t_range=AUGDATA_TRANGE, target_cols=["usgsFlow"]
+    )
+    # Calculate the missing data rate for each basin
+    # Count the number of nan values for each basin along the time axis
+    num_nans = np.isnan(unchosen_flow).sum(axis=1)  # Sum over the time dimension
+    total_data_points = unchosen_flow.shape[1]  # Total number of time points
+
+    # Calculate missing data rate as a percentage
+    missing_data_rate = (num_nans / total_data_points) * 100
+
+    # Find indices of the basin with the max and min missing data rates
+    max_missing_idx = np.argmax(missing_data_rate)
+    min_missing_idx = np.argmin(missing_data_rate)
+    # Optionally, print the missing data rate for each basin
+    print("Missing data rates for each basin (%):", missing_data_rate)
+    # Plot the streamflow data of the first unchosen basin
+    t_lst = hydro_utils.t_range_days(AUGDATA_TRANGE)
+    figure_dir = os.path.join(definitions.RESULT_DIR, "figures", "prepare_data")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+    plot_ts(
+        t_lst,
+        unchosen_flow[max_missing_idx, :, 0],
+        title=f"Time Series for Basin {unchosen_basins[max_missing_idx]} with Maximum Missing Data",
+        xlabel="Date",
+        ylabel="Streamflow(m$^3$/s)",
+    )
+    plt.savefig(
+        os.path.join(figure_dir, "max_missing_data_basin_flow_ts.png"),
+        dpi=600,
+    )
+    plot_ts(
+        t_lst,
+        unchosen_flow[min_missing_idx, :, 0],
+        title=f"Time Series for Basin {unchosen_basins[min_missing_idx]} with Minimum Missing Data",
+        xlabel="Date",
+        ylabel="Streamflow(m$^3$/s)",
+    )
+    plt.savefig(
+        os.path.join(figure_dir, "min_missing_data_basin_flow_ts.png"),
+        dpi=600,
+    )
+
+
 if __name__ == "__main__":
     # select_basins()
     # compare_nldas()
-    see_basin_area()
+    # see_basin_area()
+    see_basin_streamflow_data()
