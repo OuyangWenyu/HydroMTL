@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-18 16:54:30
+LastEditTime: 2024-05-20 07:58:26
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -313,15 +313,20 @@ def plot_test_boxes(
 # for ET
 def plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx):
     plot_multi_metrics_for_stl_mtl(
-        [exps_et_q_test[0], exps_et_q_test[chosen_idx]], figure_dir, var_obj="et"
+        [exps_et_q_test[0], exps_et_q_test[chosen_idx]],
+        figure_dir,
+        var_obj="et",
+        chosen_idx=chosen_idx,
     )
     # for Q
     plot_multi_metrics_for_stl_mtl(
-        [exps_q_et_test[0], exps_q_et_test[chosen_idx]], figure_dir
+        [exps_q_et_test[0], exps_q_et_test[chosen_idx]],
+        figure_dir,
+        chosen_idx=chosen_idx,
     )
 
 
-# plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx)
+plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx)
 
 
 # plot scatter with a 1:1 line to compare single-task and multi-task models

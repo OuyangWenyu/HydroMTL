@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-05-18 16:51:58
+LastEditTime: 2024-05-20 07:59:59
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -868,8 +868,9 @@ def plot_mtl_results_map(
     )
 
 
-def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow"):
-    show_inds = ["Bias", "RMSE", "Corr", "NSE"]
+def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow", chosen_idx=3):
+    metric_cache_dir = os.path.join(definitions.RESULT_DIR, "cache")
+    show_inds = ["Bias", "RMSE", "Corr", "NSE", "KGE"]
     plt.rc("axes", labelsize=16)
     plt.rc("ytick", labelsize=12)
     FIGURE_DPI = 600
@@ -877,13 +878,41 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow"):
     exps_metrices_results = []
     for ind in show_inds:
         if var_obj == "flow":
-            exp_metric_results = read_multi_single_exps_results(
-                exps_q_et, metric=ind, ensemble=-1
+            cache_file = os.path.join(
+                metric_cache_dir,
+                "exps_q_et_test_results_" + ind + ".npy",
             )
+            if os.path.exists(cache_file):
+                exp_metric_results_all = np.load(
+                    cache_file,
+                    allow_pickle=True,
+                )
+                exp_metric_results = [
+                    exp_metric_results_all[0],
+                    exp_metric_results_all[chosen_idx],
+                ]
+            else:
+                exp_metric_results = read_multi_single_exps_results(
+                    exps_q_et, metric=ind, ensemble=-1
+                )
         else:
-            exp_metric_results = read_multi_single_exps_results(
-                exps_q_et, metric=ind, var_idx=1, ensemble=-1
+            cache_file = os.path.join(
+                metric_cache_dir,
+                "exps_et_q_test_results_" + ind + ".npy",
             )
+            if os.path.exists(cache_file):
+                exp_metric_results_all = np.load(
+                    cache_file,
+                    allow_pickle=True,
+                )
+                exp_metric_results = [
+                    exp_metric_results_all[0],
+                    exp_metric_results_all[chosen_idx],
+                ]
+            else:
+                exp_metric_results = read_multi_single_exps_results(
+                    exps_q_et, metric=ind, var_idx=1, ensemble=-1
+                )
         exps_metrices_results.append([exp_metric_results[0], exp_metric_results[1]])
     plot_boxes_matplotlib(
         exps_metrices_results,
