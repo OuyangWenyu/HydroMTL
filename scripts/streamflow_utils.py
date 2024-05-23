@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 17:31:35
-LastEditTime: 2024-05-10 14:20:43
+LastEditTime: 2024-05-23 11:08:41
 LastEditors: Wenyu Ouyang
 Description: Some util functions for scripts in app/streamflow
 FilePath: \HydroMTL\scripts\streamflow_utils.py
@@ -697,9 +697,7 @@ def read_dl_models_et_metric_for_1basin(exp, epoch, cv_fold=2, **kwargs):
     return inds_df_trains, inds_df_valids
 
 
-def read_tb_log(
-    a_exp, best_batchsize, exp_example="gages", where_save="transfer_learning"
-):
+def read_tb_log(a_exp, best_batchsize, exp_example="camels"):
     """Copy a recent log file to the current directory and read the log file.
 
     Parameters
@@ -710,8 +708,6 @@ def read_tb_log(
         _description_
     exp_example : str, optional
         _description_, by default "gages"
-    where_save : str, optional
-        A directory in "app" directory, by default "transfer_learning"
 
     Returns
     -------
@@ -724,9 +720,7 @@ def read_tb_log(
         _description_
     """
     log_dir = os.path.join(
-        definitions.ROOT_DIR,
-        "hydroSPB",
-        "example",
+        definitions.RESULT_DIR,
         exp_example,
         a_exp,
         f"opt_Adadelta_lr_1.0_bsize_{str(best_batchsize)}",
@@ -734,11 +728,7 @@ def read_tb_log(
     if not os.path.exists(log_dir):
         raise FileNotFoundError(f"Log dir {log_dir} not found!")
     result_dir = os.path.join(
-        definitions.ROOT_DIR,
-        "hydroSPB",
-        "app",
-        where_save,
-        "results",
+        definitions.RESULT_DIR,
         "tensorboard",
         a_exp,
         f"opt_Adadelta_lr_1.0_bsize_{str(best_batchsize)}",
@@ -821,10 +811,9 @@ def copy_latest_tblog_file(log_dir, result_dir):
         shutil.copy(copy_file, result_dir)
 
 
-def plot_ts_for_basin_fold(
+def plot_ts_for_basin(
     leg_lst,
     basin_id,
-    fold,
     step_lst,
     value_lst,
     ylabel,
@@ -839,8 +828,6 @@ def plot_ts_for_basin_fold(
     leg_lst : list
         a list of legends
     basin_id : _type_
-        _description_
-    fold : _type_
         _description_
     step_lst : _type_
         _description_
@@ -872,7 +859,7 @@ def plot_ts_for_basin_fold(
         plt.savefig(
             os.path.join(
                 result_dir,
-                f"{basin_id}_fold{fold}_{ylabel}.png",
+                f"{basin_id}_{ylabel}.png",
             ),
             dpi=600,
             bbox_inches="tight",
@@ -881,7 +868,7 @@ def plot_ts_for_basin_fold(
         plt.savefig(
             os.path.join(
                 result_dir,
-                f"{basin_id}_fold{fold}_{ylabel}_bsize{batch_size}.png",
+                f"{basin_id}_{ylabel}_bsize{batch_size}.png",
             ),
             dpi=600,
             bbox_inches="tight",

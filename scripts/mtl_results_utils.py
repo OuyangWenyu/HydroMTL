@@ -921,7 +921,7 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow", chosen
         colorlst=["#d62728", "#1f77b4"],
         figsize=(10, 5),
         subplots_adjust_wspace=0.35,
-        median_font_size="xx-small",
+        median_font_size="large",
     )
     plt.savefig(
         os.path.join(
