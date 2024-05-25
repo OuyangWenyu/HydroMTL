@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-05-20 07:59:59
+LastEditTime: 2024-05-25 10:30:43
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -410,6 +410,7 @@ def predict_new_mtl_exp(
     alpah=None,
     n_hidden_states=256,
     layer_hidden_size=128,
+    random_seed=1234,
 ):
     project_name = os.path.join("camels", exp)
     data_gap, fill_nan, n_output = config4difftargets(targets)
@@ -506,6 +507,7 @@ def predict_new_mtl_exp(
         n_output=n_output,
         gage_id=gage_id,
         stat_dict_file=stat_dict_file,
+        rs=random_seed,
     )
     predict_in_test_period_with_model(
         args, weight_path=weight_path, cache_cfg_dir=cache_path

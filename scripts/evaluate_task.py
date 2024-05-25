@@ -40,6 +40,7 @@ def train_and_test(args):
         )
     n_hidden_states = args.n_hidden_states
     layer_hidden_size = args.layer_hidden_size
+    random_seed = args.random_seed
     predict_new_mtl_exp(
         exp=exp,
         targets=[Q_CAMELS_US_NAME, ET_MODIS_NAME],
@@ -53,6 +54,7 @@ def train_and_test(args):
         stat_dict_file=stat_dict_file,
         n_hidden_states=n_hidden_states,
         layer_hidden_size=layer_hidden_size,
+        random_seed=random_seed,
     )
 
 
@@ -133,6 +135,13 @@ if __name__ == "__main__":
         type=int,
         default=128,
         # default=32,
+    )
+    parser.add_argument(
+        "--random_seed",
+        dest="random_seed",
+        help="the random seed for the model",
+        type=int,
+        default=1234,
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")
