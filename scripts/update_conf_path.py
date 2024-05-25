@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-12 11:49:21
-LastEditTime: 2024-05-15 10:55:56
+LastEditTime: 2024-05-25 16:11:50
 LastEditors: Wenyu Ouyang
 Description: Update paths in the JSON file to the new path as we may use the saved files in different computers
 FilePath: \\HydroMTL\\scripts\\update_conf_path.py
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_path_old",
         type=str,
-        default="/home/ouyangwenyu/data/",
+        default="/mnt/data/owen411/data/",
         help="Old data path",
     )
     parser.add_argument(
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--code_path_old",
         type=str,
-        default="/home/ouyangwenyu/code/HydroMTL/",
+        default="/mnt/sdc/owen/code/HydroMTL/",
         help="Old code path",
     )
     parser.add_argument(
