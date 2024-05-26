@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2024-05-25 10:31:24
+LastEditTime: 2024-05-26 08:53:30
 LastEditors: Wenyu Ouyang
 Description: Just try some code
 FilePath: \HydroMTL\scripts\evaluate_all_ensemble_tasks.py
@@ -19,24 +19,25 @@ import definitions
 from scripts.streamflow_utils import get_lastest_weight_path
 
 # MTL exps with different λ: 0, ∞, 2, 1, 1/3, 1/8, 1/24
-random_seeds = [1234, 12345, 123, 111, 1111]
+# random_seeds = [1234, 12345, 123, 111, 1111]
+random_seeds = [12345, 123, 111, 1111]
 all_valid_exps = [
     # random seed 1234
-    [
-        "expstlq001",
-        "expstlet001",
-        "expmtl002",
-        "expmtl001",
-        "expmtl003",
-        "expmtl004",
-        "expmtl005",
-    ],
+    # [
+    #     "expstlq001",
+    #     "expstlet001",
+    #     "expmtl002",
+    #     "expmtl001",
+    #     "expmtl003",
+    #     "expmtl004",
+    #     "expmtl005",
+    # ],
     # random seed 12345
     [
         "expstlq202",
         "expstlet003",
-        "expmtl201",
         "expmtl202",
+        "expmtl201",
         "expmtl203",
         "expmtl204",
         "expmtl205",
@@ -45,8 +46,8 @@ all_valid_exps = [
     [
         "expstlq203",
         "expstlet002",
-        "expmtl301",
         "expmtl302",
+        "expmtl301",
         "expmtl303",
         "expmtl304",
         "expmtl305",
@@ -55,8 +56,8 @@ all_valid_exps = [
     [
         "expstlq204",
         "expstlet004",
-        "expmtl401",
         "expmtl402",
+        "expmtl401",
         "expmtl403",
         "expmtl404",
         "expmtl405",
@@ -65,21 +66,78 @@ all_valid_exps = [
     [
         "expstlq205",
         "expstlet005",
-        "expmtl501",
         "expmtl502",
+        "expmtl501",
         "expmtl503",
         "expmtl504",
         "expmtl505",
     ],
 ]
+all_weight_files = [
+    # random seed 1234
+    # [
+    #     "07_April_202311_52AM_model.pth",
+    #     "09_April_202303_02AM_model.pth",
+    #     "09_April_202303_57PM_model.pth",
+    #     "12_April_202305_24PM_model.pth",
+    #     "12_April_202306_35PM_model.pth",
+    #     "14_April_202302_40PM_model.pth",
+    #     "14_April_202304_16PM_model.pth",
+    # ],
+    # random seed 12345
+    [
+        "21_May_202403_13PM_model.pth",
+        "24_April_202309_24PM_model.pth",
+        "19_May_202401_01AM_model.pth",
+        "18_May_202411_27PM_model.pth",
+        "17_May_202404_59PM_model.pth",
+        "18_May_202411_23PM_model.pth",
+        "19_May_202401_06AM_model.pth",
+    ],
+    # random seed 123
+    [
+        "21_May_202408_46PM_model.pth",
+        "11_April_202303_45AM_model.pth",
+        "19_May_202409_57PM_model.pth",
+        "19_May_202409_55PM_model.pth",
+        "18_May_202405_18PM_model.pth",
+        "19_May_202411_57PM_model.pth",
+        "19_May_202411_58PM_model.pth",
+    ],
+    # random seed 111
+    [
+        "23_May_202403_18PM_model.pth",
+        "24_April_202310_21PM_model.pth",
+        "21_May_202409_11PM_model.pth",
+        "21_May_202409_11PM_model.pth",
+        "21_May_202409_33PM_model.pth",
+        "21_May_202411_50PM_model.pth",
+        "21_May_202411_51PM_model.pth",
+    ],
+    # random seed 1111
+    [
+        "23_May_202403_32PM_model.pth",
+        "26_April_202303_04PM_model.pth",
+        "23_May_202410_34PM_model.pth",
+        "23_May_202409_34PM_model.pth",
+        "24_May_202402_13AM_model.pth",
+        "24_May_202402_33AM_model.pth",
+        "24_May_202402_13AM_model.pth",
+    ],
+]
 all_test_exps = []
 all_weight_paths = []
-for all_valid_exps_ in all_valid_exps:
-    all_test_exps_ = [f"{tmp}0" for tmp in all_valid_exps_]
+for i in range(len(all_valid_exps)):
+    all_test_exps_ = [f"{tmp}0" for tmp in all_valid_exps[i]]
     all_test_exps.append(all_test_exps_)
     all_weight_paths_ = [
-        get_lastest_weight_path(os.path.join(definitions.RESULT_DIR, "camels", tmp))
-        for tmp in all_valid_exps_
+        os.path.join(
+            definitions.RESULT_DIR,
+            "camels",
+            all_valid_exps[i][j],
+            all_weight_files[i][j],
+        )
+        for j in range(len(all_valid_exps[i]))
     ]
     all_weight_paths.append(all_weight_paths_)
 
@@ -98,13 +156,13 @@ for j in range(len(all_test_exps)):
     all_weight_paths_ = all_weight_paths[j]
     random_seed = random_seeds[j]
     for i in range(len(all_test_exps_)):
-        if i == 0:
+        if i == 0 and j == 0:
             cache_path = "None"
         else:
             cache_path = os.path.join(
                 definitions.RESULT_DIR,
                 "camels",
-                all_test_exps_[0],
+                all_test_exps[0][0],
             )
         args = [
             "python",
@@ -129,6 +187,8 @@ for j in range(len(all_test_exps)):
             str(random_seed),
         ]
         print("Running command: ", " ".join(args))
+        if not os.path.isfile(all_weight_paths_[i]):
+            raise FileNotFoundError(f"Weight file {all_weight_paths_[i]} not found.")
         args_list.append(args)
 
 print("Please check the command and make sure they are correct.")
