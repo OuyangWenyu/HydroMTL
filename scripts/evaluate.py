@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-20 07:58:26
+LastEditTime: 2024-05-26 10:16:35
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -221,36 +221,19 @@ else:
 # ----------------------  Plot for valid period  ---------------------
 # plot boxes of NSEs for valid Q
 def plot_valid_boxes(
-    figure_dir, cases_exps_legends_together, q_et_valid_inds, et_q_valid_inds
+    figure_dir,
+    cases_exps_legends_together,
+    q_et_valid_inds,
+    et_q_valid_inds,
+    random_seed=1234,
 ):
-    plot_multi_single_comp_flow_boxes(
-        q_et_valid_inds[:-2],
-        cases_exps_legends_together=cases_exps_legends_together,
-        save_path=os.path.join(
-            figure_dir,
-            "mtl_valid_flow_boxes.png",
-        ),
-        rotation=45,
-    )
-
-    # plot boxes of NSEs for valid ET
-    plot_multi_single_comp_flow_boxes(
-        et_q_valid_inds[:-2],
-        cases_exps_legends_together=cases_exps_legends_together,
-        save_path=os.path.join(
-            figure_dir,
-            "mtl_valid_et_boxes.png",
-        ),
-        rotation=45,
-    )
-
     # plot boxes of NSEs for valid Q
     plot_multi_single_comp_flow_boxes(
         q_et_valid_inds[:-2],
         cases_exps_legends_together=cases_exps_legends_together,
         save_path=os.path.join(
             figure_dir,
-            "mtl_valid_flow_boxes.png",
+            f"mtl_valid_flow_boxes_{random_seed}.png",
         ),
         rotation=45,
     )
@@ -261,7 +244,7 @@ def plot_valid_boxes(
         cases_exps_legends_together=cases_exps_legends_together,
         save_path=os.path.join(
             figure_dir,
-            "mtl_valid_et_boxes.png",
+            f"mtl_valid_et_boxes_{random_seed}.png",
         ),
         rotation=45,
     )
@@ -279,14 +262,18 @@ chosen_mtl4et_test_result = exps_et_q_results[chosen_idx]
 
 # plot boxes of NSEs for test Q
 def plot_test_boxes(
-    figure_dir, cases_exps_legends_together, exps_q_et_results, exps_et_q_results
+    figure_dir,
+    cases_exps_legends_together,
+    exps_q_et_results,
+    exps_et_q_results,
+    random_seed=1234,
 ):
     plot_multi_single_comp_flow_boxes(
         exps_q_et_results[:-2],
         cases_exps_legends_together=cases_exps_legends_together,
         save_path=os.path.join(
             figure_dir,
-            "mtl_test_flow_boxes.png",
+            f"mtl_test_flow_boxes_{random_seed}.png",
         ),
         rotation=45,
     )
@@ -297,7 +284,7 @@ def plot_test_boxes(
         cases_exps_legends_together=cases_exps_legends_together,
         save_path=os.path.join(
             figure_dir,
-            "mtl_test_et_boxes.png",
+            f"mtl_test_et_boxes_{random_seed}.png",
         ),
         rotation=45,
     )
@@ -311,22 +298,26 @@ def plot_test_boxes(
 # --------------- Plot all metrics for testing period ---------------------------
 # plot all metrics for stl and mtl exps
 # for ET
-def plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx):
+def plot_multi_metrics(
+    exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx, random_seed=1234
+):
     plot_multi_metrics_for_stl_mtl(
         [exps_et_q_test[0], exps_et_q_test[chosen_idx]],
         figure_dir,
         var_obj="et",
         chosen_idx=chosen_idx,
+        random_seed=random_seed,
     )
     # for Q
     plot_multi_metrics_for_stl_mtl(
         [exps_q_et_test[0], exps_q_et_test[chosen_idx]],
         figure_dir,
         chosen_idx=chosen_idx,
+        random_seed=random_seed,
     )
 
 
-plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx)
+# plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx)
 
 
 # plot scatter with a 1:1 line to compare single-task and multi-task models
@@ -336,6 +327,7 @@ def plot_scatter(
     exps_et_q_results,
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
+    random_seed=1234,
 ):
     plot_scatter_with_11line(
         exps_q_et_results[0],
@@ -386,7 +378,7 @@ def plot_scatter(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "mtl_stl_flow_scatter_plot_with_11line.png",
+            f"mtl_stl_flow_scatter_plot_with_11line_{random_seed}.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -440,7 +432,7 @@ def plot_scatter(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "mtl_stl_et_scatter_plot_with_11line.png",
+            f"mtl_stl_et_scatter_plot_with_11line_{random_seed}.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -703,10 +695,10 @@ def plot_map_figures(
     )
 
 
-plot_map_figures(
-    figure_dir,
-    exps_q_et_results,
-    exps_et_q_results,
-    chosen_mtl4q_test_result,
-    chosen_mtl4et_test_result,
-)
+# plot_map_figures(
+#     figure_dir,
+#     exps_q_et_results,
+#     exps_et_q_results,
+#     chosen_mtl4q_test_result,
+#     chosen_mtl4et_test_result,
+# )

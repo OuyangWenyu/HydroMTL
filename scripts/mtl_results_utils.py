@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-05-25 10:30:43
+LastEditTime: 2024-05-26 10:15:17
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -870,7 +870,9 @@ def plot_mtl_results_map(
     )
 
 
-def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow", chosen_idx=3):
+def plot_multi_metrics_for_stl_mtl(
+    exps_q_et, result_dir, var_obj="flow", chosen_idx=3, random_seed=1234
+):
     metric_cache_dir = os.path.join(definitions.RESULT_DIR, "cache")
     show_inds = ["Bias", "RMSE", "Corr", "NSE", "KGE"]
     plt.rc("axes", labelsize=16)
@@ -882,7 +884,7 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow", chosen
         if var_obj == "flow":
             cache_file = os.path.join(
                 metric_cache_dir,
-                "exps_q_et_test_results_" + ind + ".npy",
+                "exps_q_et_test_results_" + ind + f"_{random_seed}.npy",
             )
             if os.path.exists(cache_file):
                 exp_metric_results_all = np.load(
@@ -900,7 +902,7 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow", chosen
         else:
             cache_file = os.path.join(
                 metric_cache_dir,
-                "exps_et_q_test_results_" + ind + ".npy",
+                "exps_et_q_test_results_" + ind + f"_{random_seed}.npy",
             )
             if os.path.exists(cache_file):
                 exp_metric_results_all = np.load(
@@ -928,7 +930,7 @@ def plot_multi_metrics_for_stl_mtl(exps_q_et, result_dir, var_obj="flow", chosen
     plt.savefig(
         os.path.join(
             result_dir,
-            "mtl_" + var_obj + "_test_all_metrices_boxes.png",
+            "mtl_" + var_obj + f"_test_all_metrices_boxes_{random_seed}.png",
         ),
         dpi=FIGURE_DPI,
         bbox_inches="tight",

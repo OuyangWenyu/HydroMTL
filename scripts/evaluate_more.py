@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-04-29 08:46:00
-LastEditTime: 2024-05-10 13:27:10
+LastEditTime: 2024-05-26 11:23:01
 LastEditors: Wenyu Ouyang
 Description: According to reviewers' feedback, we add more results evaluation to the original notebook evaluate.ipynb.
     The performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights
@@ -18,7 +18,7 @@ import numpy as np
 import os
 import sys
 import argparse
-from tqdm import tqdm
+
 
 # Get the current directory
 project_dir = os.path.abspath("")
@@ -29,24 +29,7 @@ from scripts.mtl_results_utils import (
     read_multi_single_exps_results,
 )
 from hydromtl.visual.plot_stat import plot_scatter_with_11line
-
-# MTL exps with different λ: 2, 1, 1/3, 1/8, 1/24
-mtl_q_et_valid_exps = [
-    "expmtl002",
-    "expmtl001",
-    "expmtl003",
-    "expmtl004",
-    "expmtl005",
-]
-mtl_q_et_test_exps = [f"{tmp}0" for tmp in mtl_q_et_valid_exps]
-# index 0 is STL-Q, index 1-5 are MTL-Q
-exps_q_et_valid = ["expstlq001"] + mtl_q_et_valid_exps
-exps_q_et_test = ["expstlq0010"] + mtl_q_et_test_exps
-
-# index 0 is STL-ET, index 1-5 are MTL-Q
-exps_et_q_valid = ["expstlet001"] + mtl_q_et_valid_exps
-exps_et_q_test = ["expstlet0010"] + mtl_q_et_test_exps
-
+from scripts.evaluate_ensemble import get_exps_of_diff_random_seed
 
 result_cache_dir = os.path.join(
     definitions.RESULT_DIR,
@@ -79,30 +62,32 @@ figure_weight_ratios_names = [
 ]
 
 
-def one_metric_data_reader(metric="NSE"):
+def one_metric_data_reader(
+    exps_q_et_test, exps_et_q_test, metric="NSE", random_seed=1234
+):
     exps_test_q_et_results_file = os.path.join(
         result_cache_dir,
-        f"exps_q_et_test_results_{metric}.npy",
+        f"exps_q_et_test_results_{metric}_{random_seed}.npy",
     )
     exps_test_et_q_results_file = os.path.join(
         result_cache_dir,
-        f"exps_et_q_test_results_{metric}.npy",
+        f"exps_et_q_test_results_{metric}_{random_seed}.npy",
     )
     exps_test_pred_q_file = os.path.join(
         result_cache_dir,
-        f"exps_q_test_pred_{metric}.npy",
+        f"exps_q_test_pred_{metric}_{random_seed}.npy",
     )
     exps_test_obs_q_file = os.path.join(
         result_cache_dir,
-        f"exps_q_test_obs_{metric}.npy",
+        f"exps_q_test_obs_{metric}_{random_seed}.npy",
     )
     exps_test_et_pred_file = os.path.join(
         result_cache_dir,
-        f"exps_et_test_pred_{metric}.npy",
+        f"exps_et_test_pred_{metric}_{random_seed}.npy",
     )
     exps_test_et_obs_file = os.path.join(
         result_cache_dir,
-        f"exps_et_test_obs_{metric}.npy",
+        f"exps_et_test_obs_{metric}_{random_seed}.npy",
     )
 
     if os.path.exists(exps_test_q_et_results_file) and os.path.exists(
@@ -141,7 +126,12 @@ def one_metric_data_reader(metric="NSE"):
 
 
 def plot_scatter_with_11line_for_1metric1lossweightratio(
-    exps_q_et_results, exps_et_q_results, chosen_idx, metric="NSE", maxdiff_label=False
+    exps_q_et_results,
+    exps_et_q_results,
+    chosen_idx,
+    metric="NSE",
+    maxdiff_label=False,
+    random_seed=1234,
 ):
     """_summary_
 
@@ -215,7 +205,7 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
     plt.savefig(
         os.path.join(
             figure_dir,
-            f"mtl_stl_flow_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}.png",
+            f"mtl_stl_flow_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}_{random_seed}.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -261,7 +251,7 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
     plt.savefig(
         os.path.join(
             figure_dir,
-            f"mtl_stl_et_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}.png",
+            f"mtl_stl_et_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}_{random_seed}.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -271,6 +261,12 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--metric", type=str, default="NSE", help="Performance metric")
+    parser.add_argument(
+        "--random_seed",
+        type=int,
+        default=12345,
+        help="Random seed for the experiment",
+    )
     args = parser.parse_args()
 
     available_metrics = [
@@ -289,10 +285,24 @@ if __name__ == "__main__":
         print(available_metrics)
     else:
         print("Reading data...")
-        exps_q_et_results, exps_et_q_results = one_metric_data_reader(args.metric)
+        (
+            exps_q_et_valid,
+            exps_et_q_valid,
+            exps_q_et_test,
+            exps_et_q_test,
+            exps_q_et_train,
+            exps_et_q_train,
+        ) = get_exps_of_diff_random_seed(args.random_seed)
+        exps_q_et_results, exps_et_q_results = one_metric_data_reader(
+            exps_q_et_test, exps_et_q_test, args.metric, random_seed=args.random_seed
+        )
         print("Data reading complete.")
         # 1 to 5 means 5 weight ratios
-        for chosen_idx in tqdm(range(1, 6)):
-            plot_scatter_with_11line_for_1metric1lossweightratio(
-                exps_q_et_results, exps_et_q_results, chosen_idx, args.metric
-            )
+        # for chosen_idx in tqdm(range(1, 6)):
+        #     plot_scatter_with_11line_for_1metric1lossweightratio(
+        #         exps_q_et_results,
+        #         exps_et_q_results,
+        #         chosen_idx,
+        #         args.metric,
+        #         random_seed=args.random_seed,
+        #     )

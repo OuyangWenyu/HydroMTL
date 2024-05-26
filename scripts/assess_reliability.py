@@ -20,17 +20,21 @@ import definitions
 from hydromtl.data.source import data_constant
 from hydromtl.explain.probe_analysis import show_probe
 
-save_dir = os.path.join(
-    definitions.RESULT_DIR,
-    "figures",
-)
+# random_seed = 1234
+# run_exp_lst = [
+#     f"camels{os.sep}expstlq0010",
+#     f"camels{os.sep}expmtl0030",
+#     f"camels{os.sep}expstlet0010",
+# ]
+random_seed = 12345
+run_exp_lst = [
+    f"camels{os.sep}expstlq2020",
+    f"camels{os.sep}expmtl2030",
+    f"camels{os.sep}expstlet0030",
+]
+save_dir = os.path.join(definitions.RESULT_DIR, "figures", f"rs{random_seed}")
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
-run_exp_lst = [
-    f"camels{os.sep}expstlq0010",
-    f"camels{os.sep}expmtl0030",
-    f"camels{os.sep}expstlet0010",
-]
 legend_lst = ["STL-Q", "MTL", "STL-ET"]
 # First probe is for evapotranspiration (ET).
 show_probe(
