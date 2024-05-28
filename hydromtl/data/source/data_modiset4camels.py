@@ -62,6 +62,8 @@ class ModisEt4Camels(DataSourceBase):
             modisa16_dir = os.path.join(et_basin_mean_dir, "MOD16A2_105_CAMELS")
         elif self.et_product == "MOD16A2V006":
             modisa16_dir = os.path.join(et_basin_mean_dir, "MOD16A2_006_CAMELS")
+        elif self.et_product == "MOD16A2GFV061":
+            modisa16_dir = os.path.join(et_basin_mean_dir, "MOD16A2GF_061_CAMELS")
         else:
             raise NotImplementedError("No such product now")
         pmlv2_dir = os.path.join(et_basin_mean_dir, "PML_V2_CAMELS")
@@ -195,6 +197,10 @@ class ModisEt4Camels(DataSourceBase):
         elif et_product == "MOD16A2V105":
             modis16a2_data_file = os.path.join(
                 modis16a2_data_folder, huc, f"{usgs_id}_lump_modis16a2v105_et.txt"
+            )
+        elif et_product == "MOD16A2GFV061":
+            modis16a2_data_file = os.path.join(
+                modis16a2_data_folder, huc, f"{usgs_id}_lump_modis16a2vgf061_et.txt"
             )
         else:
             raise NotImplementedError("No such product now")
