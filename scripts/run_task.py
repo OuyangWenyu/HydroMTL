@@ -167,7 +167,8 @@ if __name__ == "__main__":
         dest="et_product",
         help="the product of ET",
         type=str,
-        default="MOD16A2GFV061",
+        default="MOD16A2V006",
+        # default="MOD16A2GFV061",
         # default="MOD16A2V105",
     )
     parser.add_argument(

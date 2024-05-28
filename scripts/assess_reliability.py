@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-14 17:44:31
-LastEditTime: 2024-05-14 17:44:46
+LastEditTime: 2024-05-26 20:26:19
 LastEditors: Wenyu Ouyang
 Description: scripts same with assess_reliability.ipynb
 FilePath: \HydroMTL\scripts\assess_reliability.py
@@ -26,11 +26,29 @@ from hydromtl.explain.probe_analysis import show_probe
 #     f"camels{os.sep}expmtl0030",
 #     f"camels{os.sep}expstlet0010",
 # ]
-random_seed = 12345
+# random_seed = 12345
+# run_exp_lst = [
+#     f"camels{os.sep}expstlq2020",
+#     f"camels{os.sep}expmtl2030",
+#     f"camels{os.sep}expstlet0030",
+# ]
+# random_seed = 123
+# run_exp_lst = [
+#     f"camels{os.sep}expstlq2030",
+#     f"camels{os.sep}expmtl3030",
+#     f"camels{os.sep}expstlet0020",
+# ]
+# random_seed = 111
+# run_exp_lst = [
+#     f"camels{os.sep}expstlq2040",
+#     f"camels{os.sep}expmtl4030",
+#     f"camels{os.sep}expstlet0040",
+# ]
+random_seed = 1111
 run_exp_lst = [
-    f"camels{os.sep}expstlq2020",
-    f"camels{os.sep}expmtl2030",
-    f"camels{os.sep}expstlet0030",
+    f"camels{os.sep}expstlq2050",
+    f"camels{os.sep}expmtl5030",
+    f"camels{os.sep}expstlet0050",
 ]
 save_dir = os.path.join(definitions.RESULT_DIR, "figures", f"rs{random_seed}")
 if not os.path.exists(save_dir):
