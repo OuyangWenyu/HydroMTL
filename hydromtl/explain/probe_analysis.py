@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2024-04-17 11:07:49
+LastEditTime: 2024-05-29 11:38:34
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: \HydroMTL\hydromtl\explain\probe_analysis.py
@@ -199,7 +199,7 @@ def train_probe(run_exp, var="ET", retrain=False, probe_input="state", **kwargs)
         ws, bs = get_all_models_weights([model])
         np.save(linear_probe_weights_file, ws)
         np.save(linear_probe_biases_file, bs)
-    return all_corrs, all_basin_corrs, errors, ws, bs
+    return all_corrs, all_basin_corrs, errors, ws, bs, preds
 
 
 def plot_one_probe(
@@ -325,8 +325,10 @@ def show_probe(
     errors_lst = []
     ws_lst = []
     bs_lst = []
+    preds_lst = []
+    is_plot = kwargs.get("is_plot", True)
     for i, run_exp in enumerate(run_exp_lst):
-        all_corrs, all_basin_corrs, errors, ws, bs = train_probe(
+        all_corrs, all_basin_corrs, errors, ws, bs, preds = train_probe(
             run_exp=run_exp,
             var=var.name,
             retrain=retrian_probe[i],
@@ -338,58 +340,33 @@ def show_probe(
         errors_lst.append(errors)
         ws_lst.append(ws)
         bs_lst.append(bs)
-        plot_one_probe(
-            run_exp, var, probe_input, all_basin_corrs, ws, save_dir=save_dir
-        )
-    FIGURE_DPI = 600
-    print(
-        "-- Comparing cs~" + var.name + " correlations for " + str(run_exp_lst) + " --"
+        preds_lst.append(preds)
+        if is_plot:
+            plot_one_probe(
+                run_exp, var, probe_input, all_basin_corrs, ws, save_dir=save_dir
+            )
+    if not is_plot:
+        return preds_lst
+    plot_all_corrs(run_exp_lst, var, legend_lst, save_dir, probe_input, all_corrs_lst)
+    plot_errors(
+        run_exp_lst,
+        var,
+        legend_lst,
+        show_probe_metric,
+        save_dir,
+        probe_input,
+        errors_lst,
     )
-    f, ax1 = plt.subplots(figsize=(12, 4))
-    for i, run_exp in enumerate(run_exp_lst):
-        data = all_corrs_lst[i]
-        max_abs_value = max(data, key=abs)
-        n, bins, patches = ax1.hist(
-            data,
-            alpha=0.6,
-            bins=100,
-            label=legend_lst[i],
-            color=f"C{str(i)}",
-        )
-        max_bin = np.digitize(max_abs_value, bins) - 1
-        max_bin = min(max_bin, len(patches) - 1)
-        max_height = n[max_bin]
-        ax1.annotate(
-            f"Max abs: {abs(max_abs_value):.2f}",
-            xy=(bins[max_bin], max_height),  # arrow's head
-            xytext=(bins[max_bin], max_height + (i + 2) * max_height),  # text position
-            arrowprops=dict(
-                facecolor=f"C{str(i)}", arrowstyle="->", linestyle="dashed"
-            ),
-            color=f"C{str(i)}",
-            fontsize=12,
-        )
-        ax1.spines["right"].set_visible(False)
-        ax1.spines["top"].set_visible(False)
-    ax1.legend()
-    # ax1.set_title(
-    #     "Correlation between one cell state of all basins and the observation of "
-    #     + var.name
-    # )
-    ax1.set_xlabel("Corr", fontsize=16)
-    ax1.set_ylabel("Frequency", fontsize=16)
-    sns.despine()
 
+
+def plot_errors(
+    run_exp_lst, var, legend_lst, show_probe_metric, save_dir, probe_input, errors_lst
+):
+    FIGURE_DPI = 600
     if probe_input == "state":
         plot_name = var.name
     else:
         plot_name = abbreviate_and_join(probe_input) + "_" + var.name
-
-    plt.savefig(
-        os.path.join(save_dir, "all_corrs_" + plot_name + ".png"),
-        dpi=FIGURE_DPI,
-        bbox_inches="tight",
-    )
     print(
         "-- Comparing cs~"
         + var.name
@@ -447,6 +424,57 @@ def show_probe(
             save_dir,
             "linear_probe_preds_" + plot_name + "_" + show_probe_metric + ".png",
         ),
+        dpi=FIGURE_DPI,
+        bbox_inches="tight",
+    )
+
+
+def plot_all_corrs(run_exp_lst, var, legend_lst, save_dir, probe_input, all_corrs_lst):
+    FIGURE_DPI = 600
+    print(
+        "-- Comparing cs~" + var.name + " correlations for " + str(run_exp_lst) + " --"
+    )
+    f, ax1 = plt.subplots(figsize=(12, 4))
+    for i, run_exp in enumerate(run_exp_lst):
+        data = all_corrs_lst[i]
+        max_abs_value = max(data, key=abs)
+        n, bins, patches = ax1.hist(
+            data,
+            alpha=0.6,
+            bins=100,
+            label=legend_lst[i],
+            color=f"C{str(i)}",
+        )
+        max_bin = np.digitize(max_abs_value, bins) - 1
+        max_bin = min(max_bin, len(patches) - 1)
+        max_height = n[max_bin]
+        ax1.annotate(
+            f"Max abs: {abs(max_abs_value):.2f}",
+            xy=(bins[max_bin], max_height),  # arrow's head
+            xytext=(bins[max_bin], max_height + (i + 2) * max_height),  # text position
+            arrowprops=dict(
+                facecolor=f"C{str(i)}", arrowstyle="->", linestyle="dashed"
+            ),
+            color=f"C{str(i)}",
+            fontsize=12,
+        )
+        ax1.spines["right"].set_visible(False)
+        ax1.spines["top"].set_visible(False)
+    ax1.legend()
+    # ax1.set_title(
+    #     "Correlation between one cell state of all basins and the observation of "
+    #     + var.name
+    # )
+    ax1.set_xlabel("Corr", fontsize=16)
+    ax1.set_ylabel("Frequency", fontsize=16)
+    sns.despine()
+    if probe_input == "state":
+        plot_name = var.name
+    else:
+        plot_name = abbreviate_and_join(probe_input) + "_" + var.name
+
+    plt.savefig(
+        os.path.join(save_dir, "all_corrs_" + plot_name + ".png"),
         dpi=FIGURE_DPI,
         bbox_inches="tight",
     )
