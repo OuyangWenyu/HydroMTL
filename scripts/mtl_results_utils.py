@@ -411,6 +411,7 @@ def predict_new_mtl_exp(
     n_hidden_states=256,
     layer_hidden_size=128,
     random_seed=1234,
+    et_product="MOD16A2V006",
 ):
     project_name = os.path.join("camels", exp)
     data_gap, fill_nan, n_output = config4difftargets(targets)
@@ -508,6 +509,7 @@ def predict_new_mtl_exp(
         gage_id=gage_id,
         stat_dict_file=stat_dict_file,
         rs=random_seed,
+        et_product=et_product,
     )
     predict_in_test_period_with_model(
         args, weight_path=weight_path, cache_cfg_dir=cache_path

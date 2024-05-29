@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-04-29 08:46:00
-LastEditTime: 2024-05-26 11:23:01
+LastEditTime: 2024-05-29 16:57:34
 LastEditors: Wenyu Ouyang
 Description: According to reviewers' feedback, we add more results evaluation to the original notebook evaluate.ipynb.
     The performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights
@@ -28,6 +28,8 @@ import definitions
 from scripts.mtl_results_utils import (
     read_multi_single_exps_results,
 )
+from scripts.streamflow_utils import get_json_file
+from hydromtl.models.trainer import stat_result
 from hydromtl.visual.plot_stat import plot_scatter_with_11line
 from scripts.evaluate_ensemble import get_exps_of_diff_random_seed
 
@@ -60,6 +62,22 @@ figure_weight_ratios_names = [
     "one8th",
     "one24th",
 ]
+
+
+def compare_et_pred():
+    exps_lst = ["expstlet9010", "expstlet0010"]
+    inds_df_lst = []
+    for exp in exps_lst:
+        cfg_dir_flow_other = os.path.join(definitions.RESULT_DIR, "camels", exp)
+        cfg_flow_other = get_json_file(cfg_dir_flow_other)
+        inds_df_, pred, obs = stat_result(
+            cfg_flow_other["data_params"]["test_path"],
+            cfg_flow_other["evaluate_params"]["test_epoch"],
+            fill_nan=cfg_flow_other["evaluate_params"]["fill_nan"],
+            return_value=True,
+        )
+        inds_df_lst.append(inds_df_)
+    return inds_df_lst
 
 
 def one_metric_data_reader(
@@ -268,7 +286,7 @@ if __name__ == "__main__":
         help="Random seed for the experiment",
     )
     args = parser.parse_args()
-
+    compare_et_pred()
     available_metrics = [
         "Bias",
         "RMSE",

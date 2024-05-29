@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-05-19 14:20:38
+LastEditTime: 2024-05-29 16:37:01
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -65,7 +65,7 @@ def compare_nldas():
         nldas_camels = np.load(nldas_camels_file)
     if os.path.exists(nldas_gee_file):
         nldas_madeingee = np.load(nldas_gee_file)
-    if (not os.path.exists(nldas_camels_file)) and (not os.path.exists(nldas_gee_file)):
+    if (not os.path.exists(nldas_camels_file)) or (not os.path.exists(nldas_gee_file)):
         nldas_camels, nldas_madeingee = _read_nldas_data(
             nldas_camels_file, nldas_gee_file
         )
@@ -201,8 +201,54 @@ def see_basin_streamflow_data():
     )
 
 
+def _read_et_data(etv006_file, etv061gf_file):
+    basin_ids = pd.read_csv(ID_FILE_PATH, dtype={"GAGE_ID": str})["GAGE_ID"].tolist()
+    source_path = [
+        os.path.join(definitions.DATASET_DIR, "camelsflowet"),
+        os.path.join(definitions.DATASET_DIR, "modiset4camels"),
+        os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
+        os.path.join(definitions.DATASET_DIR, "nldas4camels"),
+        os.path.join(definitions.DATASET_DIR, "smap4camels"),
+    ]
+    camels_pro1 = CamelsPro(source_path)
+    etv006 = camels_pro1.read_target_cols(
+        basin_ids,
+        t_range_list=AUGDATA_TRANGE,
+        target_cols=["ET"],
+    )
+    np.save(etv006_file, etv006)
+    camels_pro2 = CamelsPro(source_path, et_product="MOD16A2GFV061")
+    etv061gf = camels_pro2.read_target_cols(
+        basin_ids,
+        t_range_list=AUGDATA_TRANGE,
+        target_cols=["ET"],
+    )
+    np.save(etv061gf_file, etv061gf)
+    return etv006, etv061gf
+
+
+def compare_ets():
+    if not os.path.exists(ID_FILE_PATH):
+        select_basins()
+    etv006_file = os.path.join(definitions.RESULT_DIR, "etv006.npy")
+    etv061gf_file = os.path.join(definitions.RESULT_DIR, "etv061gf.npy")
+    if os.path.exists(etv006_file):
+        etv006 = np.load(etv006_file)
+    if os.path.exists(etv061gf_file):
+        etv061gf = np.load(etv061gf_file)
+    if (not os.path.exists(etv006_file)) or (not os.path.exists(etv061gf_file)):
+        etv006, etv061gf = _read_et_data(etv006_file, etv061gf_file)
+    # all are numpy arrays
+    metrics = hydro_stat.stat_error(etv006, etv061gf, fill_nan=["no"])
+    print(metrics)
+
+
+
+
 if __name__ == "__main__":
     # select_basins()
     # compare_nldas()
     # see_basin_area()
-    see_basin_streamflow_data()
+    # see_basin_streamflow_data()
+    compare_ets()
+    compare_et_pred()

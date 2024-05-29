@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2024-05-18 11:45:10
+LastEditTime: 2024-05-29 15:26:45
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: \HydroMTL\scripts\evaluate_task.py
@@ -41,6 +41,7 @@ def train_and_test(args):
     n_hidden_states = args.n_hidden_states
     layer_hidden_size = args.layer_hidden_size
     random_seed = args.random_seed
+    et_product = args.et_product
     predict_new_mtl_exp(
         exp=exp,
         targets=[Q_CAMELS_US_NAME, ET_MODIS_NAME],
@@ -55,6 +56,7 @@ def train_and_test(args):
         n_hidden_states=n_hidden_states,
         layer_hidden_size=layer_hidden_size,
         random_seed=random_seed,
+        et_product=et_product,
     )
 
 
@@ -66,8 +68,9 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        # default="expmtl2030",
-        default="expstlq2030",
+        default="expmtl2030",
+        # default="expstlq2030",
+        # default="expstlet9010",
         # default="expstlet0030",
     )
     parser.add_argument(
@@ -77,8 +80,8 @@ if __name__ == "__main__":
         nargs="+",
         type=float,
         # default=[0.5, 0.5],
-        # default=[0.75, 0.25],
-        default=[1, 0],
+        default=[0.75, 0.25],
+        # default=[1, 0],
         # default=[0, 1],
     )
     parser.add_argument(
@@ -109,6 +112,8 @@ if __name__ == "__main__":
         default=os.path.join(
             definitions.RESULT_DIR,
             "camels",
+            # "expstlet901",
+            # "28_May_202409_28PM_model.pth",
             "expstlq203",
             "18_May_202410_44AM_model.pth",
         ),
@@ -142,6 +147,14 @@ if __name__ == "__main__":
         help="the random seed for the model",
         type=int,
         default=1234,
+    )
+    parser.add_argument(
+        "--et_product",
+        dest="et_product",
+        help="the product of ET",
+        type=str,
+        default="MOD16A2V006",
+        # default="MOD16A2GFV061",
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")
