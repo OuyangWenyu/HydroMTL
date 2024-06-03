@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-28 20:28:09
+LastEditTime: 2024-06-03 11:11:58
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -578,7 +578,7 @@ if __name__ == "__main__":
         colorlst=["#d62728", "#1f77b4"],
         figsize=(10, 5),
         subplots_adjust_wspace=0.35,
-        median_font_size="large",
+        median_font_size="xx-small",
     )
     plt.savefig(
         os.path.join(
@@ -596,7 +596,7 @@ if __name__ == "__main__":
         colorlst=["#d62728", "#1f77b4"],
         figsize=(10, 5),
         subplots_adjust_wspace=0.35,
-        median_font_size="large",
+        median_font_size="xx-small",
     )
     plt.savefig(
         os.path.join(
