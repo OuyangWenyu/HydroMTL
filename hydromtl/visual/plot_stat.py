@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2024-05-18 15:01:41
+LastEditTime: 2024-06-05 15:42:12
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: \HydroMTL\hydromtl\visual\plot_stat.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from typing import Union
 import matplotlib
 import seaborn as sns
@@ -211,9 +212,11 @@ def plot_boxes_matplotlib(
     figsize=(8, 6),
     sharey=False,
     xticklabel=None,
+    xlabel_font_size=12,
     axin=None,
     ylim=None,
     ylabel=None,
+    axtick_font_size=12,
     notch=False,
     widths=0.5,
     subplots_adjust_wspace=0.2,
@@ -274,7 +277,9 @@ def plot_boxes_matplotlib(
     else:
         axes = axin
 
-    for k in range(0, nc):
+    # the next few lines are for showing median values
+    decimal_places = "2"
+    for k in range(nc):
         ax = axes[k] if nc > 1 else axes
         temp = data[k]
         if type(temp) is list:
@@ -292,14 +297,12 @@ def plot_boxes_matplotlib(
         )
         for median in bp["medians"]:
             median.set_color(median_line_color)
-        # the next few lines are for showing median values
-        decimal_places = "2"
         medians_value = [np.median(tmp) for tmp in temp]
         percent25value = [np.percentile(tmp, 25) for tmp in temp]
         percent75value = [np.percentile(tmp, 75) for tmp in temp]
         per25min = np.min(percent25value)
         per75max = np.max(percent75value)
-        median_labels = [format(s, "." + decimal_places + "f") for s in medians_value]
+        median_labels = [format(s, f".{decimal_places}f") for s in medians_value]
         pos = range(len(medians_value))
         if show_median:
             for tick, label in zip(pos, ax.get_xticklabels()):
@@ -314,13 +317,13 @@ def plot_boxes_matplotlib(
                     weight="semibold",
                     color=median_line_color,
                 )
-        for kk in range(0, len(bp["boxes"])):
+        for kk in range(len(bp["boxes"])):
             plt.setp(bp["boxes"][kk], facecolor=colorlst[kk])
 
         if label1 is not None:
-            ax.set_xlabel(label1[k])
+            ax.set_xlabel(label1[k], fontsize=xlabel_font_size)
         else:
-            ax.set_xlabel(str(k))
+            ax.set_xlabel(str(k), fontsize=xlabel_font_size)
         if xticklabel is None:
             ax.set_xticks([])
         else:
@@ -330,6 +333,7 @@ def plot_boxes_matplotlib(
             ax.set_ylabel(ylabel[k])
         if ylim is not None:
             ax.set_ylim(ylim[k])
+        ax.tick_params(axis='both', labelsize=axtick_font_size)
     if label2 is not None:
         plt.legend(
             bp["boxes"],
@@ -347,10 +351,7 @@ def plot_boxes_matplotlib(
         ax.set_title(title)
     plt.tight_layout()
     plt.subplots_adjust(wspace=subplots_adjust_wspace)
-    if axin is None:
-        return fig
-    else:
-        return ax, bp
+    return fig if axin is None else (ax, bp)
 
 
 def swarmplot_without_legend(x, y, hue, vmin, vmax, cmap, **kwargs):
@@ -1506,7 +1507,7 @@ def plot_rainfall_runoff(
     if xlabel is not None:
         ax.set_xlabel(xlabel, fontsize=18)
     # ax2.set_ylabel("降水（mm/day）", fontsize=8, loc="top")
-    ax2.set_ylabel("precipitation (mm/day)", fontsize=12, loc='top')
+    ax2.set_ylabel("precipitation (mm/day)", fontsize=12, loc="top")
     # https://github.com/matplotlib/matplotlib/issues/12318
     ax.tick_params(axis="x", labelsize=16)
     ax.tick_params(axis="y", labelsize=16)

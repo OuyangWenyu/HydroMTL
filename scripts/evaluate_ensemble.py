@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-03 11:11:58
+LastEditTime: 2024-06-05 18:51:30
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -27,7 +27,9 @@ from scripts.mtl_results_utils import (
     read_multi_single_exps_results,
 )
 from scripts.evaluate import (
+    plot_map_figures,
     plot_scatter,
+    plot_ts_figures,
 )
 
 
@@ -609,35 +611,35 @@ if __name__ == "__main__":
     # plot scatter with a 1:1 line to compare single-task and multi-task models
     plot_scatter(
         figure_dir,
-        exps_q_et_results,
-        exps_et_q_results,
-        chosen_mtl4q_test_result,
-        chosen_mtl4et_test_result,
+        q_metrices_results_chosen[chosen_idx][0],
+        et_metrics_results_chosen[chosen_idx][0],
+        q_metrices_results_chosen[chosen_idx][1],
+        et_metrics_results_chosen[chosen_idx][1],
         random_seed="ensemble",
     )
 
     # ---- Plot time-series for some specific basins ------
-    # plot_ts_figures(
-    #     figure_dir,
-    #     exps_q_et_results,
-    #     preds_q_lst,
-    #     obss_q_lst,
-    #     preds_et_lst,
-    #     obss_et_lst,
-    #     preds_q_train_lst,
-    #     obss_q_train_lst,
-    #     preds_et_train_lst,
-    #     obss_et_train_lst,
-    #     chosen_idx,
-    #     chosen_mtl4q_test_result,
-    # )
+    plot_ts_figures(
+        figure_dir,
+        q_metrices_results_chosen[chosen_idx][0],
+        q_metrices_results_chosen[chosen_idx][1],
+        preds_q_lst,
+        obss_q_lst,
+        preds_et_lst,
+        obss_et_lst,
+        preds_q_train_lst,
+        obss_q_train_lst,
+        preds_et_train_lst,
+        obss_et_train_lst,
+        chosen_idx,
+    )
 
     # ----------------------  Plot maps -------------------------
     # plot map
-    # plot_map_figures(
-    #     figure_dir,
-    #     exps_q_et_results,
-    #     exps_et_q_results,
-    #     chosen_mtl4q_test_result,
-    #     chosen_mtl4et_test_result,
-    # )
+    plot_map_figures(
+        figure_dir,
+        exps_q_et_results,
+        exps_et_q_results,
+        chosen_mtl4q_test_result,
+        chosen_mtl4et_test_result,
+    )

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-05-26 10:16:35
+LastEditTime: 2024-06-05 18:50:53
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -323,14 +323,14 @@ def plot_multi_metrics(
 # plot scatter with a 1:1 line to compare single-task and multi-task models
 def plot_scatter(
     figure_dir,
-    exps_q_et_results,
-    exps_et_q_results,
+    stl_q_et_result,
+    stl_et_q_result,
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
     random_seed=1234,
 ):
     plot_scatter_with_11line(
-        exps_q_et_results[0],
+        stl_q_et_result,
         chosen_mtl4q_test_result,
         # xlabel="NSE single-task",
         # ylabel="NSE multi-task",
@@ -341,7 +341,7 @@ def plot_scatter(
     mark_color = "darkred"
 
     # Extract the first and second 1-D arrays
-    x = exps_q_et_results[0]
+    x = stl_q_et_result
     y = chosen_mtl4q_test_result
     # Filter the data to only include points where both x and y are in the range [0, 1]
     mask = (x >= 0) & (x <= 1) & (y >= 0) & (y <= 1)
@@ -385,7 +385,7 @@ def plot_scatter(
     )
 
     plot_scatter_with_11line(
-        exps_et_q_results[0],
+        stl_et_q_result,
         chosen_mtl4et_test_result,
         # xlabel="NSE single-task",
         # ylabel="NSE multi-task",
@@ -397,7 +397,7 @@ def plot_scatter(
     max_diff_y_value = filtered_y[filtered_max_diff_index]
 
     # Extract the first and second 1-D arrays from the second 2-D array
-    x2 = exps_et_q_results[0]
+    x2 = stl_et_q_result
     y2 = chosen_mtl4et_test_result
 
     # Filter the data to only include points where both x and y are in the range [0, 1]
@@ -441,8 +441,8 @@ def plot_scatter(
 
 # plot_scatter(
 #     figure_dir,
-#     exps_q_et_results,
-#     exps_et_q_results,
+#     exps_q_et_results[0],
+#     exps_et_q_results[0],
 #     chosen_mtl4q_test_result,
 #     chosen_mtl4et_test_result,
 # )
@@ -451,7 +451,8 @@ def plot_scatter(
 # ---- Plot time-series for some specific basins ------
 def plot_ts_figures(
     figure_dir,
-    exps_q_et_results,
+    stl_q_et_result,
+    chosen_mtl4q_test_result,
     preds_q_lst,
     obss_q_lst,
     preds_et_lst,
@@ -461,7 +462,6 @@ def plot_ts_figures(
     preds_et_train_lst,
     obss_et_train_lst,
     chosen_idx,
-    chosen_mtl4q_test_result,
 ):
     source_path = [
         os.path.join(definitions.DATASET_DIR, "camelsflowet"),
@@ -472,7 +472,7 @@ def plot_ts_figures(
     ]
     camels_pro = CamelsPro(source_path)
     gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
-        exps_q_et_results, chosen_mtl4q_test_result
+        stl_q_et_result, chosen_mtl4q_test_result
     )
     time_range = ["2016-10-01", "2021-10-01"]
     t_lst = hydro_utils.t_range_days(time_range)
@@ -624,53 +624,53 @@ def plot_ts_figures(
     )
 
 
-def _find_max_diff(exps_q_et_results, chosen_mtl4q_test_result):
+def _find_max_diff(stl_q_et_result, chosen_mtl4q_test_result):
     gage_id_file = os.path.join(
         definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
     )
     gage_ids = pd.read_csv(gage_id_file, dtype={"GAGE_ID": str})
 
-    diff_q = chosen_mtl4q_test_result - exps_q_et_results[0]
+    diff_q = chosen_mtl4q_test_result - stl_q_et_result
     diff_q_sort = np.argsort(diff_q)
     both_positive_q = np.where(
-        (chosen_mtl4q_test_result > 0) & (exps_q_et_results[0] > 0)
+        (chosen_mtl4q_test_result > 0) & (stl_q_et_result > 0)
     )[0]
     diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
     max_diff_gage_id = str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)
     return gage_ids, diff_q_sort_idx, max_diff_gage_id
 
 
-# plot_ts_figures(
-#     figure_dir,
-#     exps_q_et_results,
-#     preds_q_lst,
-#     obss_q_lst,
-#     preds_et_lst,
-#     obss_et_lst,
-#     preds_q_train_lst,
-#     obss_q_train_lst,
-#     preds_et_train_lst,
-#     obss_et_train_lst,
-#     chosen_idx,
-#     chosen_mtl4q_test_result,
-# )
+plot_ts_figures(
+    figure_dir,
+    exps_q_et_results[0],
+    chosen_mtl4q_test_result,
+    preds_q_lst,
+    obss_q_lst,
+    preds_et_lst,
+    obss_et_lst,
+    preds_q_train_lst,
+    obss_q_train_lst,
+    preds_et_train_lst,
+    obss_et_train_lst,
+    chosen_idx,
+)
 
 
 # ----------------------  Plot maps -------------------------
 # plot map
 def plot_map_figures(
     figure_dir,
-    exps_q_et_results,
-    exps_et_q_results,
+    stl_q_et_result,
+    stl_et_q_result,
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
 ):
     gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
-        exps_q_et_results, chosen_mtl4q_test_result
+        stl_q_et_result, chosen_mtl4q_test_result
     )
     plot_mtl_results_map(
         gage_ids["GAGE_ID"].values,
-        [exps_q_et_results[0], chosen_mtl4q_test_result],
+        [stl_q_et_result, chosen_mtl4q_test_result],
         ["Q", "MTL-Q"],
         ["o", "x"],
         os.path.join(
@@ -683,7 +683,7 @@ def plot_map_figures(
     # plot map
     plot_mtl_results_map(
         gage_ids["GAGE_ID"].values,
-        [exps_et_q_results[0], chosen_mtl4et_test_result],
+        [stl_et_q_result, chosen_mtl4et_test_result],
         ["ET", "MTL-ET"],
         ["o", "x"],
         os.path.join(
@@ -697,8 +697,8 @@ def plot_map_figures(
 
 # plot_map_figures(
 #     figure_dir,
-#     exps_q_et_results,
-#     exps_et_q_results,
+#     exps_q_et_results[0],
+#     exps_et_q_results[0],
 #     chosen_mtl4q_test_result,
 #     chosen_mtl4et_test_result,
 # )
