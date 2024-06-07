@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-05-29 16:37:01
+LastEditTime: 2024-05-30 11:30:45
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -71,9 +71,7 @@ def compare_nldas():
         )
     # compare the nldas data from camels and madeingee
     # all are numpy arrays
-    metrics = hydro_stat.stat_error(
-        nldas_camels, nldas_madeingee, fill_nan=["no", "no"]
-    )
+    metrics = hydro_stat.stat_error(nldas_camels, nldas_madeingee, fill_nan=["no"])
     print(metrics)
 
 
@@ -92,17 +90,16 @@ def _read_nldas_data(nldas_camels_file, nldas_gee_file):
     nldas_camels = camels.read_relevant_cols(
         basin_ids,
         t_range=COMP_TRANGE,
-        # only these two variables are included in both camels and GEE nldas data
-        # unit: PRCP(mm/day)	SRAD(W/m2)
-        var_lst=["prcp", "srad"],
+        # unit: PRCP(mm/day)
+        var_lst=["prcp"],
         forcing_type="nldas",
     )
     np.save(nldas_camels_file, nldas_camels)
     nldas_madeingee = camels_pro.read_relevant_cols(
         basin_ids,
         t_range_list=COMP_TRANGE,
-        # total_precipitation(kg/m^2) shortwave_radiation(W/m^2)
-        relevant_cols=["total_precipitation", "shortwave_radiation"],
+        # total_precipitation(kg/m^2)
+        relevant_cols=["total_precipitation"],
         forcing_type="nldas",
     )
     np.save(nldas_gee_file, nldas_madeingee)
@@ -243,12 +240,9 @@ def compare_ets():
     print(metrics)
 
 
-
-
 if __name__ == "__main__":
     # select_basins()
-    # compare_nldas()
+    compare_nldas()
     # see_basin_area()
     # see_basin_streamflow_data()
     compare_ets()
-    compare_et_pred()

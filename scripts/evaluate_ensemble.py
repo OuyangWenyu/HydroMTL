@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-05 18:51:30
+LastEditTime: 2024-06-07 14:15:38
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import sys
+import pickle
 
 
 # Get the project directory of the py file
@@ -31,6 +32,7 @@ from scripts.evaluate import (
     plot_scatter,
     plot_ts_figures,
 )
+from scripts.general_vars import random_seeds
 
 
 # set font
@@ -186,7 +188,13 @@ def get_exps_of_diff_random_seed(random_seed=1234):
 
 
 def get_results(
-    exps_q_et_valid, exps_et_q_valid, exps_q_et_test, exps_et_q_test, random_seed=1234
+    exps_q_et_train,
+    exps_et_q_train,
+    exps_q_et_valid,
+    exps_et_q_valid,
+    exps_q_et_test,
+    exps_et_q_test,
+    random_seed=1234,
 ):
     result_cache_dir = os.path.join(
         definitions.RESULT_DIR,
@@ -210,6 +218,14 @@ def get_results(
     exps_valid_et_q_results_file = os.path.join(
         result_cache_dir,
         f"exps_et_q_valid_results_{random_seed}.npy",
+    )
+    exps_train_q_et_results_file = os.path.join(
+        result_cache_dir,
+        f"exps_q_et_train_results_{random_seed}.npy",
+    )
+    exps_train_et_q_results_file = os.path.join(
+        result_cache_dir,
+        f"exps_et_q_train_results_{random_seed}.npy",
     )
 
     exps_test_pred_q_file = os.path.join(
@@ -244,8 +260,24 @@ def get_results(
         result_cache_dir,
         f"exps_et_valid_obs_{random_seed}.npy",
     )
-
+    exps_train_q_pred_file = os.path.join(
+        result_cache_dir,
+        f"exps_q_train_pred_{random_seed}.npy",
+    )
+    exps_train_q_obs_file = os.path.join(
+        result_cache_dir,
+        f"exps_q_train_obs_{random_seed}.npy",
+    )
+    exps_train_et_pred_file = os.path.join(
+        result_cache_dir,
+        f"exps_et_train_pred_{random_seed}.npy",
+    )
+    exps_train_et_obs_file = os.path.join(
+        result_cache_dir,
+        f"exps_et_train_obs_{random_seed}.npy",
+    )
     if (
+        # check if the cache files exist, we didn't check all files, so make sure run the code successfully once
         os.path.exists(exps_test_q_et_results_file)
         and os.path.exists(exps_test_et_q_results_file)
         and os.path.exists(exps_valid_q_et_results_file)
@@ -254,20 +286,44 @@ def get_results(
         and os.path.exists(exps_valid_obs_q_file)
         and os.path.exists(exps_valid_et_pred_file)
         and os.path.exists(exps_valid_et_obs_file)
+        and os.path.exists(exps_train_q_et_results_file)
+        and os.path.exists(exps_train_et_q_results_file)
     ):
-        exps_q_et_results = np.load(exps_test_q_et_results_file, allow_pickle=True)
-        exps_et_q_results = np.load(exps_test_et_q_results_file, allow_pickle=True)
+        q_et_test_inds = np.load(exps_test_q_et_results_file, allow_pickle=True)
+        et_q_test_inds = np.load(exps_test_et_q_results_file, allow_pickle=True)
         q_et_valid_inds = np.load(exps_valid_q_et_results_file, allow_pickle=True)
         et_q_valid_inds = np.load(exps_valid_et_q_results_file, allow_pickle=True)
-        preds_q_lst = np.load(exps_test_pred_q_file, allow_pickle=True)
-        obss_q_lst = np.load(exps_test_obs_q_file, allow_pickle=True)
-        preds_et_lst = np.load(exps_test_et_pred_file, allow_pickle=True)
-        obss_et_lst = np.load(exps_test_et_obs_file, allow_pickle=True)
+        q_et_train_inds = np.load(exps_train_q_et_results_file, allow_pickle=True)
+        et_q_train_inds = np.load(exps_train_et_q_results_file, allow_pickle=True)
+        preds_q_lst_test = np.load(exps_test_pred_q_file, allow_pickle=True)
+        obss_q_lst_test = np.load(exps_test_obs_q_file, allow_pickle=True)
+        preds_et_lst_test = np.load(exps_test_et_pred_file, allow_pickle=True)
+        obss_et_lst_test = np.load(exps_test_et_obs_file, allow_pickle=True)
         preds_q_lst_valid = np.load(exps_valid_pred_q_file, allow_pickle=True)
         obss_q_lst_valid = np.load(exps_valid_obs_q_file, allow_pickle=True)
         preds_et_lst_valid = np.load(exps_valid_et_pred_file, allow_pickle=True)
         obss_et_lst_valid = np.load(exps_valid_et_obs_file, allow_pickle=True)
+        preds_q_lst_train = np.load(exps_train_q_pred_file, allow_pickle=True)
+        obss_q_lst_train = np.load(exps_train_q_obs_file, allow_pickle=True)
+        preds_et_lst_train = np.load(exps_train_et_pred_file, allow_pickle=True)
+        obss_et_lst_train = np.load(exps_train_et_obs_file, allow_pickle=True)
     else:
+        (
+            q_et_train_inds,
+            _,
+            preds_q_lst_train,
+            obss_q_lst_train,
+        ) = read_multi_single_exps_results(
+            exps_q_et_train,
+            return_value=True,
+        )
+        (et_q_train_inds, _, preds_et_lst_train, obss_et_lst_train) = (
+            read_multi_single_exps_results(
+                exps_et_q_train,
+                var_idx=1,
+                return_value=True,
+            )
+        )
         (
             et_q_valid_inds,
             et_q_best_index_valid_best4et,
@@ -287,16 +343,16 @@ def get_results(
 
         # q when best4q
         (
-            exps_q_et_results,
+            q_et_test_inds,
             _,
-            preds_q_lst,
-            obss_q_lst,
+            preds_q_lst_test,
+            obss_q_lst_test,
         ) = read_multi_single_exps_results(
             exps_q_et_test, q_et_best_index_valid, return_value=True
         )
 
         # et when best4q
-        exps_et_q_results, _, preds_et_lst, obss_et_lst = (
+        et_q_test_inds, _, preds_et_lst_test, obss_et_lst_test = (
             read_multi_single_exps_results(
                 exps_et_q_test,
                 q_et_best_index_valid,
@@ -306,34 +362,45 @@ def get_results(
         )
         np.save(exps_valid_q_et_results_file, q_et_valid_inds, allow_pickle=True)
         np.save(exps_valid_et_q_results_file, et_q_valid_inds, allow_pickle=True)
-        np.save(exps_test_q_et_results_file, exps_q_et_results, allow_pickle=True)
-        np.save(exps_test_et_q_results_file, exps_et_q_results, allow_pickle=True)
-        np.save(exps_test_pred_q_file, preds_q_lst, allow_pickle=True)
-        np.save(exps_test_obs_q_file, obss_q_lst, allow_pickle=True)
-        np.save(exps_test_et_pred_file, preds_et_lst, allow_pickle=True)
-        np.save(exps_test_et_obs_file, obss_et_lst, allow_pickle=True)
+        np.save(exps_test_q_et_results_file, q_et_test_inds, allow_pickle=True)
+        np.save(exps_test_et_q_results_file, et_q_test_inds, allow_pickle=True)
+        np.save(exps_train_q_et_results_file, q_et_train_inds, allow_pickle=True)
+        np.save(exps_train_et_q_results_file, et_q_train_inds, allow_pickle=True)
+        np.save(exps_test_pred_q_file, preds_q_lst_test, allow_pickle=True)
+        np.save(exps_test_obs_q_file, obss_q_lst_test, allow_pickle=True)
+        np.save(exps_test_et_pred_file, preds_et_lst_test, allow_pickle=True)
+        np.save(exps_test_et_obs_file, obss_et_lst_test, allow_pickle=True)
         np.save(exps_valid_pred_q_file, preds_q_lst_valid, allow_pickle=True)
         np.save(exps_valid_obs_q_file, obss_q_lst_valid, allow_pickle=True)
         np.save(exps_valid_et_pred_file, preds_et_lst_valid, allow_pickle=True)
         np.save(exps_valid_et_obs_file, obss_et_lst_valid, allow_pickle=True)
+        np.save(exps_train_q_pred_file, preds_q_lst_train, allow_pickle=True)
+        np.save(exps_train_q_obs_file, obss_q_lst_train, allow_pickle=True)
+        np.save(exps_train_et_pred_file, preds_et_lst_train, allow_pickle=True)
+        np.save(exps_train_et_obs_file, obss_et_lst_train, allow_pickle=True)
     return (
-        exps_q_et_results,
-        exps_et_q_results,
+        q_et_test_inds,
+        et_q_test_inds,
         q_et_valid_inds,
         et_q_valid_inds,
-        preds_q_lst,
-        obss_q_lst,
-        preds_et_lst,
-        obss_et_lst,
+        q_et_train_inds,
+        et_q_train_inds,
+        preds_q_lst_test,
+        obss_q_lst_test,
+        preds_et_lst_test,
+        obss_et_lst_test,
         preds_q_lst_valid,
         obss_q_lst_valid,
         preds_et_lst_valid,
         obss_et_lst_valid,
+        preds_q_lst_train,
+        obss_q_lst_train,
+        preds_et_lst_train,
+        obss_et_lst_train,
     )
 
 
 def get_ensemble_results():
-    random_seeds = [1234, 12345, 123, 111, 1111]
     cases_exps_legends_together = [
         "STL",
         "2",
@@ -342,10 +409,12 @@ def get_ensemble_results():
         "1/8",
         "1/24",
     ]
-    preds_q_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
-    preds_et_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
+    preds_q_test_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
+    preds_et_test_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
     preds_q_valid_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
     preds_et_valid_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
+    preds_q_train_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
+    preds_et_train_ensemble_lst = [[] for _ in range(len(cases_exps_legends_together))]
     for random_seed in random_seeds:
         (
             exps_q_et_valid,
@@ -356,19 +425,27 @@ def get_ensemble_results():
             exps_et_q_train,
         ) = get_exps_of_diff_random_seed(random_seed)
         (
-            exps_q_et_results,
-            exps_et_q_results,
+            q_et_test_inds,
+            et_q_test_inds,
             q_et_valid_inds,
             et_q_valid_inds,
-            preds_q_lst,
-            obss_q_lst,
-            preds_et_lst,
-            obss_et_lst,
+            q_et_train_inds,
+            et_q_train_inds,
+            preds_q_lst_test,
+            obss_q_lst_test,
+            preds_et_lst_test,
+            obss_et_lst_test,
             preds_q_lst_valid,
             obss_q_lst_valid,
             preds_et_lst_valid,
             obss_et_lst_valid,
+            preds_q_lst_train,
+            obss_q_lst_train,
+            preds_et_lst_train,
+            obss_et_lst_train,
         ) = get_results(
+            exps_q_et_train,
+            exps_et_q_train,
             exps_q_et_valid,
             exps_et_q_valid,
             exps_q_et_test,
@@ -376,23 +453,31 @@ def get_ensemble_results():
             random_seed=random_seed,
         )
         for case_idx in range(len(cases_exps_legends_together)):
-            preds_q_ensemble_lst[case_idx].append(preds_q_lst[case_idx])
-            preds_et_ensemble_lst[case_idx].append(preds_et_lst[case_idx])
+            preds_q_test_ensemble_lst[case_idx].append(preds_q_lst_test[case_idx])
+            preds_et_test_ensemble_lst[case_idx].append(preds_et_lst_test[case_idx])
             preds_q_valid_ensemble_lst[case_idx].append(preds_q_lst_valid[case_idx])
             preds_et_valid_ensemble_lst[case_idx].append(preds_et_lst_valid[case_idx])
-    preds_et_ensemble = []
-    preds_q_ensemble = []
-    obss_et_ensemble = obss_et_lst
-    obss_q_ensemble = obss_q_lst
+            preds_q_train_ensemble_lst[case_idx].append(preds_q_lst_train[case_idx])
+            preds_et_train_ensemble_lst[case_idx].append(preds_et_lst_train[case_idx])
+    preds_et_test_ensemble = []
+    preds_q_test_ensemble = []
+    obss_et_test_ensemble = obss_et_lst_test
+    obss_q_test_ensemble = obss_q_lst_test
     preds_et_valid_ensemble = []
     preds_q_valid_ensemble = []
     obss_et_valid_ensemble = obss_et_lst_valid
     obss_q_valid_ensemble = obss_q_lst_valid
+    preds_et_train_ensemble = []
+    preds_q_train_ensemble = []
+    obss_et_train_ensemble = obss_et_lst_train
+    obss_q_train_ensemble = obss_q_lst_train
     for i in range(len(cases_exps_legends_together)):
-        ensemble_preds_q = np.mean(np.array(preds_q_ensemble_lst[i]), axis=0)
-        ensemble_preds_et = np.mean(np.array(preds_et_ensemble_lst[i]), axis=0)
-        preds_et_ensemble.append(ensemble_preds_et)
-        preds_q_ensemble.append(ensemble_preds_q)
+        ensemble_preds_q_test = np.mean(np.array(preds_q_test_ensemble_lst[i]), axis=0)
+        ensemble_preds_et_test = np.mean(
+            np.array(preds_et_test_ensemble_lst[i]), axis=0
+        )
+        preds_et_test_ensemble.append(ensemble_preds_et_test)
+        preds_q_test_ensemble.append(ensemble_preds_q_test)
         ensemble_preds_q_valid = np.mean(
             np.array(preds_q_valid_ensemble_lst[i]), axis=0
         )
@@ -401,15 +486,27 @@ def get_ensemble_results():
         )
         preds_et_valid_ensemble.append(ensemble_preds_et_valid)
         preds_q_valid_ensemble.append(ensemble_preds_q_valid)
+        ensemble_preds_q_train = np.mean(
+            np.array(preds_q_train_ensemble_lst[i]), axis=0
+        )
+        ensemble_preds_et_train = np.mean(
+            np.array(preds_et_train_ensemble_lst[i]), axis=0
+        )
+        preds_et_train_ensemble.append(ensemble_preds_et_train)
+        preds_q_train_ensemble.append(ensemble_preds_q_train)
     return (
-        preds_q_ensemble,
-        obss_q_ensemble,
-        preds_et_ensemble,
-        obss_et_ensemble,
+        preds_q_test_ensemble,
+        obss_q_test_ensemble,
+        preds_et_test_ensemble,
+        obss_et_test_ensemble,
         preds_q_valid_ensemble,
         obss_q_valid_ensemble,
         preds_et_valid_ensemble,
         obss_et_valid_ensemble,
+        preds_q_train_ensemble,
+        obss_q_train_ensemble,
+        preds_et_train_ensemble,
+        obss_et_train_ensemble,
     )
 
 
@@ -487,16 +584,33 @@ def extract_metrics_from_dict(data_list, dict_indices, metric_keys):
     return results
 
 
+def save_to_cache(data, filename):
+    with open(filename, "wb") as f:
+        pickle.dump(data, f)
+
+
+def load_from_cache(filename):
+    if os.path.exists(filename):
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    else:
+        return None
+
+
 if __name__ == "__main__":
     (
-        preds_q_ensemble,
-        obss_q_ensemble,
-        preds_et_ensemble,
-        obss_et_ensemble,
+        preds_q_test_ensemble,
+        obss_q_test_ensemble,
+        preds_et_test_ensemble,
+        obss_et_test_ensemble,
         preds_q_valid_ensemble,
         obss_q_valid_ensemble,
         preds_et_valid_ensemble,
         obss_et_valid_ensemble,
+        preds_q_train_ensemble,
+        obss_q_train_ensemble,
+        preds_et_train_ensemble,
+        obss_et_train_ensemble,
     ) = get_ensemble_results()
     cases_exps_legends_together = [
         "STL",
@@ -506,28 +620,58 @@ if __name__ == "__main__":
         "1/8",
         "1/24",
     ]
-    inds_ensemble_q_valid = read_ensemble_metrics(
-        preds_q_valid_ensemble,
-        obss_q_valid_ensemble,
-        cases_exps_legends_together,
-    )
-    inds_ensemble_q_test = read_ensemble_metrics(
-        preds_q_ensemble,
-        obss_q_ensemble,
-        cases_exps_legends_together,
-    )
-    inds_ensemble_et_valid = read_ensemble_metrics(
-        preds_et_valid_ensemble,
-        obss_et_valid_ensemble,
-        cases_exps_legends_together,
-        var_idx=1,
-    )
-    inds_ensemble_et_test = read_ensemble_metrics(
-        preds_et_ensemble,
-        obss_et_ensemble,
-        cases_exps_legends_together,
-        var_idx=1,
-    )
+    cache_files = {
+        "inds_ensemble_q_valid": os.path.join(
+            definitions.RESULT_DIR, "cache", "inds_ensemble_q_valid.pkl"
+        ),
+        "inds_ensemble_q_test": os.path.join(
+            definitions.RESULT_DIR, "cache", "inds_ensemble_q_test.pkl"
+        ),
+        "inds_ensemble_et_valid": os.path.join(
+            definitions.RESULT_DIR, "cache", "inds_ensemble_et_valid.pkl"
+        ),
+        "inds_ensemble_et_test": os.path.join(
+            definitions.RESULT_DIR, "cache", "inds_ensemble_et_test.pkl"
+        ),
+    }
+
+    inds_ensemble_q_valid = load_from_cache(cache_files["inds_ensemble_q_valid"])
+    if inds_ensemble_q_valid is None:
+        inds_ensemble_q_valid = read_ensemble_metrics(
+            preds_q_valid_ensemble,
+            obss_q_valid_ensemble,
+            cases_exps_legends_together,
+        )
+        save_to_cache(inds_ensemble_q_valid, cache_files["inds_ensemble_q_valid"])
+
+    inds_ensemble_q_test = load_from_cache(cache_files["inds_ensemble_q_test"])
+    if inds_ensemble_q_test is None:
+        inds_ensemble_q_test = read_ensemble_metrics(
+            preds_q_test_ensemble,
+            obss_q_test_ensemble,
+            cases_exps_legends_together,
+        )
+        save_to_cache(inds_ensemble_q_test, cache_files["inds_ensemble_q_test"])
+
+    inds_ensemble_et_valid = load_from_cache(cache_files["inds_ensemble_et_valid"])
+    if inds_ensemble_et_valid is None:
+        inds_ensemble_et_valid = read_ensemble_metrics(
+            preds_et_valid_ensemble,
+            obss_et_valid_ensemble,
+            cases_exps_legends_together,
+            var_idx=1,
+        )
+        save_to_cache(inds_ensemble_et_valid, cache_files["inds_ensemble_et_valid"])
+
+    inds_ensemble_et_test = load_from_cache(cache_files["inds_ensemble_et_test"])
+    if inds_ensemble_et_test is None:
+        inds_ensemble_et_test = read_ensemble_metrics(
+            preds_et_test_ensemble,
+            obss_et_test_ensemble,
+            cases_exps_legends_together,
+            var_idx=1,
+        )
+        save_to_cache(inds_ensemble_et_test, cache_files["inds_ensemble_et_test"])
 
     figure_dir = os.path.join(
         definitions.RESULT_DIR,
@@ -570,76 +714,79 @@ if __name__ == "__main__":
     et_metrics_results_chosen = extract_metrics_from_dict(
         inds_ensemble_et_test, [0, chosen_idx], show_inds
     )
+    chosen_metric_idx = 3
     # --------------- Plot all metrics for testing period ---------------------------
     # plot all metrics for stl and mtl exps
     # for Q
-    plot_boxes_matplotlib(
-        q_metrices_results_chosen,
-        label1=show_inds,
-        label2=["STL", "MTL"],
-        colorlst=["#d62728", "#1f77b4"],
-        figsize=(10, 5),
-        subplots_adjust_wspace=0.35,
-        median_font_size="xx-small",
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            "mtl_flow_test_all_metrices_boxes_ensemble.png",
-        ),
-        dpi=FIGURE_DPI,
-        bbox_inches="tight",
-    )
-    # for ET
-    plot_boxes_matplotlib(
-        et_metrics_results_chosen,
-        label1=show_inds,
-        label2=["STL", "MTL"],
-        colorlst=["#d62728", "#1f77b4"],
-        figsize=(10, 5),
-        subplots_adjust_wspace=0.35,
-        median_font_size="xx-small",
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            "mtl_et_test_all_metrices_boxes_ensemble.png",
-        ),
-        dpi=FIGURE_DPI,
-        bbox_inches="tight",
-    )
+    # plot_boxes_matplotlib(
+    #     q_metrices_results_chosen,
+    #     label1=show_inds,
+    #     label2=["STL", "MTL"],
+    #     colorlst=["#d62728", "#1f77b4"],
+    #     figsize=(10, 5),
+    #     subplots_adjust_wspace=0.35,
+    #     median_font_size="xx-small",
+    # )
+    # plt.savefig(
+    #     os.path.join(
+    #         figure_dir,
+    #         "mtl_flow_test_all_metrices_boxes_ensemble.png",
+    #     ),
+    #     dpi=FIGURE_DPI,
+    #     bbox_inches="tight",
+    # )
+    # # for ET
+    # plot_boxes_matplotlib(
+    #     et_metrics_results_chosen,
+    #     label1=show_inds,
+    #     label2=["STL", "MTL"],
+    #     colorlst=["#d62728", "#1f77b4"],
+    #     figsize=(10, 5),
+    #     subplots_adjust_wspace=0.35,
+    #     median_font_size="xx-small",
+    # )
+    # plt.savefig(
+    #     os.path.join(
+    #         figure_dir,
+    #         "mtl_et_test_all_metrices_boxes_ensemble.png",
+    #     ),
+    #     dpi=FIGURE_DPI,
+    #     bbox_inches="tight",
+    # )
     # plot scatter with a 1:1 line to compare single-task and multi-task models
     plot_scatter(
         figure_dir,
-        q_metrices_results_chosen[chosen_idx][0],
-        et_metrics_results_chosen[chosen_idx][0],
-        q_metrices_results_chosen[chosen_idx][1],
-        et_metrics_results_chosen[chosen_idx][1],
+        q_metrices_results_chosen[chosen_metric_idx][0],
+        et_metrics_results_chosen[chosen_metric_idx][0],
+        q_metrices_results_chosen[chosen_metric_idx][1],
+        et_metrics_results_chosen[chosen_metric_idx][1],
         random_seed="ensemble",
     )
 
     # ---- Plot time-series for some specific basins ------
     plot_ts_figures(
         figure_dir,
-        q_metrices_results_chosen[chosen_idx][0],
-        q_metrices_results_chosen[chosen_idx][1],
-        preds_q_lst,
-        obss_q_lst,
-        preds_et_lst,
-        obss_et_lst,
-        preds_q_train_lst,
-        obss_q_train_lst,
-        preds_et_train_lst,
-        obss_et_train_lst,
+        q_metrices_results_chosen[chosen_metric_idx][0],
+        q_metrices_results_chosen[chosen_metric_idx][1],
+        np.array(preds_q_test_ensemble),
+        np.array(obss_q_test_ensemble),
+        np.array(preds_et_test_ensemble),
+        np.array(obss_et_test_ensemble),
+        np.array(preds_q_train_ensemble),
+        np.array(obss_q_train_ensemble),
+        np.array(preds_et_train_ensemble),
+        np.array(obss_et_train_ensemble),
         chosen_idx,
+        random_seed="ensemble",
     )
 
     # ----------------------  Plot maps -------------------------
     # plot map
     plot_map_figures(
         figure_dir,
-        exps_q_et_results,
-        exps_et_q_results,
-        chosen_mtl4q_test_result,
-        chosen_mtl4et_test_result,
+        q_metrices_results_chosen[chosen_metric_idx][0],
+        et_metrics_results_chosen[chosen_metric_idx][0],
+        q_metrices_results_chosen[chosen_metric_idx][1],
+        et_metrics_results_chosen[chosen_metric_idx][1],
+        random_seed="ensemble",
     )

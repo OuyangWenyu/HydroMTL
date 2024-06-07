@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-05 18:50:53
+LastEditTime: 2024-06-07 15:34:25
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -328,6 +328,7 @@ def plot_scatter(
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
     random_seed=1234,
+    points_num=1,
 ):
     plot_scatter_with_11line(
         stl_q_et_result,
@@ -350,39 +351,41 @@ def plot_scatter(
 
     # Calculate the difference for the filtered data
     filtered_diff = np.abs(filtered_x - filtered_y)
-
+    indices = np.argpartition(filtered_diff, -points_num)[-points_num:]
     # Find the index of the point with the most significant difference in the filtered data
-    filtered_max_diff_index = np.argmax(filtered_diff)
-
-    # Highlight the point with the most significant difference with a red circle
-    plt.gca().add_artist(
-        plt.Circle(
-            (filtered_x[filtered_max_diff_index], filtered_y[filtered_max_diff_index]),
-            0.02,
-            fill=False,
-            color=mark_color,
-            linewidth=2,
+    # filtered_max_diff_index = np.argmax(filtered_diff)
+    for idx in indices:
+        # Highlight the point with the most significant difference with a red circle
+        plt.gca().add_artist(
+            plt.Circle(
+                (
+                    filtered_x[idx],
+                    filtered_y[idx],
+                ),
+                0.02,
+                fill=False,
+                color=mark_color,
+                linewidth=2,
+            )
         )
-    )
-    # Label the plot
-    plt.text(
-        filtered_x[filtered_max_diff_index],
-        filtered_y[filtered_max_diff_index],
-        " Max diff",
-        verticalalignment="bottom",
-        horizontalalignment="left",
-        color=mark_color,
-        fontsize=18,
-    )
-
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"mtl_stl_flow_scatter_plot_with_11line_{random_seed}.png",
-        ),
-        dpi=600,
-        bbox_inches="tight",
-    )
+        # Label the plot
+        plt.text(
+            filtered_x[idx],
+            filtered_y[idx],
+            " Max diff",
+            verticalalignment="bottom",
+            horizontalalignment="left",
+            color=mark_color,
+            fontsize=18,
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"mtl_stl_flow_scatter_plot_with_11line_{random_seed}.png",
+            ),
+            dpi=600,
+            bbox_inches="tight",
+        )
 
     plot_scatter_with_11line(
         stl_et_q_result,
@@ -392,51 +395,49 @@ def plot_scatter(
         xlabel="STL_ET NSE",
         ylabel="MTL_ET NSE",
     )
-    # Get the values of the point with max difference
-    max_diff_x_value = filtered_x[filtered_max_diff_index]
-    max_diff_y_value = filtered_y[filtered_max_diff_index]
+    for idx in indices:
+        # Get the values of the point with max difference
+        max_diff_x_value = filtered_x[idx]
+        max_diff_y_value = filtered_y[idx]
 
-    # Extract the first and second 1-D arrays from the second 2-D array
-    x2 = stl_et_q_result
-    y2 = chosen_mtl4et_test_result
+        # Extract the first and second 1-D arrays from the second 2-D array
+        x2 = stl_et_q_result
+        y2 = chosen_mtl4et_test_result
 
-    # Filter the data to only include points where both x and y are in the range [0, 1]
-    mask2 = (x2 >= 0) & (x2 <= 1) & (y2 >= 0) & (y2 <= 1)
-    filtered_x2 = x2[mask2]
-    filtered_y2 = y2[mask2]
-
-    # Find the index of the point with the max difference in the first plot in the second plot
-    index_in_second_plot = np.where(mask)[0][filtered_max_diff_index]
-    # Highlight the point with the same index as the point with the max difference in the first plot
-    plt.gca().add_artist(
-        plt.Circle(
-            (x2[index_in_second_plot], y2[index_in_second_plot]),
-            0.01,
-            fill=False,
-            color=mark_color,
-            linewidth=2,
+        # Filter the data to only include points where both x and y are in the range [0, 1]
+        mask2 = (x2 >= 0) & (x2 <= 1) & (y2 >= 0) & (y2 <= 1)
+        filtered_x2 = x2[mask2]
+        filtered_y2 = y2[mask2]
+        # Find the index of the point with the max difference in the first plot in the second plot
+        index_in_second_plot = np.where(mask)[0][idx]
+        # Highlight the point with the same index as the point with the max difference in the first plot
+        plt.gca().add_artist(
+            plt.Circle(
+                (x2[index_in_second_plot], y2[index_in_second_plot]),
+                0.01,
+                fill=False,
+                color=mark_color,
+                linewidth=2,
+            )
         )
-    )
-
-    # Label the plot
-    plt.text(
-        x2[index_in_second_plot],
-        y2[index_in_second_plot],
-        " Max diff \n in fig(a)",
-        verticalalignment="top",
-        horizontalalignment="left",
-        color=mark_color,
-        fontsize=18,
-    )
-
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"mtl_stl_et_scatter_plot_with_11line_{random_seed}.png",
-        ),
-        dpi=600,
-        bbox_inches="tight",
-    )
+        # Label the plot
+        plt.text(
+            x2[index_in_second_plot],
+            y2[index_in_second_plot],
+            " Max diff \n in fig(a)",
+            verticalalignment="top",
+            horizontalalignment="left",
+            color=mark_color,
+            fontsize=18,
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"mtl_stl_et_scatter_plot_with_11line_{random_seed}.png",
+            ),
+            dpi=600,
+            bbox_inches="tight",
+        )
 
 
 # plot_scatter(
@@ -453,15 +454,16 @@ def plot_ts_figures(
     figure_dir,
     stl_q_et_result,
     chosen_mtl4q_test_result,
-    preds_q_lst,
-    obss_q_lst,
-    preds_et_lst,
-    obss_et_lst,
-    preds_q_train_lst,
-    obss_q_train_lst,
-    preds_et_train_lst,
-    obss_et_train_lst,
+    preds_q_lst: np.ndarray,
+    obss_q_lst: np.ndarray,
+    preds_et_lst: np.ndarray,
+    obss_et_lst: np.ndarray,
+    preds_q_train_lst: np.ndarray,
+    obss_q_train_lst: np.ndarray,
+    preds_et_train_lst: np.ndarray,
+    obss_et_train_lst: np.ndarray,
     chosen_idx,
+    random_seed=1234,
 ):
     source_path = [
         os.path.join(definitions.DATASET_DIR, "camelsflowet"),
@@ -507,7 +509,7 @@ def plot_ts_figures(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "abasin_mtl_stl_flow_train_rrts.png",
+            f"abasin_mtl_stl_flow_train_rrts_{random_seed}.png",
         ),
         dpi=600,
     )
@@ -527,7 +529,7 @@ def plot_ts_figures(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "abasin_mtl_stl_flow_train_ts.png",
+            f"abasin_mtl_stl_flow_train_ts_{random_seed}.png",
         ),
         dpi=600,
     )
@@ -548,7 +550,7 @@ def plot_ts_figures(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "abasin_mtl_stl_et_train_ts.png",
+            f"abasin_mtl_stl_et_train_ts_{random_seed}.png",
         ),
         dpi=600,
     )
@@ -577,7 +579,7 @@ def plot_ts_figures(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "abasin_mtl_stl_flow_rrts.png",
+            f"abasin_mtl_stl_flow_rrts_{random_seed}.png",
         ),
         dpi=600,
     )
@@ -598,7 +600,7 @@ def plot_ts_figures(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "abasin_mtl_stl_flow_ts.png",
+            f"abasin_mtl_stl_flow_ts_{random_seed}.png",
         ),
         dpi=600,
     )
@@ -618,7 +620,7 @@ def plot_ts_figures(
     plt.savefig(
         os.path.join(
             figure_dir,
-            "abasin_mtl_stl_et_ts.png",
+            f"abasin_mtl_stl_et_ts_{random_seed}.png",
         ),
         dpi=600,
     )
@@ -632,28 +634,28 @@ def _find_max_diff(stl_q_et_result, chosen_mtl4q_test_result):
 
     diff_q = chosen_mtl4q_test_result - stl_q_et_result
     diff_q_sort = np.argsort(diff_q)
-    both_positive_q = np.where(
-        (chosen_mtl4q_test_result > 0) & (stl_q_et_result > 0)
-    )[0]
+    both_positive_q = np.where((chosen_mtl4q_test_result > 0) & (stl_q_et_result > 0))[
+        0
+    ]
     diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
     max_diff_gage_id = str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)
     return gage_ids, diff_q_sort_idx, max_diff_gage_id
 
 
-plot_ts_figures(
-    figure_dir,
-    exps_q_et_results[0],
-    chosen_mtl4q_test_result,
-    preds_q_lst,
-    obss_q_lst,
-    preds_et_lst,
-    obss_et_lst,
-    preds_q_train_lst,
-    obss_q_train_lst,
-    preds_et_train_lst,
-    obss_et_train_lst,
-    chosen_idx,
-)
+# plot_ts_figures(
+#     figure_dir,
+#     exps_q_et_results[0],
+#     chosen_mtl4q_test_result,
+#     preds_q_lst,
+#     obss_q_lst,
+#     preds_et_lst,
+#     obss_et_lst,
+#     preds_q_train_lst,
+#     obss_q_train_lst,
+#     preds_et_train_lst,
+#     obss_et_train_lst,
+#     chosen_idx,
+# )
 
 
 # ----------------------  Plot maps -------------------------
@@ -664,6 +666,7 @@ def plot_map_figures(
     stl_et_q_result,
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
+    random_seed=1234,
 ):
     gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
         stl_q_et_result, chosen_mtl4q_test_result
@@ -675,7 +678,7 @@ def plot_map_figures(
         ["o", "x"],
         os.path.join(
             figure_dir,
-            "better_flow_stl_mtl_cases_map.png",
+            f"better_flow_stl_mtl_cases_map_{random_seed}.png",
         ),
         highlight_idx=diff_q_sort_idx[-1],
         highlight_label=f"max-diff basin: {max_diff_gage_id}",
@@ -688,7 +691,7 @@ def plot_map_figures(
         ["o", "x"],
         os.path.join(
             figure_dir,
-            "better_et_stl_mtl_cases_map.png",
+            f"better_et_stl_mtl_cases_map_{random_seed}.png",
         ),
         highlight_idx=diff_q_sort_idx[-1],
         highlight_label=f"max-Q-diff basin: {max_diff_gage_id}",
