@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-07 15:34:25
+LastEditTime: 2024-06-11 11:53:35
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -318,6 +318,20 @@ def plot_multi_metrics(
 
 
 # plot_multi_metrics(exps_q_et_test, exps_et_q_test, figure_dir, chosen_idx)
+def _generate_labels(points_num):
+    if points_num == 1:
+        return ["Max diff"]
+
+    labels = ["Max diff"]
+    suffixes = ["2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"]
+
+    for i in range(1, points_num):
+        if i < len(suffixes):
+            labels.append(f"{suffixes[i-1]} Max diff")
+        else:
+            labels.append(f"{i+1}th Max diff")
+
+    return labels
 
 
 # plot scatter with a 1:1 line to compare single-task and multi-task models
@@ -352,9 +366,11 @@ def plot_scatter(
     # Calculate the difference for the filtered data
     filtered_diff = np.abs(filtered_x - filtered_y)
     indices = np.argpartition(filtered_diff, -points_num)[-points_num:]
+    sorted_indices = indices[np.argsort(filtered_diff[indices])][::-1]
+    labels = _generate_labels(points_num)
     # Find the index of the point with the most significant difference in the filtered data
     # filtered_max_diff_index = np.argmax(filtered_diff)
-    for idx in indices:
+    for i, idx in enumerate(sorted_indices):
         # Highlight the point with the most significant difference with a red circle
         plt.gca().add_artist(
             plt.Circle(
@@ -372,7 +388,7 @@ def plot_scatter(
         plt.text(
             filtered_x[idx],
             filtered_y[idx],
-            " Max diff",
+            f" {labels[i]}",
             verticalalignment="bottom",
             horizontalalignment="left",
             color=mark_color,
@@ -381,7 +397,7 @@ def plot_scatter(
         plt.savefig(
             os.path.join(
                 figure_dir,
-                f"mtl_stl_flow_scatter_plot_with_11line_{random_seed}.png",
+                f"mtl_stl_flow_scatter_plot_with_11line_{random_seed}_{i}max.png",
             ),
             dpi=600,
             bbox_inches="tight",
@@ -395,7 +411,7 @@ def plot_scatter(
         xlabel="STL_ET NSE",
         ylabel="MTL_ET NSE",
     )
-    for idx in indices:
+    for i, idx in enumerate(sorted_indices):
         # Get the values of the point with max difference
         max_diff_x_value = filtered_x[idx]
         max_diff_y_value = filtered_y[idx]
@@ -408,7 +424,7 @@ def plot_scatter(
         mask2 = (x2 >= 0) & (x2 <= 1) & (y2 >= 0) & (y2 <= 1)
         filtered_x2 = x2[mask2]
         filtered_y2 = y2[mask2]
-        # Find the index of the point with the max difference in the first plot in the second plot
+        # TODO: check -- Find the index of the point with the max difference in the first plot in the second plot
         index_in_second_plot = np.where(mask)[0][idx]
         # Highlight the point with the same index as the point with the max difference in the first plot
         plt.gca().add_artist(
@@ -424,7 +440,7 @@ def plot_scatter(
         plt.text(
             x2[index_in_second_plot],
             y2[index_in_second_plot],
-            " Max diff \n in fig(a)",
+            f" {labels[i]} in Q",
             verticalalignment="top",
             horizontalalignment="left",
             color=mark_color,
@@ -433,20 +449,21 @@ def plot_scatter(
         plt.savefig(
             os.path.join(
                 figure_dir,
-                f"mtl_stl_et_scatter_plot_with_11line_{random_seed}.png",
+                f"mtl_stl_et_scatter_plot_with_11line_{random_seed}_{i}max.png",
             ),
             dpi=600,
             bbox_inches="tight",
         )
 
 
-# plot_scatter(
-#     figure_dir,
-#     exps_q_et_results[0],
-#     exps_et_q_results[0],
-#     chosen_mtl4q_test_result,
-#     chosen_mtl4et_test_result,
-# )
+plot_scatter(
+    figure_dir,
+    exps_q_et_results[0],
+    exps_et_q_results[0],
+    chosen_mtl4q_test_result,
+    chosen_mtl4et_test_result,
+    points_num=2,
+)
 
 
 # ---- Plot time-series for some specific basins ------
