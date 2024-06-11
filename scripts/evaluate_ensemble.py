@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-07 14:15:38
+LastEditTime: 2024-06-11 15:52:56
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -761,6 +761,7 @@ if __name__ == "__main__":
         q_metrices_results_chosen[chosen_metric_idx][1],
         et_metrics_results_chosen[chosen_metric_idx][1],
         random_seed="ensemble",
+        points_num=2,
     )
 
     # ---- Plot time-series for some specific basins ------

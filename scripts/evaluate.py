@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-11 11:53:35
+LastEditTime: 2024-06-11 15:52:31
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -343,16 +343,8 @@ def plot_scatter(
     chosen_mtl4et_test_result,
     random_seed=1234,
     points_num=1,
+    one_plot=False,
 ):
-    plot_scatter_with_11line(
-        stl_q_et_result,
-        chosen_mtl4q_test_result,
-        # xlabel="NSE single-task",
-        # ylabel="NSE multi-task",
-        xlabel="STL_Q NSE",
-        ylabel="MTL_Q NSE",
-    )
-
     mark_color = "darkred"
 
     # Extract the first and second 1-D arrays
@@ -371,6 +363,15 @@ def plot_scatter(
     # Find the index of the point with the most significant difference in the filtered data
     # filtered_max_diff_index = np.argmax(filtered_diff)
     for i, idx in enumerate(sorted_indices):
+        if not (one_plot and i > 0):
+            plot_scatter_with_11line(
+                stl_q_et_result,
+                chosen_mtl4q_test_result,
+                # xlabel="NSE single-task",
+                # ylabel="NSE multi-task",
+                xlabel="STL_Q NSE",
+                ylabel="MTL_Q NSE",
+            )
         # Highlight the point with the most significant difference with a red circle
         plt.gca().add_artist(
             plt.Circle(
@@ -403,28 +404,21 @@ def plot_scatter(
             bbox_inches="tight",
         )
 
-    plot_scatter_with_11line(
-        stl_et_q_result,
-        chosen_mtl4et_test_result,
-        # xlabel="NSE single-task",
-        # ylabel="NSE multi-task",
-        xlabel="STL_ET NSE",
-        ylabel="MTL_ET NSE",
-    )
+    # Extract the first and second 1-D arrays from the second 2-D array
+    x2 = stl_et_q_result
+    y2 = chosen_mtl4et_test_result
     for i, idx in enumerate(sorted_indices):
-        # Get the values of the point with max difference
-        max_diff_x_value = filtered_x[idx]
-        max_diff_y_value = filtered_y[idx]
-
-        # Extract the first and second 1-D arrays from the second 2-D array
-        x2 = stl_et_q_result
-        y2 = chosen_mtl4et_test_result
-
-        # Filter the data to only include points where both x and y are in the range [0, 1]
-        mask2 = (x2 >= 0) & (x2 <= 1) & (y2 >= 0) & (y2 <= 1)
-        filtered_x2 = x2[mask2]
-        filtered_y2 = y2[mask2]
-        # TODO: check -- Find the index of the point with the max difference in the first plot in the second plot
+        if not (one_plot and i > 0):
+            plot_scatter_with_11line(
+                stl_et_q_result,
+                chosen_mtl4et_test_result,
+                # xlabel="NSE single-task",
+                # ylabel="NSE multi-task",
+                xlabel="STL_ET NSE",
+                ylabel="MTL_ET NSE",
+            )
+        # Find the index of the point with the max difference in the first plot in the second plot
+        # mask is the first plot's mask, and it is correct
         index_in_second_plot = np.where(mask)[0][idx]
         # Highlight the point with the same index as the point with the max difference in the first plot
         plt.gca().add_artist(
@@ -456,14 +450,14 @@ def plot_scatter(
         )
 
 
-plot_scatter(
-    figure_dir,
-    exps_q_et_results[0],
-    exps_et_q_results[0],
-    chosen_mtl4q_test_result,
-    chosen_mtl4et_test_result,
-    points_num=2,
-)
+# plot_scatter(
+#     figure_dir,
+#     exps_q_et_results[0],
+#     exps_et_q_results[0],
+#     chosen_mtl4q_test_result,
+#     chosen_mtl4et_test_result,
+#     points_num=2,
+# )
 
 
 # ---- Plot time-series for some specific basins ------
