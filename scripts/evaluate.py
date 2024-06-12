@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-11 15:52:31
+LastEditTime: 2024-06-12 20:48:03
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -430,13 +430,18 @@ def plot_scatter(
                 linewidth=2,
             )
         )
+        # Determine the position of the label based on the relative position of the point to the 1:1 line
+        if x2[index_in_second_plot] < y2[index_in_second_plot]:
+            position = "bottom right"
+        else:
+            position = "top left"
         # Label the plot
         plt.text(
             x2[index_in_second_plot],
             y2[index_in_second_plot],
-            f" {labels[i]} in Q",
-            verticalalignment="top",
-            horizontalalignment="left",
+            f" {labels[i]} \nin Q",
+            verticalalignment=position.split()[0],
+            horizontalalignment=position.split()[1],
             color=mark_color,
             fontsize=18,
         )
@@ -475,6 +480,7 @@ def plot_ts_figures(
     obss_et_train_lst: np.ndarray,
     chosen_idx,
     random_seed=1234,
+    points_num=1,
 ):
     source_path = [
         os.path.join(definitions.DATASET_DIR, "camelsflowet"),
@@ -484,8 +490,8 @@ def plot_ts_figures(
         os.path.join(definitions.DATASET_DIR, "smap4camels"),
     ]
     camels_pro = CamelsPro(source_path)
-    gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
-        stl_q_et_result, chosen_mtl4q_test_result
+    gage_ids, diff_q_sort_idx, max_diff_gage_ids = _find_max_diff(
+        stl_q_et_result, chosen_mtl4q_test_result, points_num
     )
     time_range = ["2016-10-01", "2021-10-01"]
     t_lst = hydro_utils.t_range_days(time_range)
@@ -495,149 +501,150 @@ def plot_ts_figures(
     # just set the test period as the training period
     train_time_range = ["2001-10-01", "2011-10-01"]
     t_lst_train = hydro_utils.t_range_days(train_time_range)
-    # precipitation from NLDAS 2
     prcp_train = camels_pro.read_relevant_cols(
-        object_ids=[max_diff_gage_id],
+        object_ids=max_diff_gage_ids,
         t_range_list=train_time_range,
         relevant_cols=["total_precipitation"],
         forcing_type="nldas",
-    ).flatten()
-    plot_rainfall_runoff(
-        t_lst_train,
-        prcp_train,
-        [
-            preds_q_train_lst[0, diff_q_sort_idx[-1], :],
-            preds_q_train_lst[chosen_idx, diff_q_sort_idx[-1], :],
-            obss_q_train_lst[0, diff_q_sort_idx[-1], :],
-        ],
-        leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
-        xlabel="Date",
-        ylabel="Streamflow(m$^3$/s)",
-        fig_size=(18, 6),
-        # red/blue/black in seaborn pastel
-        c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"abasin_mtl_stl_flow_train_rrts_{random_seed}.png",
-        ),
-        dpi=600,
-    )
-    plot_ts(
-        np.tile(t_lst_train, (3, 1)).tolist(),
-        [
-            preds_q_train_lst[0, diff_q_sort_idx[-1], :],
-            preds_q_train_lst[chosen_idx, diff_q_sort_idx[-1], :],
-            obss_q_train_lst[0, diff_q_sort_idx[-1], :],
-        ],
-        leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
-        xlabel="Date",
-        ylabel="Streamflow(m$^3$/s)",
-        c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
-        fig_size=(18, 6),
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"abasin_mtl_stl_flow_train_ts_{random_seed}.png",
-        ),
-        dpi=600,
-    )
-
-    plot_ts(
-        np.tile(t_lst_train, (3, 1)).tolist(),
-        [
-            preds_et_train_lst[0, diff_q_sort_idx[-1], :],
-            preds_et_train_lst[chosen_idx, diff_q_sort_idx[-1], :],
-            obss_et_train_lst[0, diff_q_sort_idx[-1], :],
-        ],
-        leg_lst=["STL_ET", "MTL_ET", "OBS_ET"],
-        xlabel="Date",
-        ylabel="ET(mm/day)",
-        c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
-        fig_size=(18, 6),
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"abasin_mtl_stl_et_train_ts_{random_seed}.png",
-        ),
-        dpi=600,
-    )
-
-    # for testing period
+    ).reshape(points_num, -1)
     prcp = camels_pro.read_relevant_cols(
-        object_ids=[str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)],
+        object_ids=max_diff_gage_ids,
         t_range_list=time_range,
         relevant_cols=["total_precipitation"],
         forcing_type="nldas",
-    ).flatten()
-    plot_rainfall_runoff(
-        t_lst,
-        prcp,
-        [
-            preds_q_lst[0, diff_q_sort_idx[-1], :],
-            preds_q_lst[chosen_idx, diff_q_sort_idx[-1], :],
-            obss_q_lst[0, diff_q_sort_idx[-1], :],
-        ],
-        leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
-        xlabel="Date",
-        ylabel="Streamflow(m$^3$/s)",
-        fig_size=(18, 6),
-        c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"abasin_mtl_stl_flow_rrts_{random_seed}.png",
-        ),
-        dpi=600,
-    )
+    ).reshape(points_num, -1)
+    for i in range(len(max_diff_gage_ids)):
+        # precipitation from NLDAS 2
+        plot_rainfall_runoff(
+            t_lst_train,
+            prcp_train[i],
+            [
+                preds_q_train_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+                preds_q_train_lst[chosen_idx, diff_q_sort_idx[-(points_num - i)], :],
+                obss_q_train_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+            ],
+            leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
+            xlabel="Date",
+            ylabel="Streamflow(m$^3$/s)",
+            fig_size=(18, 6),
+            # red/blue/black in seaborn pastel
+            c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_mtl_stl_flow_train_rrts_{random_seed}.png",
+            ),
+            dpi=600,
+        )
+        plot_ts(
+            np.tile(t_lst_train, (3, 1)).tolist(),
+            [
+                preds_q_train_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+                preds_q_train_lst[chosen_idx, diff_q_sort_idx[-(points_num - i)], :],
+                obss_q_train_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+            ],
+            leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
+            xlabel="Date",
+            ylabel="Streamflow(m$^3$/s)",
+            c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
+            fig_size=(18, 6),
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_mtl_stl_flow_train_ts_{random_seed}.png",
+            ),
+            dpi=600,
+        )
 
-    # also plot the ET and soil moisture
-    plot_ts(
-        np.tile(t_lst, (3, 1)).tolist(),
-        [
-            preds_q_lst[0, diff_q_sort_idx[-1], :],
-            preds_q_lst[chosen_idx, diff_q_sort_idx[-1], :],
-            obss_q_lst[0, diff_q_sort_idx[-1], :],
-        ],
-        leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
-        xlabel="Date",
-        ylabel="Streamflow(m$^3$/s)",
-        c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"abasin_mtl_stl_flow_ts_{random_seed}.png",
-        ),
-        dpi=600,
-    )
+        plot_ts(
+            np.tile(t_lst_train, (3, 1)).tolist(),
+            [
+                preds_et_train_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+                preds_et_train_lst[chosen_idx, diff_q_sort_idx[-(points_num - i)], :],
+                obss_et_train_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+            ],
+            leg_lst=["STL_ET", "MTL_ET", "OBS_ET"],
+            xlabel="Date",
+            ylabel="ET(mm/day)",
+            c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
+            fig_size=(18, 6),
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_mtl_stl_et_train_ts_{random_seed}.png",
+            ),
+            dpi=600,
+        )
 
-    plot_ts(
-        np.tile(t_lst, (3, 1)).tolist(),
-        [
-            preds_et_lst[0, diff_q_sort_idx[-1], :],
-            preds_et_lst[chosen_idx, diff_q_sort_idx[-1], :],
-            obss_et_lst[0, diff_q_sort_idx[-1], :],
-        ],
-        leg_lst=["STL_ET", "MTL_ET", "OBS_ET"],
-        xlabel="Date",
-        ylabel="ET(mm/day)",
-        c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
-    )
-    plt.savefig(
-        os.path.join(
-            figure_dir,
-            f"abasin_mtl_stl_et_ts_{random_seed}.png",
-        ),
-        dpi=600,
-    )
+        # for testing period
+        plot_rainfall_runoff(
+            t_lst,
+            prcp[i],
+            [
+                preds_q_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+                preds_q_lst[chosen_idx, diff_q_sort_idx[-(points_num - i)], :],
+                obss_q_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+            ],
+            leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
+            xlabel="Date",
+            ylabel="Streamflow(m$^3$/s)",
+            fig_size=(18, 6),
+            c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_mtl_stl_flow_rrts_{random_seed}.png",
+            ),
+            dpi=600,
+        )
+
+        # also plot the ET and soil moisture
+        plot_ts(
+            np.tile(t_lst, (3, 1)).tolist(),
+            [
+                preds_q_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+                preds_q_lst[chosen_idx, diff_q_sort_idx[-(points_num - i)], :],
+                obss_q_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+            ],
+            leg_lst=["STL_Q", "MTL_Q", "OBS_Q"],
+            xlabel="Date",
+            ylabel="Streamflow(m$^3$/s)",
+            c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_mtl_stl_flow_ts_{random_seed}.png",
+            ),
+            dpi=600,
+        )
+
+        plot_ts(
+            np.tile(t_lst, (3, 1)).tolist(),
+            [
+                preds_et_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+                preds_et_lst[chosen_idx, diff_q_sort_idx[-(points_num - i)], :],
+                obss_et_lst[0, diff_q_sort_idx[-(points_num - i)], :],
+            ],
+            leg_lst=["STL_ET", "MTL_ET", "OBS_ET"],
+            xlabel="Date",
+            ylabel="ET(mm/day)",
+            c_lst=["#ff9f9b", "#a1c9f4", "#000000"],
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_mtl_stl_et_ts_{random_seed}.png",
+            ),
+            dpi=600,
+        )
 
 
-def _find_max_diff(stl_q_et_result, chosen_mtl4q_test_result):
+def _find_max_diff(stl_q_et_result, chosen_mtl4q_test_result, points_num=1):
     gage_id_file = os.path.join(
         definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
     )
@@ -649,8 +656,11 @@ def _find_max_diff(stl_q_et_result, chosen_mtl4q_test_result):
         0
     ]
     diff_q_sort_idx = [i for i in diff_q_sort if i in both_positive_q]
-    max_diff_gage_id = str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)
-    return gage_ids, diff_q_sort_idx, max_diff_gage_id
+    # max_diff_gage_id = str(gage_ids.iloc[diff_q_sort_idx[-1]]["GAGE_ID"]).zfill(8)
+    max_diff_gage_ids = [
+        str(gage_ids.iloc[i]["GAGE_ID"]).zfill(8) for i in diff_q_sort_idx[-points_num:]
+    ]
+    return gage_ids, diff_q_sort_idx, max_diff_gage_ids
 
 
 # plot_ts_figures(
@@ -678,35 +688,37 @@ def plot_map_figures(
     chosen_mtl4q_test_result,
     chosen_mtl4et_test_result,
     random_seed=1234,
+    points_num=1,
 ):
-    gage_ids, diff_q_sort_idx, max_diff_gage_id = _find_max_diff(
-        stl_q_et_result, chosen_mtl4q_test_result
+    gage_ids, diff_q_sort_idx, max_diff_gage_ids = _find_max_diff(
+        stl_q_et_result, chosen_mtl4q_test_result, points_num=points_num
     )
-    plot_mtl_results_map(
-        gage_ids["GAGE_ID"].values,
-        [stl_q_et_result, chosen_mtl4q_test_result],
-        ["Q", "MTL-Q"],
-        ["o", "x"],
-        os.path.join(
-            figure_dir,
-            f"better_flow_stl_mtl_cases_map_{random_seed}.png",
-        ),
-        highlight_idx=diff_q_sort_idx[-1],
-        highlight_label=f"max-diff basin: {max_diff_gage_id}",
-    )
-    # plot map
-    plot_mtl_results_map(
-        gage_ids["GAGE_ID"].values,
-        [stl_et_q_result, chosen_mtl4et_test_result],
-        ["ET", "MTL-ET"],
-        ["o", "x"],
-        os.path.join(
-            figure_dir,
-            f"better_et_stl_mtl_cases_map_{random_seed}.png",
-        ),
-        highlight_idx=diff_q_sort_idx[-1],
-        highlight_label=f"max-Q-diff basin: {max_diff_gage_id}",
-    )
+    for i in range(points_num):
+        plot_mtl_results_map(
+            gage_ids["GAGE_ID"].values,
+            [stl_q_et_result, chosen_mtl4q_test_result],
+            ["Q", "MTL-Q"],
+            ["o", "x"],
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_better_flow_stl_mtl_cases_map_{random_seed}.png",
+            ),
+            highlight_idx=diff_q_sort_idx[-(points_num - i)],
+            highlight_label=f"max-diff basin: {max_diff_gage_ids[i]}",
+        )
+        # plot map
+        plot_mtl_results_map(
+            gage_ids["GAGE_ID"].values,
+            [stl_et_q_result, chosen_mtl4et_test_result],
+            ["ET", "MTL-ET"],
+            ["o", "x"],
+            os.path.join(
+                figure_dir,
+                f"{max_diff_gage_ids[i]}_better_et_stl_mtl_cases_map_{random_seed}.png",
+            ),
+            highlight_idx=diff_q_sort_idx[-(points_num - i)],
+            highlight_label=f"max-Q-diff basin: {max_diff_gage_ids[i]}",
+        )
 
 
 # plot_map_figures(
