@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-12 20:45:16
+LastEditTime: 2024-06-13 14:58:50
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -762,34 +762,35 @@ if __name__ == "__main__":
     #     et_metrics_results_chosen[chosen_metric_idx][1],
     #     random_seed="ensemble",
     #     points_num=2,
+    #     one_plot=True,
     # )
 
     # ---- Plot time-series for some specific basins ------
-    # plot_ts_figures(
-    #     figure_dir,
-    #     q_metrices_results_chosen[chosen_metric_idx][0],
-    #     q_metrices_results_chosen[chosen_metric_idx][1],
-    #     np.array(preds_q_test_ensemble),
-    #     np.array(obss_q_test_ensemble),
-    #     np.array(preds_et_test_ensemble),
-    #     np.array(obss_et_test_ensemble),
-    #     np.array(preds_q_train_ensemble),
-    #     np.array(obss_q_train_ensemble),
-    #     np.array(preds_et_train_ensemble),
-    #     np.array(obss_et_train_ensemble),
-    #     chosen_idx,
-    #     random_seed="ensemble",
-    #     points_num=2,
-    # )
-
-    # ----------------------  Plot maps -------------------------
-    # plot map
-    plot_map_figures(
+    plot_ts_figures(
         figure_dir,
         q_metrices_results_chosen[chosen_metric_idx][0],
-        et_metrics_results_chosen[chosen_metric_idx][0],
         q_metrices_results_chosen[chosen_metric_idx][1],
-        et_metrics_results_chosen[chosen_metric_idx][1],
+        np.array(preds_q_test_ensemble),
+        np.array(obss_q_test_ensemble),
+        np.array(preds_et_test_ensemble),
+        np.array(obss_et_test_ensemble),
+        np.array(preds_q_train_ensemble),
+        np.array(obss_q_train_ensemble),
+        np.array(preds_et_train_ensemble),
+        np.array(obss_et_train_ensemble),
+        chosen_idx,
         random_seed="ensemble",
         points_num=2,
     )
+
+    # ----------------------  Plot maps -------------------------
+    # plot map
+    # plot_map_figures(
+    #     figure_dir,
+    #     q_metrices_results_chosen[chosen_metric_idx][0],
+    #     et_metrics_results_chosen[chosen_metric_idx][0],
+    #     q_metrices_results_chosen[chosen_metric_idx][1],
+    #     et_metrics_results_chosen[chosen_metric_idx][1],
+    #     random_seed="ensemble",
+    #     points_num=2,
+    # )

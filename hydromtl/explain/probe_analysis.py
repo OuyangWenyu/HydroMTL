@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2024-05-29 11:38:34
+LastEditTime: 2024-06-14 12:03:25
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: \HydroMTL\hydromtl\explain\probe_analysis.py
@@ -116,7 +116,7 @@ def train_probe(run_exp, var="ET", retrain=False, probe_input="state", **kwargs)
     probe_train_params = {
         "train_test": True,
         "train_val": False,
-        "num_workers": 4,
+        "num_workers": 0,
         "device": -1,
         "drop_out": 0.0,
     } | kwargs
@@ -385,7 +385,7 @@ def plot_errors(
             label=legend_lst[i],
             color=f"C{str(i)}",
         )
-        median = np.median(errors_lst[i][show_probe_metric])
+        median = np.nanmedian(errors_lst[i][show_probe_metric])
         ax2.axvline(
             median,
             ls="--",
@@ -393,13 +393,13 @@ def plot_errors(
         )
         text_pos = (
             median - 0.2,
-            ax2.get_ylim()[1] / 2 + i * 0.2 * ax2.get_ylim()[1],
+            ax2.get_ylim()[1] / 2 + i * 0.1 * ax2.get_ylim()[1],
         )
         ax2.annotate(
             f"Median: {median:.2f}",
             xy=(
                 median,
-                ax2.get_ylim()[1] / 2 + i * 0.2 * ax2.get_ylim()[1],
+                ax2.get_ylim()[1] / 2 + i * 0.1 * ax2.get_ylim()[1],
             ),  # arrow points to median
             xytext=text_pos,  # text position
             arrowprops=dict(

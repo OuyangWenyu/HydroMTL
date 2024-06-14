@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-14 17:44:31
-LastEditTime: 2024-05-29 12:55:39
+LastEditTime: 2024-06-14 11:48:27
 LastEditors: Wenyu Ouyang
 Description: scripts same with assess_reliability.ipynb
 FilePath: \HydroMTL\scripts\assess_ensemble_reliability.py
@@ -20,7 +20,7 @@ sys.path.append(project_dir)
 import definitions
 from hydromtl.data.source import data_constant
 from hydromtl.explain.explain_lstm import calculate_all_error_metrics
-from hydromtl.explain.probe_analysis import plot_errors, show_probe
+from hydromtl.explain.probe_analysis import plot_errors, show_probe, train_probe
 
 random_seed = [1234, 12345, 123, 111, 1111]
 run_exp_lst = [
@@ -53,7 +53,7 @@ run_exp_lst = [
 save_dir = os.path.join(definitions.RESULT_DIR, "figures", "ensemble")
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
-legend_lst = ["STL-Q", "MTL", "STL-ET"]
+legend_lst = ["STL-Q Cell State", "MTL Cell State", "STL-ET Cell State"]
 
 
 def compute_mean_dataarrays(data_list):
@@ -94,6 +94,7 @@ def show_probe_ensemble(
     legend_lst,
     show_probe_metric="Corr",
     save_dir=None,
+    show_input_probe=False,
 ):
     preds_all_lst = []
     run_exp_ensemble_lst = [
@@ -133,7 +134,25 @@ def show_probe_ensemble(
             )
             errors_ensemble.to_netcdf(linear_probe_error_file)
         errors_ensemble_lst.append(errors_ensemble)
-
+    if show_input_probe:
+        probe_input = [
+            "total_precipitation",
+            "temperature",
+            "specific_humidity",
+            "shortwave_radiation",
+            "potential_energy",
+        ]
+        # only one run_exp is needed for input probe
+        run_exp = run_exp_lst[0][0]
+        all_corrs, all_basin_corrs, errors, ws, bs, preds = train_probe(
+            run_exp=run_exp,
+            var=var.name,
+            retrain=False,
+            probe_input=probe_input,
+        )
+        errors_ensemble_lst.append(errors)
+        run_exp_ensemble_lst += [os.path.join("camels", "input_probe")]
+        legend_lst = legend_lst + ["Meteorological Forcing"]
     plot_errors(
         run_exp_ensemble_lst,
         var,
@@ -145,21 +164,23 @@ def show_probe_ensemble(
     )
 
 
-# First probe is for evapotranspiration (ET).
-show_probe_ensemble(
-    run_exp_lst=run_exp_lst,
-    var=data_constant.evapotranspiration_modis_camels_us,
-    legend_lst=legend_lst,
-    show_probe_metric="Corr",
-    save_dir=save_dir,
-)
-# The second probe is for streamflow (Q).
+# The probe is for streamflow (Q).
 show_probe_ensemble(
     run_exp_lst=run_exp_lst,
     var=data_constant.streamflow_camels_us,
     legend_lst=legend_lst,
     show_probe_metric="Corr",
     save_dir=save_dir,
+    show_input_probe=True,
+)
+# The probe is for evapotranspiration (ET).
+show_probe_ensemble(
+    run_exp_lst=run_exp_lst,
+    var=data_constant.evapotranspiration_modis_camels_us,
+    legend_lst=legend_lst,
+    show_probe_metric="Corr",
+    save_dir=save_dir,
+    show_input_probe=True,
 )
 # The final probe is for soil moisture (SM).
 show_probe_ensemble(
@@ -168,4 +189,5 @@ show_probe_ensemble(
     legend_lst=legend_lst,
     show_probe_metric="Corr",
     save_dir=save_dir,
+    show_input_probe=True,
 )

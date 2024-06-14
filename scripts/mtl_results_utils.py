@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-05-26 10:15:17
+LastEditTime: 2024-06-13 11:54:09
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -841,28 +841,29 @@ def plot_mtl_results_map(
     )
     # Highlight a specific point if specified
     if highlight_idx is not None:
-        highlight_lat = lat_lon[highlight_idx, 0]
-        highlight_lon = lat_lon[highlight_idx, 1]
+        for i in range(len(highlight_idx)):
+            highlight_lat = lat_lon[highlight_idx[i], 0]
+            highlight_lon = lat_lon[highlight_idx[i], 1]
 
-        # Adjust these offsets based on the specific layout of points or desired aesthetics
-        offset_lat = (
-            highlight_lat - 1
-        )  # Slightly larger offset to move the text further away
-        offset_lon = highlight_lon - 1
+            # Adjust these offsets based on the specific layout of points or desired aesthetics
+            offset_lat = (
+                highlight_lat - 1
+            )  # Slightly larger offset to move the text further away
+            offset_lon = highlight_lon - 1
 
-        # Draw an arrow pointing to the highlighted point with text at the start of the arrow
-        ax.annotate(
-            highlight_label,
-            xy=(highlight_lon, highlight_lat),
-            xycoords=ccrs.PlateCarree(),
-            xytext=(offset_lon, offset_lat),
-            textcoords=ccrs.PlateCarree(),
-            arrowprops=dict(arrowstyle="->", color="red", lw=1.5),
-            horizontalalignment="right",
-            verticalalignment="top",
-            fontsize=16,
-            color="red",
-        )
+            # Draw an arrow pointing to the highlighted point with text at the start of the arrow
+            ax.annotate(
+                highlight_label[i],
+                xy=(highlight_lon, highlight_lat),
+                xycoords=ccrs.PlateCarree(),
+                xytext=(offset_lon, offset_lat),
+                textcoords=ccrs.PlateCarree(),
+                arrowprops=dict(arrowstyle="->", color="red", lw=1.5),
+                horizontalalignment="right",
+                verticalalignment="top",
+                fontsize=16,
+                color="red",
+            )
 
     FIGURE_DPI = 600
     plt.savefig(

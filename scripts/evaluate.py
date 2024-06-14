@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-12 20:48:03
+LastEditTime: 2024-06-13 11:59:25
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate.py
@@ -355,6 +355,11 @@ def plot_scatter(
     filtered_x = x[mask]
     filtered_y = y[mask]
 
+    above_line_count = np.sum(y > x)
+    below_line_count = np.sum(y < x)
+
+    print(f"Number of point above the 1:1 line of Q: {above_line_count}")
+    print(f"Number of point below the 1:1 line of Q: {below_line_count}")
     # Calculate the difference for the filtered data
     filtered_diff = np.abs(filtered_x - filtered_y)
     indices = np.argpartition(filtered_diff, -points_num)[-points_num:]
@@ -407,6 +412,11 @@ def plot_scatter(
     # Extract the first and second 1-D arrays from the second 2-D array
     x2 = stl_et_q_result
     y2 = chosen_mtl4et_test_result
+    above_line_count_for_et = np.sum(y2 > x2)
+    below_line_count_for_et = np.sum(y2 < x2)
+
+    print(f"Number of point above the 1:1 line of Q: {above_line_count_for_et}")
+    print(f"Number of point below the 1:1 line of Q: {below_line_count_for_et}")
     for i, idx in enumerate(sorted_indices):
         if not (one_plot and i > 0):
             plot_scatter_with_11line(
@@ -693,32 +703,41 @@ def plot_map_figures(
     gage_ids, diff_q_sort_idx, max_diff_gage_ids = _find_max_diff(
         stl_q_et_result, chosen_mtl4q_test_result, points_num=points_num
     )
-    for i in range(points_num):
-        plot_mtl_results_map(
-            gage_ids["GAGE_ID"].values,
-            [stl_q_et_result, chosen_mtl4q_test_result],
-            ["Q", "MTL-Q"],
-            ["o", "x"],
-            os.path.join(
-                figure_dir,
-                f"{max_diff_gage_ids[i]}_better_flow_stl_mtl_cases_map_{random_seed}.png",
-            ),
-            highlight_idx=diff_q_sort_idx[-(points_num - i)],
-            highlight_label=f"max-diff basin: {max_diff_gage_ids[i]}",
-        )
-        # plot map
-        plot_mtl_results_map(
-            gage_ids["GAGE_ID"].values,
-            [stl_et_q_result, chosen_mtl4et_test_result],
-            ["ET", "MTL-ET"],
-            ["o", "x"],
-            os.path.join(
-                figure_dir,
-                f"{max_diff_gage_ids[i]}_better_et_stl_mtl_cases_map_{random_seed}.png",
-            ),
-            highlight_idx=diff_q_sort_idx[-(points_num - i)],
-            highlight_label=f"max-Q-diff basin: {max_diff_gage_ids[i]}",
-        )
+    highlight_label = [
+        f"{points_num-i}{['st', 'nd', 'rd'][(points_num-i) % 10 - 1] if (points_num-i) % 10 in [1, 2, 3] else 'th'}-max-diff basin:\n {max_diff_gage_ids[-points_num+i]}"
+        for i in range(points_num)
+    ]
+    highlight_label[-1] = f"max-diff basin:\n {max_diff_gage_ids[-1]}"
+    plot_mtl_results_map(
+        gage_ids["GAGE_ID"].values,
+        [stl_q_et_result, chosen_mtl4q_test_result],
+        ["Q", "MTL-Q"],
+        ["o", "x"],
+        os.path.join(
+            figure_dir,
+            f"better_flow_stl_mtl_cases_map_{random_seed}.png",
+        ),
+        highlight_idx=diff_q_sort_idx[-points_num:],
+        highlight_label=highlight_label,
+    )
+    # plot map
+    highlight_label2 = [
+        f"{points_num-i}{['st', 'nd', 'rd'][(points_num-i) % 10 - 1] if (points_num-i) % 10 in [1, 2, 3] else 'th'}-max-Q-diff basin:\n {max_diff_gage_ids[-points_num+i]}"
+        for i in range(points_num)
+    ]
+    highlight_label2[-1] = f"max-Q-diff basin:\n {max_diff_gage_ids[-1]}"
+    plot_mtl_results_map(
+        gage_ids["GAGE_ID"].values,
+        [stl_et_q_result, chosen_mtl4et_test_result],
+        ["ET", "MTL-ET"],
+        ["o", "x"],
+        os.path.join(
+            figure_dir,
+            f"better_et_stl_mtl_cases_map_{random_seed}.png",
+        ),
+        highlight_idx=diff_q_sort_idx[-points_num:],
+        highlight_label=highlight_label2,
+    )
 
 
 # plot_map_figures(
