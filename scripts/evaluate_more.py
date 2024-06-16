@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-04-29 08:46:00
-LastEditTime: 2024-05-29 16:57:34
+LastEditTime: 2024-06-15 15:39:06
 LastEditors: Wenyu Ouyang
 Description: According to reviewers' feedback, we add more results evaluation to the original notebook evaluate.ipynb.
     The performance metrics for evapotranspiration (ET) and streamflow (Q) under varying weights
@@ -19,6 +19,8 @@ import os
 import sys
 import argparse
 
+from tqdm import tqdm
+
 
 # Get the current directory
 project_dir = os.path.abspath("")
@@ -31,7 +33,13 @@ from scripts.mtl_results_utils import (
 from scripts.streamflow_utils import get_json_file
 from hydromtl.models.trainer import stat_result
 from hydromtl.visual.plot_stat import plot_scatter_with_11line
-from scripts.evaluate_ensemble import get_exps_of_diff_random_seed
+from scripts.evaluate_ensemble import (
+    get_ensemble_results,
+    get_exps_of_diff_random_seed,
+    load_from_cache,
+    read_ensemble_metrics,
+    save_to_cache,
+)
 
 result_cache_dir = os.path.join(
     definitions.RESULT_DIR,
@@ -148,8 +156,7 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
     exps_et_q_results,
     chosen_idx,
     metric="NSE",
-    maxdiff_label=False,
-    random_seed=1234,
+    random_seed="1234",
 ):
     """_summary_
 
@@ -164,9 +171,39 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
         0 means STL, 1 means 2, 2 means 1, 3 means 1/3, 4 means 1/8, 5 means 1/24
     metric
         the metric to be evaluated
-    maxdiff_label
-        whether to label the point with the most significant difference
     """
+    if random_seed == "ensemble":
+        plot_scatter_with_11line(
+            exps_q_et_results[0][metric],
+            exps_q_et_results[chosen_idx][metric],
+            xlabel=f"STL_Q {metric}",
+            ylabel=f"MTL_Q {metric}",
+        )
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"mtl_stl_flow_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}_{random_seed}.png",
+            ),
+            dpi=600,
+            bbox_inches="tight",
+        )
+
+        plot_scatter_with_11line(
+            np.array(exps_et_q_results[0][metric]),
+            np.array(exps_et_q_results[chosen_idx][metric]),
+            xlabel=f"STL_ET {metric}",
+            ylabel=f"MTL_ET {metric}",
+        )
+
+        plt.savefig(
+            os.path.join(
+                figure_dir,
+                f"mtl_stl_et_scatter_plot_with_11line_{figure_weight_ratios_names[chosen_idx]}_{metric}_{random_seed}.png",
+            ),
+            dpi=600,
+            bbox_inches="tight",
+        )
+        return
     chosen_mtl4q_test_result = exps_q_et_results[chosen_idx]
     chosen_mtl4et_test_result = exps_et_q_results[chosen_idx]
 
@@ -179,47 +216,6 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
         xlabel=f"STL_Q {metric}",
         ylabel=f"MTL_Q {metric}",
     )
-    if maxdiff_label:
-        mark_color = "darkred"
-
-        # Extract the first and second 1-D arrays
-        x = exps_q_et_results[0]
-        y = chosen_mtl4q_test_result
-        # Filter the data to only include points where both x and y are in the range [0, 1]
-        mask = (x >= 0) & (x <= 1) & (y >= 0) & (y <= 1)
-        filtered_x = x[mask]
-        filtered_y = y[mask]
-
-        # Calculate the difference for the filtered data
-        filtered_diff = np.abs(filtered_x - filtered_y)
-
-        # Find the index of the point with the most significant difference in the filtered data
-        filtered_max_diff_index = np.argmax(filtered_diff)
-
-        # Highlight the point with the most significant difference with a red circle
-        plt.gca().add_artist(
-            plt.Circle(
-                (
-                    filtered_x[filtered_max_diff_index],
-                    filtered_y[filtered_max_diff_index],
-                ),
-                0.02,
-                fill=False,
-                color=mark_color,
-                linewidth=2,
-            )
-        )
-        # Label the plot
-        plt.text(
-            filtered_x[filtered_max_diff_index],
-            filtered_y[filtered_max_diff_index],
-            " Max diff",
-            verticalalignment="bottom",
-            horizontalalignment="left",
-            color=mark_color,
-            fontsize=18,
-        )
-
     plt.savefig(
         os.path.join(
             figure_dir,
@@ -228,7 +224,6 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
         dpi=600,
         bbox_inches="tight",
     )
-
     plot_scatter_with_11line(
         exps_et_q_results[0],
         chosen_mtl4et_test_result,
@@ -237,35 +232,6 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
         xlabel=f"STL_ET {metric}",
         ylabel=f"MTL_ET {metric}",
     )
-    if maxdiff_label:
-        # Extract the first and second 1-D arrays from the second 2-D array
-        x2 = exps_et_q_results[0]
-        y2 = chosen_mtl4et_test_result
-
-        # Find the index of the point with the max difference in the first plot in the second plot
-        index_in_second_plot = np.where(mask)[0][filtered_max_diff_index]
-        # Highlight the point with the same index as the point with the max difference in the first plot
-        plt.gca().add_artist(
-            plt.Circle(
-                (x2[index_in_second_plot], y2[index_in_second_plot]),
-                0.01,
-                fill=False,
-                color=mark_color,
-                linewidth=2,
-            )
-        )
-
-        # Label the plot
-        plt.text(
-            x2[index_in_second_plot],
-            y2[index_in_second_plot],
-            " Max diff \n in fig(a)",
-            verticalalignment="top",
-            horizontalalignment="left",
-            color=mark_color,
-            fontsize=18,
-        )
-
     plt.savefig(
         os.path.join(
             figure_dir,
@@ -278,15 +244,15 @@ def plot_scatter_with_11line_for_1metric1lossweightratio(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--metric", type=str, default="NSE", help="Performance metric")
+    parser.add_argument("--metric", type=str, default="KGE", help="Performance metric")
     parser.add_argument(
         "--random_seed",
-        type=int,
-        default=12345,
-        help="Random seed for the experiment",
+        type=str,
+        default="ensemble",
+        help="Random seed for the experiment or ensemble using all random seeds",
     )
     args = parser.parse_args()
-    compare_et_pred()
+    # compare_et_pred()
     available_metrics = [
         "Bias",
         "RMSE",
@@ -303,24 +269,88 @@ if __name__ == "__main__":
         print(available_metrics)
     else:
         print("Reading data...")
-        (
-            exps_q_et_valid,
-            exps_et_q_valid,
-            exps_q_et_test,
-            exps_et_q_test,
-            exps_q_et_train,
-            exps_et_q_train,
-        ) = get_exps_of_diff_random_seed(args.random_seed)
-        exps_q_et_results, exps_et_q_results = one_metric_data_reader(
-            exps_q_et_test, exps_et_q_test, args.metric, random_seed=args.random_seed
-        )
-        print("Data reading complete.")
-        # 1 to 5 means 5 weight ratios
-        # for chosen_idx in tqdm(range(1, 6)):
-        #     plot_scatter_with_11line_for_1metric1lossweightratio(
-        #         exps_q_et_results,
-        #         exps_et_q_results,
-        #         chosen_idx,
-        #         args.metric,
-        #         random_seed=args.random_seed,
-        #     )
+        if args.random_seed == "ensemble":
+
+            (
+                preds_q_test_ensemble,
+                obss_q_test_ensemble,
+                preds_et_test_ensemble,
+                obss_et_test_ensemble,
+                preds_q_valid_ensemble,
+                obss_q_valid_ensemble,
+                preds_et_valid_ensemble,
+                obss_et_valid_ensemble,
+                preds_q_train_ensemble,
+                obss_q_train_ensemble,
+                preds_et_train_ensemble,
+                obss_et_train_ensemble,
+            ) = get_ensemble_results()
+            cache_files = {
+                "inds_ensemble_q_valid": os.path.join(
+                    definitions.RESULT_DIR, "cache", "inds_ensemble_q_valid.pkl"
+                ),
+                "inds_ensemble_q_test": os.path.join(
+                    definitions.RESULT_DIR, "cache", "inds_ensemble_q_test.pkl"
+                ),
+                "inds_ensemble_et_valid": os.path.join(
+                    definitions.RESULT_DIR, "cache", "inds_ensemble_et_valid.pkl"
+                ),
+                "inds_ensemble_et_test": os.path.join(
+                    definitions.RESULT_DIR, "cache", "inds_ensemble_et_test.pkl"
+                ),
+            }
+            inds_ensemble_q_test = load_from_cache(cache_files["inds_ensemble_q_test"])
+            if inds_ensemble_q_test is None:
+                inds_ensemble_q_test = read_ensemble_metrics(
+                    preds_q_test_ensemble,
+                    obss_q_test_ensemble,
+                    cases_exps_legends_together,
+                )
+                save_to_cache(inds_ensemble_q_test, cache_files["inds_ensemble_q_test"])
+            inds_ensemble_et_test = load_from_cache(
+                cache_files["inds_ensemble_et_test"]
+            )
+            if inds_ensemble_et_test is None:
+                inds_ensemble_et_test = read_ensemble_metrics(
+                    preds_et_test_ensemble,
+                    obss_et_test_ensemble,
+                    cases_exps_legends_together,
+                    var_idx=1,
+                )
+                save_to_cache(
+                    inds_ensemble_et_test, cache_files["inds_ensemble_et_test"]
+                )
+                # 1 to 5 means 5 weight ratios
+            for chosen_idx in tqdm(range(1, 6)):
+                plot_scatter_with_11line_for_1metric1lossweightratio(
+                    inds_ensemble_q_test,
+                    inds_ensemble_et_test,
+                    chosen_idx,
+                    args.metric,
+                    random_seed=args.random_seed,
+                )
+        else:
+            (
+                exps_q_et_valid,
+                exps_et_q_valid,
+                exps_q_et_test,
+                exps_et_q_test,
+                exps_q_et_train,
+                exps_et_q_train,
+            ) = get_exps_of_diff_random_seed(args.random_seed)
+            exps_q_et_results, exps_et_q_results = one_metric_data_reader(
+                exps_q_et_test,
+                exps_et_q_test,
+                args.metric,
+                random_seed=args.random_seed,
+            )
+            print("Data reading complete.")
+            # 1 to 5 means 5 weight ratios
+            for chosen_idx in tqdm(range(1, 6)):
+                plot_scatter_with_11line_for_1metric1lossweightratio(
+                    exps_q_et_results,
+                    exps_et_q_results,
+                    chosen_idx,
+                    args.metric,
+                    random_seed=args.random_seed,
+                )

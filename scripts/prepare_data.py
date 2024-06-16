@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-05-30 11:30:45
+LastEditTime: 2024-06-15 10:55:21
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -240,9 +240,48 @@ def compare_ets():
     print(metrics)
 
 
+def _calculate_smap_missing_rate(data):
+    num_basins, num_periods, num_variables = data.shape
+    missing_rates = np.zeros(num_basins)
+
+    for i in range(num_basins):
+        total_groups = num_periods // 3
+        missing_groups = 0
+
+        for j in range(total_groups):
+            group = data[i, j * 3 : (j + 1) * 3, :]
+            if np.all(np.isnan(group)):
+                missing_groups += 1
+
+        missing_rates[i] = missing_groups / total_groups
+
+    return missing_rates
+
+
+def see_smap_data():
+    source_path = [
+        os.path.join(definitions.DATASET_DIR, "camelsflowet"),
+        os.path.join(definitions.DATASET_DIR, "modiset4camels"),
+        os.path.join(definitions.DATASET_DIR, "camels", "camels_us"),
+        os.path.join(definitions.DATASET_DIR, "nldas4camels"),
+        os.path.join(definitions.DATASET_DIR, "smap4camels"),
+    ]
+    camels_pro = CamelsPro(source_path)
+    basin_ids = pd.read_csv(ID_FILE_PATH, dtype={"GAGE_ID": str})["GAGE_ID"].tolist()
+    smap = camels_pro.read_target_cols(
+        basin_ids,
+        t_range_list=["2015-04-01", "2021-10-01"],
+        target_cols=["ssm"],
+    )
+    missing_rates = _calculate_smap_missing_rate(smap)
+    missing_info = {i: rate for i, rate in enumerate(missing_rates) if rate > 0}
+    print(f"Basins with missing SMAP data: {missing_info}")
+
+
 if __name__ == "__main__":
     # select_basins()
-    compare_nldas()
+    # compare_nldas()
     # see_basin_area()
     # see_basin_streamflow_data()
-    compare_ets()
+    see_smap_data()
+    # compare_ets()

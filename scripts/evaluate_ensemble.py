@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-13 14:58:50
+LastEditTime: 2024-06-15 15:10:39
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -683,26 +683,26 @@ if __name__ == "__main__":
     # ----------------------  Plot for valid period  ---------------------
     # plot boxes of NSEs for valid Q
     valid_ensemble_q_nse = extract_and_aggregate_metrics(inds_ensemble_q_valid, "NSE")
-    # plot_multi_single_comp_flow_boxes(
-    #     valid_ensemble_q_nse,
-    #     cases_exps_legends_together=cases_exps_legends_together,
-    #     save_path=os.path.join(
-    #         figure_dir,
-    #         "mtl_valid_flow_boxes_ensemble.png",
-    #     ),
-    #     rotation=45,
-    # )
+    plot_multi_single_comp_flow_boxes(
+        valid_ensemble_q_nse,
+        cases_exps_legends_together=cases_exps_legends_together,
+        save_path=os.path.join(
+            figure_dir,
+            "mtl_valid_flow_boxes_ensemble.png",
+        ),
+        rotation=45,
+    )
 
     valid_ensemble_et_nse = extract_and_aggregate_metrics(inds_ensemble_et_valid, "NSE")
-    # plot_multi_single_comp_flow_boxes(
-    #     valid_ensemble_et_nse,
-    #     cases_exps_legends_together=cases_exps_legends_together,
-    #     save_path=os.path.join(
-    #         figure_dir,
-    #         "mtl_valid_et_boxes_ensemble.png",
-    #     ),
-    #     rotation=45,
-    # )
+    plot_multi_single_comp_flow_boxes(
+        valid_ensemble_et_nse,
+        cases_exps_legends_together=cases_exps_legends_together,
+        save_path=os.path.join(
+            figure_dir,
+            "mtl_valid_et_boxes_ensemble.png",
+        ),
+        rotation=45,
+    )
 
     # -- Plot for testing period. 1/3 seems best as it didn't change make any variable's prediction worse.--
     chosen_idx = 3
@@ -766,22 +766,22 @@ if __name__ == "__main__":
     # )
 
     # ---- Plot time-series for some specific basins ------
-    plot_ts_figures(
-        figure_dir,
-        q_metrices_results_chosen[chosen_metric_idx][0],
-        q_metrices_results_chosen[chosen_metric_idx][1],
-        np.array(preds_q_test_ensemble),
-        np.array(obss_q_test_ensemble),
-        np.array(preds_et_test_ensemble),
-        np.array(obss_et_test_ensemble),
-        np.array(preds_q_train_ensemble),
-        np.array(obss_q_train_ensemble),
-        np.array(preds_et_train_ensemble),
-        np.array(obss_et_train_ensemble),
-        chosen_idx,
-        random_seed="ensemble",
-        points_num=2,
-    )
+    # plot_ts_figures(
+    #     figure_dir,
+    #     q_metrices_results_chosen[chosen_metric_idx][0],
+    #     q_metrices_results_chosen[chosen_metric_idx][1],
+    #     np.array(preds_q_test_ensemble),
+    #     np.array(obss_q_test_ensemble),
+    #     np.array(preds_et_test_ensemble),
+    #     np.array(obss_et_test_ensemble),
+    #     np.array(preds_q_train_ensemble),
+    #     np.array(obss_q_train_ensemble),
+    #     np.array(preds_et_train_ensemble),
+    #     np.array(obss_et_train_ensemble),
+    #     chosen_idx,
+    #     random_seed="ensemble",
+    #     points_num=2,
+    # )
 
     # ----------------------  Plot maps -------------------------
     # plot map

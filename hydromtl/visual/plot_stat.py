@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2024-06-05 15:42:12
+LastEditTime: 2024-06-15 11:45:12
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: \HydroMTL\hydromtl\visual\plot_stat.py
@@ -333,7 +333,7 @@ def plot_boxes_matplotlib(
             ax.set_ylabel(ylabel[k])
         if ylim is not None:
             ax.set_ylim(ylim[k])
-        ax.tick_params(axis='both', labelsize=axtick_font_size)
+        ax.tick_params(axis="both", labelsize=axtick_font_size)
     if label2 is not None:
         plt.legend(
             bp["boxes"],
@@ -619,7 +619,7 @@ def plot_boxs(
         _description_
     """
     fig = plt.figure()
-    sns.set(style="ticks", palette="pastel", font=font, font_scale=1.5)
+    sns.set_theme(style="ticks", palette="pastel", font=font, font_scale=1.5)
     # Draw a nested boxplot to show bills by day and time
     if uniform_color is not None:
         sns_box = sns.boxplot(
@@ -632,7 +632,12 @@ def plot_boxs(
         )
     else:
         sns_box = sns.boxplot(
-            x=x_name, y=y_name, data=data, showfliers=False, order=order
+            x=x_name,
+            y=y_name,
+            data=data,
+            showfliers=False,
+            order=order,
+            palette="pastel",
         )
     if swarm_plot:
         if hue is not None:
