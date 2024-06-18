@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2024-06-14 12:03:25
+LastEditTime: 2024-06-16 11:13:19
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: \HydroMTL\hydromtl\explain\probe_analysis.py
@@ -360,7 +360,14 @@ def show_probe(
 
 
 def plot_errors(
-    run_exp_lst, var, legend_lst, show_probe_metric, save_dir, probe_input, errors_lst
+    run_exp_lst,
+    var,
+    legend_lst,
+    show_probe_metric,
+    save_dir,
+    probe_input,
+    errors_lst,
+    mean_or_median="median",
 ):
     FIGURE_DPI = 600
     if probe_input == "state":
@@ -368,7 +375,7 @@ def plot_errors(
     else:
         plot_name = abbreviate_and_join(probe_input) + "_" + var.name
     print(
-        "-- Comparing cs~"
+        "-- Comparing cell_state/input~"
         + var.name
         + " probe prediction metric "
         + show_probe_metric
@@ -385,20 +392,27 @@ def plot_errors(
             label=legend_lst[i],
             color=f"C{str(i)}",
         )
-        median = np.nanmedian(errors_lst[i][show_probe_metric])
+        if mean_or_median == "mean":
+            median_or_mean = np.nanmean(errors_lst[i][show_probe_metric])
+            mm_label = "Mean"
+        elif mean_or_median == "median":
+            median_or_mean = np.nanmedian(errors_lst[i][show_probe_metric])
+            mm_label = "Median"
+        else:
+            raise ValueError("mean_or_median must be mean or median")
         ax2.axvline(
-            median,
+            median_or_mean,
             ls="--",
             color=f"C{str(i)}",
         )
         text_pos = (
-            median - 0.2,
+            median_or_mean - 0.2,
             ax2.get_ylim()[1] / 2 + i * 0.1 * ax2.get_ylim()[1],
         )
         ax2.annotate(
-            f"Median: {median:.2f}",
+            f"{mm_label}: {median_or_mean:.2f}",
             xy=(
-                median,
+                median_or_mean,
                 ax2.get_ylim()[1] / 2 + i * 0.1 * ax2.get_ylim()[1],
             ),  # arrow points to median
             xytext=text_pos,  # text position

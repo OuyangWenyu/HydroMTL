@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-15 15:10:39
+LastEditTime: 2024-06-17 09:44:33
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -754,16 +754,16 @@ if __name__ == "__main__":
     #     bbox_inches="tight",
     # )
     # plot scatter with a 1:1 line to compare single-task and multi-task models
-    # plot_scatter(
-    #     figure_dir,
-    #     q_metrices_results_chosen[chosen_metric_idx][0],
-    #     et_metrics_results_chosen[chosen_metric_idx][0],
-    #     q_metrices_results_chosen[chosen_metric_idx][1],
-    #     et_metrics_results_chosen[chosen_metric_idx][1],
-    #     random_seed="ensemble",
-    #     points_num=2,
-    #     one_plot=True,
-    # )
+    plot_scatter(
+        figure_dir,
+        q_metrices_results_chosen[chosen_metric_idx][0],
+        et_metrics_results_chosen[chosen_metric_idx][0],
+        q_metrices_results_chosen[chosen_metric_idx][1],
+        et_metrics_results_chosen[chosen_metric_idx][1],
+        random_seed="ensemble",
+        points_num=2,
+        one_plot=True,
+    )
 
     # ---- Plot time-series for some specific basins ------
     # plot_ts_figures(
