@@ -59,7 +59,7 @@ The code for Results and Discussion of the manuscript is in the scripts director
 
 ### Prepare data
 
-Firstly, download data manually from [Kaggle](https://www.kaggle.com/datasets/owenyy/hydromtl) or [Zenodo](https://doi.org/10.5281/zenodo.10024012) .
+Firstly, download data manually from [Kaggle](https://www.kaggle.com/datasets/owenyy/hydromtl) or [Zenodo](https://doi.org/10.5281/zenodo.10024011) .
 
 Then, put the data in a folder and set this fold in definitions.py.
  
