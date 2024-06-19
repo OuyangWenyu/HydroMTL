@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2024-06-19 17:04:56
+ * @LastEditTime: 2024-06-19 17:18:38
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: \HydroMTL\README.md
@@ -9,24 +9,24 @@
 -->
 # HydroMTL
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10024012.svg)](https://doi.org/10.5281/zenodo.10024012)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10024011.svg)](https://doi.org/10.5281/zenodo.10024011)
 
 ## What is HydroMTL
 
 Multi-task deep learning models for basin hydrological modeling
 
-All the code of this repository is also available on [Zenodo](https://zenodo.org/record/5550000).
+All the code of this repository is also available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10024011).
 
 If you feel it useful, please cite:
 
 ```bibtex
 @misc{ouyang2021hydroMTL,
   author = {Wenyu Ouyang},
-  title = {OuyangWenyu/HydroMTL: v0.0.1},
+  title = {OuyangWenyu/HydroMTL},
   year = {2021},
   publisher = {Zenodo},
   journal = {Zenodo},
-  howpublished = {\url{https://doi.org/10.5281/zenodo.10024012}}
+  howpublished = {\url{https://doi.org/10.5281/zenodo.10024011}}
 }
 ```
 
