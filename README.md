@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2023-10-20 15:22:48
+ * @LastEditTime: 2024-06-19 17:04:56
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: \HydroMTL\README.md
@@ -55,17 +55,7 @@ conda activate MTL
 pytest tests
 ```
 
-Code of Discussion in the paper is in the notebooks, one can install jupyter kernel for the environment to run the notebooks.
-
-```bash
-# make sure you have installed jupyterlab in the base environment
-# if not, in base environment: run "conda install jupyterlab"
-# then, in MTL environment
-# conda activate MTL
-python -m ipykernel install --user --name MTL --display-name "MTL"
-```
-
-In VSCode, you can select the kernel `MTL` to run the notebooks in the notebooks folder.
+The code for Results and Discussion of the manuscript is in the scripts directory.
 
 ### Prepare data
 
@@ -105,10 +95,30 @@ xxx
 │   ├──   |── camels_vege.txt
 │── modiset4camels
 │   ├── basin_mean_forcing
+│   |   ├── MOD16A2_006_CAMELS
+│   |   |  ├── 01
+│   |   |  ├── 02
+│   |   |  ├── ……
+│   |   ├── MOD16A2GF_061_CAMELS
+│   |   |  ├── 01
+│   |   |  ├── 02
+│   |   |  ├── ……
+|   |   ├── ……
 ├── nldas4camels
 │   ├── basin_mean_forcing
+│   |   ├── 01
+│   |   ├── 02
+│   |   ├── ……
 │── smap4camels
 │   ├── NASA_USDA_SMAP_CAMELS
+│   |   ├── 01
+│   |   ├── 02
+│   |   ├── ……
+│   ├── SMAP_CAMELS
+│   |   ├── 01
+│   |   ├── 02
+│   |   ├── ……
+```
 
 ### Train
 
@@ -132,8 +142,6 @@ python run_task.py --exp expstlet001 --loss_weight 0.0 1.0 --train_period 2001-1
 
 The trained model will be saved in `./results/` folder.
 
-If you don't want to train the model, you can download the trained model from [Kaggle]() or [Zenodo]().
-
 ### Test
 
 One can use the trained model to test in any period.
@@ -153,7 +161,3 @@ We provide a script to evaluate all trained models.
 # cd scripts
 python evaluate_all_tasks.py
 ```
-
-### Plot
-
-All figures are plotted in the notebooks folder.
