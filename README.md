@@ -1,7 +1,7 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2023-04-05 20:10:24
- * @LastEditTime: 2024-06-19 17:18:38
+ * @LastEditTime: 2024-06-19 20:48:43
  * @LastEditors: Wenyu Ouyang
  * @Description: README for HydroMTL
  * @FilePath: \HydroMTL\README.md
@@ -59,7 +59,7 @@ The code for Results and Discussion of the manuscript is in the scripts director
 
 ### Prepare data
 
-Firstly, download data manually from [Kaggle](https://www.kaggle.com/datasets/owenyy/hydromtl) or [Zenodo](https://doi.org/10.5281/zenodo.10024011) .
+Firstly, download data manually from [Kaggle](https://www.kaggle.com/datasets/owenyy/hydromtl) or [Zenodo](https://doi.org/10.5281/zenodo.12165586) + [CAMELS website](http://dx.doi.org/10.5065/D6G73C3Q).
 
 Then, put the data in a folder and set this fold in definitions.py.
  
@@ -119,6 +119,14 @@ xxx
 │   |   ├── 02
 │   |   ├── ……
 ```
+
+Below is a brief overview of the directories in [Zenodo](https://doi.org/10.5281/zenodo.12165586) -- the processed data by ourselves:
+
+- camels_streamflow: This directory contains streamflow data for CAMELS basins covering the period from January 1, 2015, to December 31, 2021. We have not included the original CAMELS dataset, which contains attributes, meteorological forcing, and streamflow data from January 1, 1980, to December 31, 2014, as it can be easily downloaded from the CAMELS website and is too large for us to upload to Zenodo.
+- modiset4camels: This directory includes multiple versions of basin-mean Evapotranspiration (ET) data retrieved from the MOD16A2 data product. The dataset spans from January 1, 2001, to December 31, 2021, with an 8-day temporal resolution.
+- nldas4camels: This directory contains basin-mean daily meteorological forcing data from the NLDAS-2 dataset, obtained via Google Earth Engine (GEE). The dataset covers the period from January 1, 2001, to December 31, 2021.
+- smap4camels: This directory features basin-mean Soil Moisture (SSM) data from the NASA-USDA Enhanced SMAP Global Soil Moisture dataset, covering the period from April 2, 2015, to October 3, 2021. The dataset provides SSM measurements at a 5 cm depth. Additionally, we provide basin-mean daily SMAP L4 data spanning from April 1, 2015, to December 31, 2023.
+
 
 ### Train
 
