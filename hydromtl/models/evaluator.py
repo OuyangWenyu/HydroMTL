@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-04-06 21:16:56
+LastEditTime: 2024-10-09 21:16:23
 LastEditors: Wenyu Ouyang
 Description: Testing functions for hydroDL models
-FilePath: /HydroMTL/hydromtl/models/evaluator.py
+FilePath: \HydroMTL\hydromtl\models\evaluator.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import os
 from typing import Dict, Tuple
 from functools import reduce
@@ -66,12 +67,47 @@ def evaluate_model(model: PyTorchForecast) -> Tuple[Dict, np.array, np.array]:
             model.params["model_params"],
             weight_path=os.path.join(model_filepath, f"model_Ep{str(test_epoch)}.pth"),
         )
-    pred, obs, test_data = infer_on_torch_model(model)
+    if model.params["evaluate_params"]["uncertainty_mode"]:
+        pred, obs, test_data = infer_on_torch_model_uncertainty(model)
+        preds_np = []
+        for pred_ in pred:
+            pred_np = test_data.inverse_scale(pred_)
+            preds_np.append(pred_np)
+    else:
+        pred, obs, test_data = infer_on_torch_model(model)
+        preds_np = test_data.inverse_scale(pred)
     print("Un-transforming data")
-    preds_np = test_data.inverse_scale(pred)
     obss_np = test_data.inverse_scale(obs)
 
     #  Then evaluate the model metrics
+    _evaluate_metrics(
+        target_col, evaluation_metrics, fill_nan, eval_log, preds_np, obss_np
+    )
+
+    return eval_log, preds_np, obss_np
+
+
+def _evaluate_metrics(
+    target_col,
+    evaluation_metrics,
+    fill_nan,
+    eval_log,
+    preds_np,
+    obss_np,
+    mc_sample_i=None,
+):
+    if type(preds_np) is list:
+        for i in range(len(preds_np)):
+            _evaluate_metrics(
+                target_col,
+                evaluation_metrics,
+                fill_nan,
+                eval_log,
+                preds_np[i],
+                obss_np,
+                i,
+            )
+        return
     if type(fill_nan) is list and len(fill_nan) != len(target_col):
         raise ArithmeticError("length of fill_nan must be equal to target_col's")
     for i in range(len(target_col)):
@@ -80,11 +116,42 @@ def evaluate_model(model: PyTorchForecast) -> Tuple[Dict, np.array, np.array]:
         else:
             inds = stat_error(obss_np[:, :, i], preds_np[:, :, i], fill_nan[i])
         for evaluation_metric in evaluation_metrics:
-            eval_log[evaluation_metric + " of " + target_col[i]] = inds[
+            eval_log[f"{evaluation_metric} of {target_col[i]}{mc_sample_i}"] = inds[
                 evaluation_metric
             ]
+    return
 
-    return eval_log, preds_np, obss_np
+
+def infer_on_torch_model_uncertainty(
+    model: PyTorchForecast,
+) -> Tuple[torch.Tensor, torch.Tensor, TestDataModel]:
+    """
+    Function to handle both test evaluation and inference on a test data-frame.
+    """
+    # multiple forward passes to estimate the model's uncertainty using Monte Carlo Dropout
+    num_samples = model.params["evaluate_params"]["n_mc_samples"]
+    mc_outputs = []
+    # set to training mode to enable Monte Carlo Dropout
+    model.model.train()
+    data_params = model.params["data_params"]
+    device = get_the_device(model.params["training_params"]["device"])
+    test_dataset = TestDataModel(model.test_data)
+    all_data = test_dataset.load_test_data()
+    # during evaluation, we don't need to calculate gradients
+    with torch.no_grad():
+        for _ in range(num_samples):
+            # force the model to use dropout
+            # TODO: need set do_drop_mc=True
+            pred = generate_predictions(
+                model,
+                test_dataset,
+                *all_data[:-1],
+                device=device,
+                data_params=data_params,
+            )
+            mc_outputs.append(pred)
+
+    return mc_outputs, all_data[-1], test_dataset
 
 
 def infer_on_torch_model(
@@ -137,7 +204,9 @@ def generate_predictions(
         _description_
     """
     model = ts_model.model
-    model.train(mode=False)
+    uncertainty_mode = ts_model.params["evaluate_params"]["uncertainty_mode"]
+    if not uncertainty_mode:
+        model.train(mode=False)
     seq_first = type(model) in sequence_first_model_lst
     if issubclass(type(test_model.test_data), Dataset):
         # TODO: not support return_cell_states yet
@@ -156,7 +225,10 @@ def generate_predictions(
                     ys = ys.transpose(0, 1)
                 xs = xs.to(device)
                 ys = ys.to(device)
-                output = model(xs)
+                if uncertainty_mode:
+                    output = model(xs, do_drop_mc=True)
+                else:
+                    output = model(xs)
                 if type(output) is tuple:
                     others = output[1:]
                     # Convention: y_p must be the first output of model
@@ -203,9 +275,7 @@ def generate_predictions(
                         np.swapaxes(np.concatenate([x_temp, c_temp], 2), 1, 0)
                     ).float()
                     if seq_first
-                    else torch.from_numpy(
-                        np.concatenate([x_temp, c_temp], 2)
-                    ).float()
+                    else torch.from_numpy(np.concatenate([x_temp, c_temp], 2)).float()
                 )
             elif seq_first:
                 xhTest = torch.from_numpy(np.swapaxes(x_temp, 1, 0)).float()
@@ -222,7 +292,10 @@ def generate_predictions(
                     else:
                         zTest = torch.from_numpy(z[i_s[i] : i_e[i], :]).float()
                     zTest = zTest.to(device)
-                    y_p = model(xhTest, zTest)
+                    if uncertainty_mode:
+                        y_p = model(xhTest, zTest, do_drop_mc=True)
+                    else:
+                        y_p = model(xhTest, zTest)
                 else:
                     if return_cell_state:
                         cs_lst = []
@@ -232,7 +305,10 @@ def generate_predictions(
                             )
                             cs_lst.append(cs)
                         cs_cat_lst = torch.cat(cs_lst, dim=0)
-                    y_p = model(xhTest)
+                    if uncertainty_mode:
+                        y_p = model(xhTest, do_drop_mc=True)
+                    else:
+                        y_p = model(xhTest)
                 if type(y_p) is tuple:
                     others = y_p[1:]
                     # Convention: y_p must be the first output of model

@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2024-04-26 21:11:15
+LastEditTime: 2024-10-09 20:01:56
 LastEditors: Wenyu Ouyang
 Description: Config for hydroDL
 FilePath: \HydroMTL\hydromtl\data\config.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 import argparse
 import fnmatch
 import json
@@ -200,7 +201,13 @@ def default_config_file():
             "train_but_not_real": False,
         },
         # For evaluation
-        "evaluate_params": {"metrics": ["NSE"], "fill_nan": "no", "test_epoch": 20},
+        "evaluate_params": {
+            "metrics": ["NSE"],
+            "fill_nan": "no",
+            "test_epoch": 20,
+            "uncertainty_mode": False,
+            "n_mc_samples": 1,
+        },
     }
     return config_default
 
@@ -262,6 +269,8 @@ def cmd(
     num_workers=None,
     train_but_not_real=None,
     et_product=None,
+    uncertainty_mode=None,
+    n_mc_samples=None,
 ):
     """input args from cmd"""
     parser = argparse.ArgumentParser(
@@ -630,6 +639,20 @@ def cmd(
         default=et_product,
         type=str,
     )
+    parser.add_argument(
+        "--uncertainty_mode",
+        dest="uncertainty_mode",
+        help="The mode of uncertainty, True for MC Dropout, False for no uncertainty",
+        type=int,
+        default=uncertainty_mode,
+    )
+    parser.add_argument(
+        "--n_mc_samples",
+        dest="n_mc_samples",
+        help="The number of MC samples for MC Dropout",
+        type=int,
+        default=n_mc_samples,
+    )
     # To make pytest work in PyCharm, here we use the following code instead of "args = parser.parse_args()":
     # https://blog.csdn.net/u014742995/article/details/100119905
     args, unknown = parser.parse_known_args()
@@ -655,14 +678,8 @@ def update_cfg(cfg_file, new_args):
     print("update config file")
     if new_args.sub is not None:
         subset, subexp = new_args.sub.split(os.sep)
-        if not os.path.exists(
-            os.path.join(definitions.RESULT_DIR, subset, subexp)
-        ):
-            os.makedirs(
-                os.path.join(
-                    definitions.RESULT_DIR, subset, subexp
-                )
-            )
+        if not os.path.exists(os.path.join(definitions.RESULT_DIR, subset, subexp)):
+            os.makedirs(os.path.join(definitions.RESULT_DIR, subset, subexp))
         cfg_file["data_params"]["validation_path"] = os.path.join(
             definitions.RESULT_DIR, subset, subexp
         )
@@ -881,6 +898,10 @@ def update_cfg(cfg_file, new_args):
         cfg_file["training_params"]["train_but_not_real"] = True
     if new_args.et_product is not None:
         cfg_file["data_params"]["et_product"] = new_args.et_product
+    if new_args.uncertainty_mode is not None:
+        cfg_file["evaluate_params"]["uncertainty_mode"] = new_args.uncertainty_mode
+    if new_args.n_mc_samples is not None:
+        cfg_file["evaluate_params"]["n_mc_samples"] = new_args.n_mc_samples
 
 
 def get_config_file(cfg_dir):
