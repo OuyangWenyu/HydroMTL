@@ -1,15 +1,16 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2024-10-09 20:13:21
+LastEditTime: 2024-10-10 20:18:18
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
-FilePath: \HydroMTL\scripts\evaluate_mcdropout.py
+FilePath: \HydroMTL\scripts\mcdropout_eval.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
 import glob
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
@@ -21,7 +22,7 @@ from hydromtl.data.source.data_constant import ET_MODIS_NAME, Q_CAMELS_US_NAME
 from scripts.mtl_results_utils import predict_new_mtl_exp
 
 
-def train_and_test(args):
+def mcdropout_run(args):
     weight_path = args.weight_path
     if weight_path is None:
         raise ValueError("weight_path is required")
@@ -42,6 +43,8 @@ def train_and_test(args):
     layer_hidden_size = args.layer_hidden_size
     random_seed = args.random_seed
     et_product = args.et_product
+    if et_product is None or et_product == "None":
+        et_product = "MOD16A2V006"
     uncertainty_mode = args.uncertainty_mode
     n_mc_samples = args.n_mc_samples
     predict_new_mtl_exp(
@@ -62,6 +65,59 @@ def train_and_test(args):
         uncertainty_mode=uncertainty_mode,
         n_mc_samples=n_mc_samples,
     )
+
+
+def run_mcdropout_for_configs(exp_list, n_mc_samples):
+    for exp in exp_list:
+        # Modify the exp string, for example "expstlq203" -> "expstlq20300" and "expstlq2030"
+        exp_add_two_zeros = f"{exp}00"
+        exp_add_one_zero = f"{exp}0"
+
+        # Find the corresponding JSON configuration file
+        train_exp_dir = os.path.join(definitions.RESULT_DIR, "camels", exp_add_one_zero)
+        stat_dict_file = glob.glob(os.path.join(train_exp_dir, "params_*.json"))
+        if len(stat_dict_file) == 0:
+            raise FileNotFoundError(
+                f"No stat.json file found for experiment: {exp_add_one_zero}"
+            )
+        stat_dict_file = stat_dict_file[0]
+        # read json file
+        with open(stat_dict_file, "r") as f:
+            stat_dict = json.load(f)
+        # Configure parameters
+        weight_path = stat_dict["model_params"]["weight_path"]
+        loss_weight = stat_dict["training_params"]["criterion_params"]["item_weight"]
+        test_periods = stat_dict["data_params"]["t_range_test"]
+        cache_dir = stat_dict["data_params"]["cache_path"]
+        n_hidden_states = stat_dict["model_params"]["model_param"]["n_hidden_states"]
+        layer_hidden_size = stat_dict["model_params"]["model_param"][
+            "layer_hidden_size"
+        ]
+        random_seed = stat_dict["training_params"]["random_seed"]
+        uncertainty_mode = 1
+
+        # Call the mcdropout_run function
+        args = (
+            argparse.Namespace()
+        )  # Create an empty Namespace object to simulate arguments
+        args.weight_path = weight_path
+        args.exp = exp_add_two_zeros
+        args.loss_weight = loss_weight
+        args.test_period = test_periods
+        args.cache_path = cache_dir
+        args.n_hidden_states = n_hidden_states
+        args.layer_hidden_size = layer_hidden_size
+        args.random_seed = random_seed
+        args.uncertainty_mode = uncertainty_mode
+        args.n_mc_samples = n_mc_samples
+
+        # these two are default values
+        args.gage_id_file = os.path.join(
+            definitions.RESULT_DIR, "camels_us_mtl_2001_2021_flow_screen.csv"
+        )
+        args.et_product = "MOD16A2V006"
+
+        mcdropout_run(args)
 
 
 if __name__ == "__main__":
@@ -176,4 +232,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")
-    train_and_test(args)
+    mcdropout_run(args)
