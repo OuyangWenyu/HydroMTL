@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2023-04-05 20:57:26
-LastEditTime: 2024-10-10 20:18:18
+LastEditTime: 2024-10-13 14:17:06
 LastEditors: Wenyu Ouyang
 Description: Evaluate the trained model
 FilePath: \HydroMTL\scripts\mcdropout_eval.py
@@ -67,10 +67,11 @@ def mcdropout_run(args):
     )
 
 
-def run_mcdropout_for_configs(exp_list, n_mc_samples):
+def run_mcdropout_for_configs(exp_list, n_mc_samples, **kwargs):
     for exp in exp_list:
+        post_fix = kwargs.get("post_fix", 0)
         # Modify the exp string, for example "expstlq203" -> "expstlq20300" and "expstlq2030"
-        exp_add_two_zeros = f"{exp}00"
+        exp_add_two_zeros = f"{exp}0{post_fix}"
         exp_add_one_zero = f"{exp}0"
 
         # Find the corresponding JSON configuration file
