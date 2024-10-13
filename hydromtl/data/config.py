@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2024-10-09 20:01:56
+LastEditTime: 2024-10-13 16:42:03
 LastEditors: Wenyu Ouyang
 Description: Config for hydroDL
 FilePath: \HydroMTL\hydromtl\data\config.py
@@ -173,6 +173,7 @@ def default_config_file():
             },
             "stat_dict_file": None,
             "et_product": "MOD16A2V006",
+            "vars_data_mask": None,
         },
         "training_params": {
             # if train_mode is False, don't train and evaluate
@@ -271,6 +272,7 @@ def cmd(
     et_product=None,
     uncertainty_mode=None,
     n_mc_samples=None,
+    vars_data_mask=None,
 ):
     """input args from cmd"""
     parser = argparse.ArgumentParser(
@@ -653,6 +655,13 @@ def cmd(
         type=int,
         default=n_mc_samples,
     )
+    parser.add_argument(
+        "--vars_data_mask",
+        dest="vars_data_mask",
+        help="The mask of variables",
+        type=json.loads,
+        default=vars_data_mask,
+    )
     # To make pytest work in PyCharm, here we use the following code instead of "args = parser.parse_args()":
     # https://blog.csdn.net/u014742995/article/details/100119905
     args, unknown = parser.parse_known_args()
@@ -902,6 +911,8 @@ def update_cfg(cfg_file, new_args):
         cfg_file["evaluate_params"]["uncertainty_mode"] = new_args.uncertainty_mode
     if new_args.n_mc_samples is not None:
         cfg_file["evaluate_params"]["n_mc_samples"] = new_args.n_mc_samples
+    if new_args.vars_data_mask is not None:
+        cfg_file["data_params"]["vars_data_mask"] = new_args.vars_data_mask
 
 
 def get_config_file(cfg_dir):

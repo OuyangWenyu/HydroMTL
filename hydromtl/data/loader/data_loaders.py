@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-04-06 21:18:00
+LastEditTime: 2024-10-13 16:45:19
 LastEditors: Wenyu Ouyang
 Description: Self-made Data sets and loaders for DL models; references to https://github.com/mhpi/hydroDL
-FilePath: /HydroMTL/hydromtl/data/loader/data_loaders.py
+FilePath: \HydroMTL\hydromtl\data\loader\data_loaders.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from abc import ABC
 from functools import wraps
 from typing import Union
@@ -56,6 +57,7 @@ class HydroDlTsDataModel(ABC):
             time length of warmup period
         batch_first
             if True, the batch data's dim is [batch, seq, feature]; else [seq, batch, feature]
+
         Returns
         -------
         tuple[torch.Tensor]
@@ -154,7 +156,10 @@ class BasinFlowDataModel(HydroDlTsDataModel):
     """Basic basin's rainfall-runoff mini-batch data model"""
 
     def __init__(
-        self, data_source: DataSourceBase, data_params: dict, loader_type: str
+        self,
+        data_source: DataSourceBase,
+        data_params: dict,
+        loader_type: str,
     ):
         """
         Parameters

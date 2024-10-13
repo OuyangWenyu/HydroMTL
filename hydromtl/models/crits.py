@@ -1,12 +1,13 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-31 11:08:29
-LastEditTime: 2023-04-06 17:17:01
+LastEditTime: 2024-10-13 18:05:28
 LastEditors: Wenyu Ouyang
 Description: Loss functions
-FilePath: /HydroMTL/hydromtl/models/crits.py
+FilePath: \HydroMTL\hydromtl\models\crits.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
+
 from typing import Union
 
 import torch
@@ -293,10 +294,10 @@ class MultiOutLoss(torch.nn.Module):
     def __init__(
         self,
         loss_funcs: Union[torch.nn.Module, list],
-        data_gap: list = [0, 2],
-        device: list = [0],
+        data_gap: list = None,
+        device: list = None,
         limit_part: list = None,
-        item_weight: list = [0.5, 0.5],
+        item_weight: list = None,
     ):
         """
         Loss function for multiple output
@@ -326,6 +327,12 @@ class MultiOutLoss(torch.nn.Module):
             use different weight for each item's loss;
             for example, the default values [0.5, 0.5] means 0.5 * loss1 + 0.5 * loss2
         """
+        if data_gap is None:
+            data_gap = [0, 2]
+        if device is None:
+            device = [0]
+        if item_weight is None:
+            item_weight = [0.5, 0.5]
         super(MultiOutLoss, self).__init__()
         self.loss_funcs = loss_funcs
         self.data_gap = data_gap
@@ -374,6 +381,8 @@ class MultiOutLoss(torch.nn.Module):
             else:
                 temp = self.item_weight[k] * self.loss_funcs(p, t)
             # sum of all k-th loss
+            if torch.isnan(temp).any():
+                continue
             loss = loss + temp
         return loss
 

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2024-05-28 15:33:48
+LastEditTime: 2024-10-13 16:53:05
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: \HydroMTL\scripts\run_task.py
@@ -9,6 +9,7 @@ Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
@@ -35,6 +36,7 @@ def train_and_test(args):
     n_hidden_states = args.n_hidden_states
     layer_hidden_size = args.layer_hidden_size
     et_product = args.et_product
+    vars_data_mask = args.vars_data_mask
     if gage_id_file is None or gage_id_file == "None":
         gage_id_file = os.path.join(
             definitions.RESULT_DIR,
@@ -62,6 +64,7 @@ def train_and_test(args):
         n_hidden_states=n_hidden_states,
         layer_hidden_size=layer_hidden_size,
         et_product=et_product,
+        vars_data_mask=vars_data_mask,
     )
 
 
@@ -73,7 +76,7 @@ if __name__ == "__main__":
         dest="exp",
         help="the ID of the experiment, such as expstlq001",
         type=str,
-        default="testmtl002",
+        default="testmtl003",
         # default="expmtl001",
         # default="expstlet001",
         # default="expstlq201",
@@ -85,8 +88,8 @@ if __name__ == "__main__":
         help="the variables as output of MTL models, chosen from ['usgsFlow', 'ET', 'ssm']",
         nargs="+",
         type=str,
-        default=["usgsFlow", "ET"],
-        # default=["usgsFlow", "ssm"],
+        # default=["usgsFlow", "ET"],
+        default=["usgsFlow", "ssm"],
     )
     parser.add_argument(
         "--loss_weight",
@@ -103,18 +106,18 @@ if __name__ == "__main__":
         dest="train_period",
         help="training period, such as ['2001-10-01', '2011-10-01']",
         nargs="+",
-        default=["2001-10-01", "2011-10-01"],
+        # default=["2001-10-01", "2011-10-01"],
         # default=["2005-10-01", "2015-10-01"],
-        # default=["2015-10-01", "2018-10-01"],
+        default=["2015-10-01", "2018-10-01"],
     )
     parser.add_argument(
         "--test_period",
         dest="test_period",
         help="testing period, such as ['2011-10-01', '2016-10-01']",
         nargs="+",
-        default=["2011-10-01", "2016-10-01"],
+        # default=["2011-10-01", "2016-10-01"],
         # default=["2015-10-01", "2018-10-01"],
-        # default=["2018-10-01", "2021-10-01"],
+        default=["2018-10-01", "2021-10-01"],
     )
     parser.add_argument(
         "--ctx", dest="ctx", help="CUDA IDs", nargs="+", type=int, default=[0]
@@ -184,6 +187,18 @@ if __name__ == "__main__":
         help="the size of neurons in output layer",
         type=int,
         default=128,
+    )
+    parser.add_argument(
+        "--vars_data_mask",
+        dest="vars_data_mask",
+        help="specify some basins some varaibles in some periods are masked as NaN",
+        # default=None,
+        default={
+            "basin_id_mask": r"C:\Users\wenyu\OneDrive\Research\paper3-mtl\results\exp_pub_kfold_percent050\camels_test_kfold0.csv",
+            "t_range_mask": ["2015-10-01", "2018-10-01"],
+            "target_cols_mask": ["usgsFlow"],
+        },
+        type=json.loads,
     )
     args = parser.parse_args()
     print(f"Your command arguments:{str(args)}")

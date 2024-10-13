@@ -1,11 +1,13 @@
 from functools import wraps
 
+import numpy as np
+import pandas as pd
 import torch
 
 from hydromtl.data.cache.cache_base import DataSourceCache
 from hydromtl.data.loader.data_scalers import wrap_t_s_dict
 from hydromtl.data.source.data_base import DataSourceBase
-from hydromtl.utils.hydro_utils import check_np_array_nan
+from hydromtl.utils.hydro_utils import check_np_array_nan, t_range_days
 
 
 @check_np_array_nan
@@ -34,10 +36,7 @@ def read_yxc(data_source: DataSourceBase, data_params: dict, loader_type: str) -
     relevant_cols = data_params["relevant_cols"]
     constant_cols = data_params["constant_cols"]
     cache_read = data_params["cache_read"]
-    if "other_cols" in data_params.keys():
-        other_cols = data_params["other_cols"]
-    else:
-        other_cols = None
+    other_cols = data_params.get("other_cols")
     if cache_read:
         # Don't wanna the cache impact the implemention of data_sources' read_xxx functions
         # Hence, here we follow "Convention over configuration", and set the cache files' name in DataSourceCache
@@ -45,6 +44,16 @@ def read_yxc(data_source: DataSourceBase, data_params: dict, loader_type: str) -
             data_params["cache_path"], loader_type, data_source
         )
         caches = data_source_cache.load_data_source()
+        if data_params["vars_data_mask"] is not None:
+            data_flow = _mask_flow(
+                caches[0],
+                data_params["vars_data_mask"],
+                basins_id,
+                t_range_list,
+                target_cols,
+            )
+        else:
+            data_flow = caches[0]
         data_dict = caches[3]
         # judge if the configs are correct
         if not (
@@ -60,14 +69,22 @@ def read_yxc(data_source: DataSourceBase, data_params: dict, loader_type: str) -
         if other_cols is not None:
             for key, value in other_cols.items():
                 assert value == data_dict[data_source_cache.key_other_cols][key]
-            return caches[0], caches[1], caches[2], caches[4]
-        return caches[0], caches[1], caches[2]
-    if "relevant_types" in data_params.keys():
+            return data_flow, caches[1], caches[2], caches[4]
+        return data_flow, caches[1], caches[2]
+    if "relevant_types" in data_params:
         forcing_type = data_params["relevant_types"][0]
     else:
         forcing_type = None
     # read streamflow
     data_flow = data_source.read_target_cols(basins_id, t_range_list, target_cols)
+    if data_params["vars_data_mask"] is not None:
+        data_flow = _mask_flow(
+            data_flow,
+            data_params["vars_data_mask"],
+            basins_id,
+            t_range_list,
+            target_cols,
+        )
     # read forcing
     data_forcing = data_source.read_relevant_cols(
         basins_id, t_range_list, relevant_cols, forcing_type=forcing_type
@@ -79,6 +96,57 @@ def read_yxc(data_source: DataSourceBase, data_params: dict, loader_type: str) -
         data_other = data_source.read_other_cols(basins_id, other_cols=other_cols)
         return data_flow, data_forcing, data_attr, data_other
     return data_flow, data_forcing, data_attr
+
+
+def _mask_flow(
+    data_flow,
+    mask,
+    basins_id,
+    t_range_list,
+    target_cols,
+):
+    """_summary_
+
+    Parameters
+    ----------
+    data_flow : np.array
+        _description_
+    mask : dict
+        sometimes we assume some data is NaN even they literally are not,
+        so we need to mask them, default is None meaning no mask
+    basins_id : list
+        the basins' ids, used to judge which basins to mask
+    t_range_list : list
+        the time range, such as ["1990-01-01","2000-01-01"], used to judge which time to mask
+    target_cols : list
+        the target columns, used to judge which columns to mask
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    basin_id_mask_file = mask["basin_id_mask"]
+    if isinstance(basin_id_mask_file, str):
+        basin_id_mask = pd.read_csv(basin_id_mask_file, dtype={"GAGE_ID": str})[
+            "GAGE_ID"
+        ].values.tolist()
+    else:
+        basin_id_mask = basin_id_mask_file
+    t_range_mask = mask["t_range_mask"]
+    target_cols_mask = mask["target_cols_mask"]
+    # which columns to mask
+    basin_id_mask_idx = [basins_id.index(basin_id) for basin_id in basin_id_mask]
+    all_t_list = t_range_days(t_range_list).tolist()
+    mask_t_list = t_range_days(t_range_mask).tolist()
+    t_range_mask_idx = [all_t_list.index(t_) for t_ in mask_t_list if t_ in all_t_list]
+    target_cols_mask_idx = [target_cols.index(col) for col in target_cols_mask]
+    # Mask the data_flow array
+    for basin_idx in basin_id_mask_idx:
+        for t_idx in t_range_mask_idx:
+            for col_idx in target_cols_mask_idx:
+                data_flow[basin_idx, t_idx, col_idx] = np.nan
+    return data_flow
 
 
 def check_data_loader(func):

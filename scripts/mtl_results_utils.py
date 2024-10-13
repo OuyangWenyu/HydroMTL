@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-07-23 10:51:52
-LastEditTime: 2024-10-09 19:55:26
+LastEditTime: 2024-10-13 16:41:37
 LastEditors: Wenyu Ouyang
 Description: Reading and Plotting utils for MTL results
 FilePath: \HydroMTL\scripts\mtl_results_utils.py
@@ -565,6 +565,7 @@ def run_mtl_camels(
     n_hidden_states=256,
     layer_hidden_size=128,
     et_product="MOD16A2V006",
+    vars_data_mask=None,
 ):
     if targets is None:
         targets = [Q_CAMELS_US_NAME, ET_MODIS_NAME]
@@ -632,6 +633,7 @@ def run_mtl_camels(
         gage_id_file=gage_id_file,
         gage_id=gage_id,
         et_product=et_product,
+        vars_data_mask=vars_data_mask,
     )
     update_cfg(config_data, args)
     if weight_path is not None:
