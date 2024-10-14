@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-10 18:25:22
-LastEditTime: 2024-10-13 14:29:28
+LastEditTime: 2024-10-14 09:28:15
 LastEditors: Wenyu Ouyang
 Description: Run all cases, save the results and plot the results
 FilePath: \HydroMTL\scripts\mcdropout_results.py
@@ -68,9 +68,9 @@ exp_mtl_lst = [
     "expmtl503",
 ]
 if run_mode:
-    run_mcdropout_for_configs(exp_q_lst, 10, post_fix=0)
-    run_mcdropout_for_configs(exp_et_lst, 10, post_fix=0)
-    run_mcdropout_for_configs(exp_mtl_lst, 10, post_fix=0)
+    run_mcdropout_for_configs(exp_q_lst, 100, post_fix=2)
+    run_mcdropout_for_configs(exp_et_lst, 100, post_fix=2)
+    run_mcdropout_for_configs(exp_mtl_lst, 100, post_fix=2)
 
 # read the results and plot
 post_fix = 0

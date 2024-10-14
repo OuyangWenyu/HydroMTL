@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-04-27 10:54:32
-LastEditTime: 2024-10-13 16:53:05
+LastEditTime: 2024-10-14 10:07:49
 LastEditors: Wenyu Ouyang
 Description: Generate commands to run scripts in Linux Screen
 FilePath: \HydroMTL\scripts\run_task.py
@@ -189,17 +189,44 @@ if __name__ == "__main__":
         default=128,
     )
     parser.add_argument(
-        "--vars_data_mask",
-        dest="vars_data_mask",
+        "--basin_id_mask",
+        dest="basin_id_mask",
         help="specify some basins some varaibles in some periods are masked as NaN",
-        # default=None,
-        default={
-            "basin_id_mask": r"C:\Users\wenyu\OneDrive\Research\paper3-mtl\results\exp_pub_kfold_percent050\camels_test_kfold0.csv",
-            "t_range_mask": ["2015-10-01", "2018-10-01"],
-            "target_cols_mask": ["usgsFlow"],
-        },
-        type=json.loads,
+        default=None,
+        # default={
+        #     "basin_id_mask": r"C:\Users\wenyu\OneDrive\Research\paper3-mtl\results\exp_pub_kfold_percent050\camels_test_kfold0.csv",
+        #     "t_range_mask": ["2015-10-01", "2018-10-01"],
+        #     "target_cols_mask": ["usgsFlow"],
+        # },
+        type=str,
+    )
+    parser.add_argument(
+        "--t_range_mask",
+        dest="t_range_mask",
+        help="specify some basins some varaibles in some periods are masked as NaN",
+        default=None,
+        nargs="+",
+    )
+    parser.add_argument(
+        "--target_cols_mask",
+        dest="target_cols_mask",
+        help="specify some basins some varaibles in some periods are masked as NaN",
+        default=None,
+        nargs="+",
     )
     args = parser.parse_args()
+    if (
+        args.basin_id_mask is not None
+        and args.t_range_mask is not None
+        and args.target_cols_mask is not None
+    ):
+        vars_data_mask = {
+            "basin_id_mask": args.basin_id_mask,
+            "t_range_mask": args.t_range_mask,
+            "target_cols_mask": args.target_cols_mask,
+        }
+    else:
+        vars_data_mask = None
+    args.vars_data_mask = vars_data_mask
     print(f"Your command arguments:{str(args)}")
     train_and_test(args)
