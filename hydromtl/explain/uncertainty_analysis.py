@@ -1,5 +1,13 @@
+import os
+from pathlib import Path
+import sys
 import numpy as np
+from scipy.special import erf
 import matplotlib.pyplot as plt
+
+project_dir = os.path.dirname(Path(os.path.abspath(__file__)).parent.parent)
+sys.path.append(project_dir)
+from definitions import RESULT_DIR
 
 
 def calculate_empirical_cdf(predictions, obs_values):
@@ -105,7 +113,9 @@ def bin_aggregated_data(z_values, r_values, num_bins=10):
     return binned_z, binned_r
 
 
-def plot_probability_plot(z_values, r_values, basin_name="Basin", scatter=True):
+def plot_probability_plot(
+    z_values, r_values, basin_name="Basin", scatter=True, save_path=None
+):
     """
     Plot the probability plot for a single basin.
 
@@ -123,6 +133,8 @@ def plot_probability_plot(z_values, r_values, basin_name="Basin", scatter=True):
     z_sorted = z_values[sorted_indices]
     r_sorted = r_values[sorted_indices]
 
+    # new plot
+    plt.figure()
     # Plot the probability plot with markers only (no lines)
     if scatter:
         plt.scatter(
@@ -140,7 +152,8 @@ def plot_probability_plot(z_values, r_values, basin_name="Basin", scatter=True):
     plt.title(f"Probability Plot - {basin_name}")
     plt.legend()
     plt.grid(True)
-    plt.show()
+    if save_path:
+        plt.savefig(save_path)
 
 
 def process_basin(predictions, obs_values, basin_name="Basin"):
@@ -227,9 +240,103 @@ def process_and_aggregate_basins(basins_data, num_bins=0):
     return all_z_values, all_r_values
 
 
+def calculate_error_exceedance_prob(y, f, sigma):
+    """
+    Calculate the error exceedance probability p_ee
+    Parameters
+    ----------
+    y: np.ndarray
+        Ground truth value
+    f: np.ndarray
+        mcdropout mean Predicted value
+    sigma: float
+        Uncertainty in the prediction
+
+    Returns
+    -------
+    p_ee: np.ndarray
+        Error exceedance probability
+    """
+    abs_error = np.abs(y - f)
+    return 1 - (erf(abs_error / (np.sqrt(2) * sigma)) / 2)
+
+
+def plot_calibration_curve(p_ee_values, label):
+    """
+    Plot the calibration curve for error exceedance probability
+
+    The name -- calibration plot comes from this paper: https://dl.acm.org/doi/10.5555/3295222.3295309
+
+    Parameters
+    ----------
+    p_ee_values: np.ndarray
+        Error exceedance probabilities
+    label: str
+        Label for the curve
+    """
+    sorted_p_ee = np.sort(p_ee_values)
+    cdf = np.arange(1, len(sorted_p_ee) + 1) / len(sorted_p_ee)
+
+    plt.figure(figsize=(8, 6))
+
+    plt.plot(sorted_p_ee, cdf, label=label)
+    plt.plot([0, 1], [0, 1], "k--", label="y=x (Ideal)")
+
+    plt.xlabel("Error Exceedance Probability")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.title("Calibration Plot of Error Exceedance Likelihoods")
+    plt.grid(True)
+
+
+def aggregate_and_plot_calibration(y_all, f_all, sigma_all):
+    """
+    Aggregates error exceedance probabilities across multiple grids and time steps,
+    and plots the overall calibration curve.
+
+    Parameters
+    ----------
+    y_all: np.ndarray
+        Ground truth values for all grids (2D array of shape (num_grids, time_steps))
+    f_all: np.ndarray
+        mcdropout mean Predicted values for all grids (2D array of shape (num_grids, time_steps))
+    sigma_all: np.ndarray
+        Uncertainty estimates for all grids (2D array of shape (num_grids, time_steps))
+
+    Returns
+    -------
+    None
+    """
+    num_grids, time_steps = y_all.shape
+    p_ee_aggregated = []
+
+    # Loop through each grid and time step to calculate error exceedance probabilities
+    for i in range(num_grids):
+        p_ee = calculate_error_exceedance_prob(y_all[i], f_all[i], sigma_all[i])
+        p_ee_aggregated.extend(
+            p_ee
+        )  # Collect p_ee values across all grids and time steps
+
+    # Convert to a numpy array for further processing
+    p_ee_aggregated = np.array(p_ee_aggregated)
+
+    # Plot the aggregated calibration curve
+    plot_calibration_curve(p_ee_aggregated, label="Aggregated p_ee")
+
+
 # Example usage with multiple basins
 if __name__ == "__main__":
     np.random.seed(1234)
+
+    y = np.random.rand(100)  # Ground truth values
+    f = np.random.rand(100)  # Predicted values
+    sigma = np.random.rand(100) * 0.2  # Single uncertainty estimate
+
+    # Calculate the error exceedance probabilities
+    p_mc = calculate_error_exceedance_prob(y, f, sigma)
+
+    # Plot the calibration curve
+    plot_calibration_curve(p_mc, label="p_mc")
 
     # Assume we have 3 basins, each with 100 time steps and 50 Monte Carlo Dropout evaluations
     num_basins = 3
@@ -266,4 +373,8 @@ if __name__ == "__main__":
     all_z_values, all_r_values = process_and_aggregate_basins(basins_data, num_bins=10)
 
     # Plot the aggregated probability plot
-    plot_probability_plot(all_z_values, all_r_values, basin_name="All Basins", scatter=False)
+    save_path = os.path.join(RESULT_DIR, "probability_plot.png")
+    plot_probability_plot(
+        all_z_values, all_r_values, basin_name="All Basins", scatter=False
+    )
+    plt.show()

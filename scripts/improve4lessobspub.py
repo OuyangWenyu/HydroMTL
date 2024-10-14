@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-10 21:01:43
-LastEditTime: 2024-10-10 21:39:46
+LastEditTime: 2024-10-14 20:18:42
 LastEditors: Wenyu Ouyang
 Description: evaluate all pub cases and plot the results
 FilePath: \HydroMTL\scripts\improve4lessobspub.py
@@ -37,8 +37,7 @@ def evaluate_pub(train_exp, gage_id_file, cache_dir=None):
         targets=[Q_CAMELS_US_NAME, SSM_SMAP_NAME],
         loss_weights=config["training_params"]["criterion_params"]["item_weight"],
         weight_path=weight_path,
-        # train_period is just used for a dummy value, not used in the prediction
-        train_period=["2001-10-01", "2011-10-01"],
+        train_period=config["data_params"]["t_range_train"],
         test_period=config["data_params"]["t_range_test"],
         cache_path=cache_dir,
         gage_id_file=gage_id_file,
@@ -56,6 +55,14 @@ if run_mode:
         definitions.RESULT_DIR, "exp_pub_kfold_percent050", "camels_test_kfold0.csv"
     )
     evaluate_pub(
-        train_exp="exppubmtl001",
+        train_exp="exppubstlq401",
         gage_id_file=fold1_test_gage_id_file,
+        # cache is for the pub-test basins which are used for traineing in another fold experiment
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq402"),
+    )
+    evaluate_pub(
+        train_exp="exppubmtl501",
+        gage_id_file=fold1_test_gage_id_file,
+        # cache is for the pub-test basins which are used for traineing in another fold experiment
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq402"),
     )
