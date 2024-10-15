@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-10 21:01:43
-LastEditTime: 2024-10-14 20:18:42
+LastEditTime: 2024-10-15 10:56:42
 LastEditors: Wenyu Ouyang
 Description: evaluate all pub cases and plot the results
 FilePath: \HydroMTL\scripts\improve4lessobspub.py
@@ -19,12 +19,16 @@ project_dir = os.path.abspath("")
 # import the module using a relative path
 sys.path.append(project_dir)
 import definitions
-from hydromtl.data.source.data_constant import Q_CAMELS_US_NAME, SSM_SMAP_NAME
+from hydromtl.data.source.data_constant import (
+    ET_MODIS_NAME,
+    Q_CAMELS_US_NAME,
+    SSM_SMAP_NAME,
+)
 from scripts.mtl_results_utils import predict_new_mtl_exp
 from scripts.streamflow_utils import get_json_file, get_lastest_weight_path
 
 
-def evaluate_pub(train_exp, gage_id_file, cache_dir=None):
+def evaluate_pub(train_exp, gage_id_file, cache_dir=None, second_var=SSM_SMAP_NAME):
     train_exp_dir = os.path.join(definitions.RESULT_DIR, "camels", train_exp)
     weight_path = get_lastest_weight_path(train_exp_dir)
     if weight_path is None:
@@ -34,7 +38,7 @@ def evaluate_pub(train_exp, gage_id_file, cache_dir=None):
     new_exp = f"{train_exp}0"
     predict_new_mtl_exp(
         exp=new_exp,
-        targets=[Q_CAMELS_US_NAME, SSM_SMAP_NAME],
+        targets=[Q_CAMELS_US_NAME, second_var],
         loss_weights=config["training_params"]["criterion_params"]["item_weight"],
         weight_path=weight_path,
         train_period=config["data_params"]["t_range_train"],

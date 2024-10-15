@@ -1,3 +1,4 @@
+import itertools
 import os
 from pathlib import Path
 import sys
@@ -156,7 +157,7 @@ def plot_probability_plot(
         plt.savefig(save_path)
 
 
-def process_basin(predictions, obs_values, basin_name="Basin"):
+def pp_plot_basin(predictions, obs_values, basin_name="Basin"):
     """
     Process a single basin: calculate z-values, ECDF, and plot the probability plot.
 
@@ -179,7 +180,7 @@ def process_basin(predictions, obs_values, basin_name="Basin"):
     plot_probability_plot(z_values, r_values, basin_name)
 
 
-def process_multiple_basins(basins_data):
+def pp_plot_multiple_basins(basins_data):
     """
     Process multiple basins: for each basin, process and plot its probability plot.
 
@@ -192,7 +193,7 @@ def process_multiple_basins(basins_data):
         predictions = basin_data["predictions"]
         obs_values = basin_data["obs_values"]
         basin_name = basin_data["name"]
-        process_basin(predictions, obs_values, basin_name)
+        pp_plot_basin(predictions, obs_values, basin_name)
 
 
 def process_and_aggregate_basins(basins_data, num_bins=0):
@@ -223,7 +224,6 @@ def process_and_aggregate_basins(basins_data, num_bins=0):
         # Calculate z-values and r-values for the current basin
         z_values = calculate_empirical_cdf(predictions, obs_values)
         r_values = calculate_observed_ecdf(obs_values)
-
         # Append the results to the global list
         all_z_values.extend(z_values)
         all_r_values.extend(r_values)
@@ -240,45 +240,43 @@ def process_and_aggregate_basins(basins_data, num_bins=0):
     return all_z_values, all_r_values
 
 
-def calculate_error_exceedance_prob(y, f, sigma):
+def calculate_error_exceedance_prob(y, f_mean, sigma):
     """
-    Calculate the error exceedance probability p_ee
+    Calculate the error exceedance probability p_ee.
+
     Parameters
     ----------
     y: np.ndarray
-        Ground truth value
-    f: np.ndarray
-        mcdropout mean Predicted value
-    sigma: float
-        Uncertainty in the prediction
+        Ground truth value.
+    f_mean: np.ndarray
+        Mean of the predicted values.
+    sigma: np.ndarray
+        Standard deviation of the predicted values.
 
     Returns
     -------
     p_ee: np.ndarray
-        Error exceedance probability
+        Error exceedance probability.
     """
-    abs_error = np.abs(y - f)
+    abs_error = np.abs(y - f_mean)
     return 1 - (erf(abs_error / (np.sqrt(2) * sigma)) / 2)
 
 
-def plot_calibration_curve(p_ee_values, label):
+def plot_calibration_curve(p_ee_values, label, save_path=None):
     """
-    Plot the calibration curve for error exceedance probability
-
-    The name -- calibration plot comes from this paper: https://dl.acm.org/doi/10.5555/3295222.3295309
+    Plot the calibration curve for error exceedance probability.
 
     Parameters
     ----------
     p_ee_values: np.ndarray
-        Error exceedance probabilities
+        Error exceedance probabilities.
     label: str
-        Label for the curve
+        Label for the curve.
     """
     sorted_p_ee = np.sort(p_ee_values)
     cdf = np.arange(1, len(sorted_p_ee) + 1) / len(sorted_p_ee)
 
     plt.figure(figsize=(8, 6))
-
     plt.plot(sorted_p_ee, cdf, label=label)
     plt.plot([0, 1], [0, 1], "k--", label="y=x (Ideal)")
 
@@ -287,33 +285,39 @@ def plot_calibration_curve(p_ee_values, label):
     plt.legend()
     plt.title("Calibration Plot of Error Exceedance Likelihoods")
     plt.grid(True)
+    if save_path:
+        plt.savefig(save_path)
 
 
-def aggregate_and_plot_calibration(y_all, f_all, sigma_all):
+def aggregate_and_plot_calibration(y_all, f_all_samples, save_path=None):
     """
-    Aggregates error exceedance probabilities across multiple grids and time steps,
+    Aggregates Monte Carlo Dropout samples across multiple grids and time steps,
     and plots the overall calibration curve.
 
     Parameters
     ----------
     y_all: np.ndarray
-        Ground truth values for all grids (2D array of shape (num_grids, time_steps))
-    f_all: np.ndarray
-        mcdropout mean Predicted values for all grids (2D array of shape (num_grids, time_steps))
-    sigma_all: np.ndarray
-        Uncertainty estimates for all grids (2D array of shape (num_grids, time_steps))
+        Ground truth values for all grids (2D array of shape (num_grids, time_steps)).
+    f_all_samples: np.ndarray
+        Monte Carlo samples of predicted values for all grids (3D array of shape (num_grids, time_steps, mc_samples)).
 
     Returns
     -------
     None
     """
-    num_grids, time_steps = y_all.shape
+    mc_samples, num_grids, time_steps = f_all_samples.shape
     p_ee_aggregated = []
 
     # Loop through each grid and time step to calculate error exceedance probabilities
-    for i in range(num_grids):
-        p_ee = calculate_error_exceedance_prob(y_all[i], f_all[i], sigma_all[i])
-        p_ee_aggregated.extend(
+    for i, t in itertools.product(range(num_grids), range(time_steps)):
+        # Get Monte Carlo samples for the current grid and time step
+        f_samples = f_all_samples[:, i, t]
+        f_mean = np.mean(f_samples)  # Calculate the mean of the predictions
+        sigma = np.std(f_samples)  # Calculate the standard deviation (uncertainty)
+
+        # Calculate error exceedance probability for the current time step
+        p_ee = calculate_error_exceedance_prob(y_all[i, t], f_mean, sigma)
+        p_ee_aggregated.append(
             p_ee
         )  # Collect p_ee values across all grids and time steps
 
@@ -321,22 +325,26 @@ def aggregate_and_plot_calibration(y_all, f_all, sigma_all):
     p_ee_aggregated = np.array(p_ee_aggregated)
 
     # Plot the aggregated calibration curve
-    plot_calibration_curve(p_ee_aggregated, label="Aggregated p_ee")
+    plot_calibration_curve(
+        p_ee_aggregated, label="Aggregated p_ee", save_path=save_path
+    )
 
 
-# Example usage with multiple basins
+# Example usage
 if __name__ == "__main__":
     np.random.seed(1234)
+    num_grids = 500  # Number of grid cells
+    time_steps = 100  # Number of time steps for each grid
+    mc_samples = 20  # Number of Monte Carlo Dropout samples
 
-    y = np.random.rand(100)  # Ground truth values
-    f = np.random.rand(100)  # Predicted values
-    sigma = np.random.rand(100) * 0.2  # Single uncertainty estimate
+    # Generate random ground truth values and Monte Carlo Dropout predictions
+    y_all = np.random.rand(num_grids, time_steps)  # Ground truth values for all grids
+    f_all_samples = np.random.rand(
+        num_grids, time_steps, mc_samples
+    )  # Monte Carlo samples for predictions
 
-    # Calculate the error exceedance probabilities
-    p_mc = calculate_error_exceedance_prob(y, f, sigma)
-
-    # Plot the calibration curve
-    plot_calibration_curve(p_mc, label="p_mc")
+    # Perform aggregation and plot the calibration curve
+    aggregate_and_plot_calibration(y_all, f_all_samples)
 
     # Assume we have 3 basins, each with 100 time steps and 50 Monte Carlo Dropout evaluations
     num_basins = 3

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-10 18:25:22
-LastEditTime: 2024-10-14 21:29:10
+LastEditTime: 2024-10-15 21:28:52
 LastEditors: Wenyu Ouyang
 Description: Run all cases, save the results and plot the results
 FilePath: \HydroMTL\scripts\mcdropout_results.py
@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import sys
 
+from matplotlib import pyplot as plt
 import numpy as np
 
 
@@ -19,7 +20,11 @@ project_dir = os.path.dirname(Path(os.path.abspath(__file__)).parent)
 sys.path.append(project_dir)
 from definitions import RESULT_DIR
 from hydromtl.explain.uncertainty_analysis import (
+    aggregate_and_plot_calibration,
+    calculate_error_exceedance_prob,
+    plot_calibration_curve,
     plot_probability_plot,
+    pp_plot_multiple_basins,
     process_and_aggregate_basins,
 )
 from scripts.mcdropout_eval import run_mcdropout_for_configs
@@ -40,8 +45,11 @@ def read_mcdropout_results(exp):
         "epoch300flow_obs.npy",
     )
     preds = np.load(pred_file)
+    # calculate the mean and std of the predictions
+    pred_mean = np.mean(preds, axis=0)
+    pred_std = np.std(preds, axis=0)
     obs = np.load(obs_file)
-    return preds, obs
+    return preds, obs, pred_mean, pred_std
 
 
 run_mode = False
@@ -73,17 +81,22 @@ if run_mode:
     run_mcdropout_for_configs(exp_mtl_lst, 100, post_fix=2)
 
 # read the results and plot
-post_fix = 2
+post_fix = 1
 exp_q_lst_uncertainty = [f"{exp}0{post_fix}" for exp in exp_q_lst]
 exp_et_lst_uncertainty = [f"{exp}0{post_fix}" for exp in exp_et_lst]
 exp_mtl_lst_uncertainty = [f"{exp}0{post_fix}" for exp in exp_mtl_lst]
 exp_lst = exp_q_lst_uncertainty + exp_et_lst_uncertainty + exp_mtl_lst_uncertainty
+# exp_lst = exp_mtl_lst_uncertainty
 for exp in exp_lst:
     print(f"Plotting {exp}")
-    preds, obs = read_mcdropout_results(exp)
+    preds, obs, pred_mean, pred_std = read_mcdropout_results(exp)
+    cc_save_path = os.path.join(RESULT_DIR, f"{exp}_calibration_curve.png")
+    aggregate_and_plot_calibration(
+        obs[:, :, 0], preds[:, :, :, 0], save_path=cc_save_path
+    )
     num_basins = obs.shape[0]
     basins_data = []
-    for i in range(num_basins):
+    for i in range(num_basins - 5, num_basins):
         # Randomly generate observed values and predictions for each basin
         basin_name = f"Basin {i+1}"
         # Store the data in the list
@@ -96,13 +109,14 @@ for exp in exp_lst:
             }
         )
     # Aggregate z-values and r-values over basins and time steps
-    all_z_values, all_r_values = process_and_aggregate_basins(basins_data, num_bins=10)
-    save_path = os.path.join(RESULT_DIR, f"{exp}_probability_plot.png")
+    pp_plot_multiple_basins(basins_data)
+    all_z_values, all_r_values = process_and_aggregate_basins(basins_data, num_bins=500)
+    pp_save_path = os.path.join(RESULT_DIR, f"{exp}_probability_plot.png")
     # Plot the aggregated probability plot
     plot_probability_plot(
         all_z_values,
         all_r_values,
         basin_name="All Basins",
-        scatter=False,
-        save_path=save_path,
+        save_path=pp_save_path,
     )
+    plt.show()
