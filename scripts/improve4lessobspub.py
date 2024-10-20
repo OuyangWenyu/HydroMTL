@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-10 21:01:43
-LastEditTime: 2024-10-15 10:56:42
+LastEditTime: 2024-10-20 11:34:20
 LastEditors: Wenyu Ouyang
 Description: evaluate all pub cases and plot the results
 FilePath: \HydroMTL\scripts\improve4lessobspub.py
@@ -59,14 +59,29 @@ if run_mode:
         definitions.RESULT_DIR, "exp_pub_kfold_percent050", "camels_test_kfold0.csv"
     )
     evaluate_pub(
-        train_exp="exppubstlq401",
+        train_exp="exppubstlq801",
         gage_id_file=fold1_test_gage_id_file,
         # cache is for the pub-test basins which are used for traineing in another fold experiment
-        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq402"),
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq802"),
     )
     evaluate_pub(
-        train_exp="exppubmtl501",
+        train_exp="exppubmtl701",
         gage_id_file=fold1_test_gage_id_file,
         # cache is for the pub-test basins which are used for traineing in another fold experiment
-        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq402"),
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq802"),
+    )
+    fold2_test_gage_id_file = os.path.join(
+        definitions.RESULT_DIR, "exp_pub_kfold_percent050", "camels_test_kfold1.csv"
+    )
+    evaluate_pub(
+        train_exp="exppubstlq802",
+        gage_id_file=fold2_test_gage_id_file,
+        # cache is for the pub-test basins which are used for traineing in another fold experiment
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq801"),
+    )
+    evaluate_pub(
+        train_exp="exppubmtl702",
+        gage_id_file=fold2_test_gage_id_file,
+        # cache is for the pub-test basins which are used for traineing in another fold experiment
+        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq801"),
     )
