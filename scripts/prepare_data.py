@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-01-08 16:58:14
-LastEditTime: 2024-06-15 10:55:21
+LastEditTime: 2024-10-21 14:00:47
 LastEditors: Wenyu Ouyang
 Description: Choose some basins for training and testing of multioutput exps
 FilePath: \HydroMTL\scripts\prepare_data.py
@@ -278,10 +278,102 @@ def see_smap_data():
     print(f"Basins with missing SMAP data: {missing_info}")
 
 
+def see_usgs_camels_streamflow():
+    """Compare streamflow data from 2001 to 2014 from USGS and CAMELS datasets."""
+    camels_dir = os.path.join(definitions.DATASET_DIR, "camels", "camels_us")
+    camels = Camels(camels_dir)
+    if not os.path.exists(ID_FILE_PATH):
+        select_basins()
+    chosen_basins = pd.read_csv(ID_FILE_PATH, dtype={"GAGE_ID": str})[
+        "GAGE_ID"
+    ].tolist()
+    # read streamflow data from CAMELS dataset
+    camels_flow = camels.read_target_cols(
+        chosen_basins,
+        t_range=COMP_TRANGE,
+        target_cols=["usgsFlow"],
+    )
+    # read streamflow data from USGS dataset
+    usgs_flow_dir = os.path.join(
+        definitions.DATASET_DIR, "FD_sources", "camels_1d_flow"
+    )
+    all_rmse = []
+    all_corr = []
+    basin_rmse = []
+    usgs_streamflows = []
+    for basin_id in chosen_basins:
+        usgs_flow_file = os.path.join(
+            usgs_flow_dir, f"camels_{basin_id}_streamflow.txt"
+        )
+        df = pd.read_csv(usgs_flow_file)
+        # chose time in COMP_TRANGE
+        start_date, end_date = COMP_TRANGE
+        usgs_flow = df.loc[(df["time"] >= start_date) & (df["time"] < end_date)]
+        usgs_streamflows.append(usgs_flow["streamflow(cfs)"].values)
+        # calculate the RMSE and correlation coefficient between CAMELS and USGS streamflow data
+        metric_dict = hydro_stat.stat_error_i(
+            camels_flow[chosen_basins.index(basin_id), :, 0],
+            usgs_flow["streamflow(cfs)"].values,
+        )
+        all_rmse.append(metric_dict["RMSE"])
+        all_corr.append(metric_dict["Corr"])
+        basin_rmse.append((basin_id, metric_dict["RMSE"]))
+    basin_rmse.sort(key=lambda x: x[1], reverse=True)
+    top_n = 5
+    print(f"Top {top_n} basins with the largest differences:")
+    cfs_to_m3s = 0.0283168
+    for basin_id, rmse in basin_rmse[:top_n]:
+        print(f"Basin ID: {basin_id}, RMSE: {rmse}")
+        # plot time series of streamflow data
+        t_lst = hydro_utils.t_range_days(COMP_TRANGE)
+        plot_ts(
+            t_lst,
+            [
+                camels_flow[chosen_basins.index(basin_id), :, 0] * cfs_to_m3s,
+                usgs_streamflows[chosen_basins.index(basin_id)] * cfs_to_m3s,
+            ],
+            title=f"Time Series for Basin {basin_id}",
+            xlabel="Date",
+            ylabel="Streamflow(m$^3$/s)",
+            alpha=[0.5, 0.5],
+            leg_lst=["CAMELS", "USGS"],
+        )
+        plt.savefig(
+            os.path.join(
+                definitions.RESULT_DIR,
+                "figures",
+                "prepare_data",
+                f"basin_{basin_id}_flow_ts.png",
+            ),
+            dpi=600,
+        )
+    # plot the RMSE and correlation coefficient in boxplot
+    plt.figure(figsize=(4, 4))
+    plt.subplot(1, 2, 1)
+    plt.boxplot(all_rmse, patch_artist=True, widths=0.2)
+    plt.title("Boxplot of RMSE")
+    plt.ylabel("RMSE")
+    plt.grid(True)
+    plt.subplot(1, 2, 2)
+    plt.boxplot(all_corr, patch_artist=True, widths=0.2)
+    plt.title("Boxplot of Corr")
+    plt.ylabel("Corr")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            definitions.RESULT_DIR, "figures", "prepare_data", "combined_boxplot.png"
+        ),
+        dpi=600,
+    )
+    plt.show()
+
+
 if __name__ == "__main__":
     # select_basins()
     # compare_nldas()
     # see_basin_area()
     # see_basin_streamflow_data()
-    see_smap_data()
+    # see_smap_data()
     # compare_ets()
+    see_usgs_camels_streamflow()
