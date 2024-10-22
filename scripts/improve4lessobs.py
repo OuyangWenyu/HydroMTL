@@ -2,7 +2,9 @@
 import os
 import sys
 from matplotlib import pyplot as plt
+import numpy as np
 import pandas as pd
+
 
 # Get the current directory of the project
 project_dir = os.path.abspath("")
@@ -10,37 +12,69 @@ project_dir = os.path.abspath("")
 sys.path.append(project_dir)
 import definitions
 from scripts.mtl_results_utils import (
-    read_multi_single_exps_results,
     plot_mtl_results_map,
 )
 from hydromtl.utils import hydro_constant
-from scripts.streamflow_utils import plot_ecdf_func
+from hydromtl.models.trainer import stat_result
+from hydromtl.utils.hydro_stat import stat_error
+from scripts.streamflow_utils import get_json_file, plot_ecdf_func
 from hydromtl.visual.plot_stat import plot_scatter_with_11line
 
-# ------------------- training -------------------
-# Some commands to train the model:
-# # STL Q
-# python run_task.py --exp expstlq201 --output_vars usgsFlow ssm --loss_weight 1.0 0.0 --train_period 2005-10-01 2015-10-01 --test_period 2015-10-01 2018-10-01 --ctx 0 --random 1234 --limit_part 1
-# # STL SSM
-# python run_task.py --exp expstlssm001 --output_vars usgsFlow ssm --loss_weight 0.0 1.0 --train_period 2015-10-01 2018-10-01 --test_period 2018-10-01 2021-10-01 --ctx 1 --random 1234 --limit_part 0
-# # MTL without STL-Q-pretrained
-# python run_task.py --exp expmtlqssm001 --output_vars usgsFlow ssm --loss_weight 0.5 0.5 --train_period 2015-10-01 2018-10-01 --test_period 2018-10-01 2021-10-01 --ctx 0 --random 1234
-# # MTL with STL-Q-pretrained; test_epoch is same as train_epoch
-# python run_task.py --exp expmtlqssm101 --output_vars usgsFlow ssm --loss_weight 0.5 0.5 --train_period 2015-10-01 2018-10-01 --test_period 2018-10-01 2021-10-01 --ctx 1 --random 1234 --weight_path /mnt/sdc/owen/code/HydroMTL/results/camels/expstlq201/model_Ep200.pth --train_epoch 100
-
-# ------------------- evaluation ------------------
-# After run all above commands, the results are saved in the folder `results/camels/`. The results are shown in the following figure.
-exps_eval = ["expstlssm001", "expmtlqssm001", "expmtlqssm101"]
-q_ssm_inds, _ = read_multi_single_exps_results(
-    exps_eval,
-    var_idx=1,
-    ensemble=-1,
-    var_names=[
-        hydro_constant.streamflow.name,
-        hydro_constant.surface_soil_moisture.name,
+exps_eval = [
+    [
+        "expdatascarcestlssm001",
+        "expdatascarcestlssm002",
+        "expdatascarcestlssm003",
+        "expdatascarcestlssm004",
+        "expdatascarcestlssm005",
     ],
-    var_units=["ft3/s", "mm/day"],
-)
+    [
+        "expdatascarcemtlqssm001",
+        "expdatascarcemtlqssm002",
+        "expdatascarcemtlqssm003",
+        "expdatascarcemtlqssm004",
+        "expdatascarcemtlqssm005",
+    ],
+    [
+        "expdatascarcemtlqssm101",
+        "expdatascarcemtlqssm102",
+        "expdatascarcemtlqssm103",
+        "expdatascarcemtlqssm104",
+        "expdatascarcemtlqssm105",
+    ],
+]
+var_idx = 1
+q_ssm_inds = []
+for exps in exps_eval:
+    preds = []
+    obss = []
+    for i in range(len(exps)):
+        cfg_dir_flow_other = os.path.join(definitions.RESULT_DIR, "camels", exps[i])
+        cfg_flow_other = get_json_file(cfg_dir_flow_other)
+        inds_df1, pred, obs = stat_result(
+            cfg_flow_other["data_params"]["test_path"],
+            cfg_flow_other["evaluate_params"]["test_epoch"],
+            fill_nan=cfg_flow_other["evaluate_params"]["fill_nan"],
+            var_unit=[
+                hydro_constant.streamflow.unit,
+                hydro_constant.surface_soil_moisture.unit,
+            ],
+            return_value=True,
+            var_name=[
+                hydro_constant.streamflow.name,
+                hydro_constant.surface_soil_moisture.name,
+            ],
+        )
+        preds.append(pred[var_idx])
+        obss.append(obs[var_idx])
+    pred_ensemble = np.array(preds).mean(axis=0)
+    obs_ensemble = np.array(obss).mean(axis=0)
+    inds_ensemble = stat_error(
+        obs_ensemble,
+        pred_ensemble,
+        fill_nan=cfg_flow_other["evaluate_params"]["fill_nan"][var_idx],
+    )
+    q_ssm_inds.append(inds_ensemble["NSE"])
 
 # ------------------------- Plots -------------------------
 # Plot a Empirical Cumulative Distribution Function (ECDF) of NSE for above MTL models.
@@ -49,9 +83,15 @@ cases_exps_legends_together = [
     "MTL",
     "MTL_Pretrained",
 ]
-figure_dir = os.path.join(definitions.RESULT_DIR, "figures")
+for i in range(len(cases_exps_legends_together)):
+    print(
+        f"the median NSE of {cases_exps_legends_together[i]} is {np.median(q_ssm_inds[i])}"
+    )
+figure_dir = os.path.join(definitions.RESULT_DIR, "figures", "data_augment")
+if not os.path.exists(figure_dir):
+    os.makedirs(figure_dir)
 plot_ecdf_func(
-    q_ssm_inds[:-1],
+    q_ssm_inds,
     cases_exps_legends_together=cases_exps_legends_together,
     save_path=os.path.join(
         figure_dir,

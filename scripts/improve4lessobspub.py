@@ -1,87 +1,124 @@
 """
 Author: Wenyu Ouyang
-Date: 2024-10-10 21:01:43
-LastEditTime: 2024-10-20 11:34:20
+Date: 2024-10-14 20:34:23
+LastEditTime: 2024-10-21 19:26:59
 LastEditors: Wenyu Ouyang
-Description: evaluate all pub cases and plot the results
-FilePath: \HydroMTL\scripts\improve4lessobspub.py
+Description: evaluate the results
+FilePath: \HydroMTL\scripts\evaluate_pub_dataaug.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
-# Get the current directory of the project
-import glob
-import json
+# Get the current directory
 import os
 import sys
+
+from matplotlib import pyplot as plt
+import numpy as np
 
 
 project_dir = os.path.abspath("")
 # import the module using a relative path
 sys.path.append(project_dir)
 import definitions
-from hydromtl.data.source.data_constant import (
-    ET_MODIS_NAME,
-    Q_CAMELS_US_NAME,
-    SSM_SMAP_NAME,
+from hydromtl.utils import hydro_constant
+from hydromtl.models.trainer import stat_result
+from hydromtl.utils.hydro_stat import stat_error
+from hydromtl.visual.plot_stat import plot_scatter_with_11line
+from scripts.streamflow_utils import get_json_file, plot_ecdf_func
+
+# we have 2-fold results to see, one-fold for some basins and the other for the rest
+# so we directly compare all basins results
+exps_lst = [
+    [
+        [
+            "exppubstlq8010",
+            "exppubstlq8030",
+            "exppubstlq8050",
+            "exppubstlq8070",
+            "exppubstlq8090",
+        ],
+        [
+            "exppubstlq8020",
+            "exppubstlq8040",
+            "exppubstlq8060",
+            "exppubstlq8080",
+            "exppubstlq8100",
+        ],
+    ],
+    [
+        [
+            "exppubmtl7010",
+            "exppubmtl7030",
+            "exppubmtl7050",
+            "exppubmtl7070",
+            "exppubmtl7090",
+        ],
+        [
+            "exppubmtl7020",
+            "exppubmtl7040",
+            "exppubmtl7060",
+            "exppubmtl7080",
+            "exppubmtl7100",
+        ],
+    ],
+]
+inds_all_lst = []
+var_idx = 0
+for models_exp in exps_lst:
+    pred_all_fold = []
+    obs_all_fold = []
+    for ensemble_exps in models_exp:
+        preds = []
+        obss = []
+        for exp in ensemble_exps:
+            cfg_dir_flow_other = os.path.join(definitions.RESULT_DIR, "camels", exp)
+            cfg_flow_other = get_json_file(cfg_dir_flow_other)
+            inds_df, pred, obs = stat_result(
+                cfg_flow_other["data_params"]["test_path"],
+                cfg_flow_other["evaluate_params"]["test_epoch"],
+                fill_nan=cfg_flow_other["evaluate_params"]["fill_nan"],
+                var_unit=[hydro_constant.streamflow.unit],
+                var_name=[hydro_constant.streamflow.name],
+                return_value=True,
+            )
+            preds.append(pred[var_idx])
+            obss.append(obs[var_idx])
+        pred_ensemble = np.array(preds).mean(axis=0)
+        obs_ensemble = np.array(obss).mean(axis=0)
+        pred_all_fold.append(pred_ensemble)
+        obs_all_fold.append(obs_ensemble)
+    preds_all_fold = np.concatenate(pred_all_fold)
+    obss_all_fold = np.concatenate(obs_all_fold)
+    inds_all = stat_error(
+        obss_all_fold,
+        preds_all_fold,
+        fill_nan="no",
+    )
+    inds_all_lst.append(inds_all["NSE"])
+cases_exps_legends_together = ["STL_Q_PUB", "MTL_PUB"]
+for i in range(len(cases_exps_legends_together)):
+    print(
+        f"the median NSE of {cases_exps_legends_together[i]} is {np.median(inds_all_lst[i])}"
+    )
+figure_dir = os.path.join(definitions.RESULT_DIR, "figures", "data_augment")
+plot_ecdf_func(
+    inds_all_lst,
+    cases_exps_legends_together,
+    save_path=os.path.join(figure_dir, "mtl_stl_pub_nse_comp.png"),
 )
-from scripts.mtl_results_utils import predict_new_mtl_exp
-from scripts.streamflow_utils import get_json_file, get_lastest_weight_path
-
-
-def evaluate_pub(train_exp, gage_id_file, cache_dir=None, second_var=SSM_SMAP_NAME):
-    train_exp_dir = os.path.join(definitions.RESULT_DIR, "camels", train_exp)
-    weight_path = get_lastest_weight_path(train_exp_dir)
-    if weight_path is None:
-        raise ValueError("weight_path is required")
-    stat_dict_file = glob.glob(os.path.join(train_exp_dir, "*_stat.json"))[0]
-    config = get_json_file(train_exp_dir)
-    new_exp = f"{train_exp}0"
-    predict_new_mtl_exp(
-        exp=new_exp,
-        targets=[Q_CAMELS_US_NAME, second_var],
-        loss_weights=config["training_params"]["criterion_params"]["item_weight"],
-        weight_path=weight_path,
-        train_period=config["data_params"]["t_range_train"],
-        test_period=config["data_params"]["t_range_test"],
-        cache_path=cache_dir,
-        gage_id_file=gage_id_file,
-        stat_dict_file=stat_dict_file,
-        n_hidden_states=config["model_params"]["model_param"]["n_hidden_states"],
-        layer_hidden_size=config["model_params"]["model_param"]["layer_hidden_size"],
-        random_seed=config["training_params"]["random_seed"],
-        et_product="MOD16A2V006",
-    )
-
-
-run_mode = True
-if run_mode:
-    fold1_test_gage_id_file = os.path.join(
-        definitions.RESULT_DIR, "exp_pub_kfold_percent050", "camels_test_kfold0.csv"
-    )
-    evaluate_pub(
-        train_exp="exppubstlq801",
-        gage_id_file=fold1_test_gage_id_file,
-        # cache is for the pub-test basins which are used for traineing in another fold experiment
-        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq802"),
-    )
-    evaluate_pub(
-        train_exp="exppubmtl701",
-        gage_id_file=fold1_test_gage_id_file,
-        # cache is for the pub-test basins which are used for traineing in another fold experiment
-        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq802"),
-    )
-    fold2_test_gage_id_file = os.path.join(
-        definitions.RESULT_DIR, "exp_pub_kfold_percent050", "camels_test_kfold1.csv"
-    )
-    evaluate_pub(
-        train_exp="exppubstlq802",
-        gage_id_file=fold2_test_gage_id_file,
-        # cache is for the pub-test basins which are used for traineing in another fold experiment
-        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq801"),
-    )
-    evaluate_pub(
-        train_exp="exppubmtl702",
-        gage_id_file=fold2_test_gage_id_file,
-        # cache is for the pub-test basins which are used for traineing in another fold experiment
-        cache_dir=os.path.join(definitions.RESULT_DIR, "camels", "exppubstlq801"),
-    )
+plot_scatter_with_11line(
+    inds_all_lst[0],
+    inds_all_lst[1],
+    # xlabel="NSE single-task",
+    # ylabel="NSE multi-task",
+    xlabel=f"{cases_exps_legends_together[0]} NSE",
+    ylabel=f"{cases_exps_legends_together[1]} NSE",
+)
+plt.savefig(
+    os.path.join(
+        figure_dir,
+        "mtl_stl_pub_q_scatter_plot_with_11line.png",
+    ),
+    dpi=600,
+    bbox_inches="tight",
+)
