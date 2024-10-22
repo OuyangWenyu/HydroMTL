@@ -116,7 +116,7 @@ plot_mtl_results_map(
     ),
 )
 # plot scatter with a 1:1 line to compare single-task and multi-task models
-plot_scatter_with_11line(
+_, _, tesxtstr = plot_scatter_with_11line(
     q_ssm_inds[0],
     q_ssm_inds[2],
     # xlabel="NSE single-task",
@@ -124,6 +124,7 @@ plot_scatter_with_11line(
     xlabel="STL NSE",
     ylabel="MTL_Pretrained NSE",
 )
+print(tesxtstr)
 plt.savefig(
     os.path.join(
         figure_dir,

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2024-06-15 11:45:12
+LastEditTime: 2024-10-22 10:34:40
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: \HydroMTL\hydromtl\visual\plot_stat.py
@@ -158,7 +158,38 @@ def plot_scatter_with_11line(
     ax.spines["top"].set_visible(False)
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
-    return fig, ax
+
+    if isinstance(x, list):
+        x_all = np.concatenate(x)
+        y_all = np.concatenate(y)
+    else:
+        x_all = np.array(x)
+        y_all = np.array(y)
+
+    above_line_all = np.sum(y_all > x_all)
+    below_line_all = np.sum(y_all < x_all)
+
+    # Filter points within the plotting range
+    in_plot = (
+        (x_all >= xlim[0])
+        & (x_all <= xlim[1])
+        & (y_all >= ylim[0])
+        & (y_all <= ylim[1])
+    )
+    x_in_plot = x_all[in_plot]
+    y_in_plot = y_all[in_plot]
+
+    above_line_in_plot = np.sum(y_in_plot > x_in_plot)
+    below_line_in_plot = np.sum(y_in_plot < x_in_plot)
+
+    # Display the point numbers on the plot
+    textstr = (
+        f"Above 1:1 line (all): {above_line_all}\n"
+        f"Below 1:1 line (all): {below_line_all}\n"
+        f"Above 1:1 line (in plot): {above_line_in_plot}\n"
+        f"Below 1:1 line (in plot): {below_line_in_plot}"
+    )
+    return fig, ax, textstr
 
 
 def plot_heat_map(

@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-14 20:34:23
-LastEditTime: 2024-10-21 19:26:59
+LastEditTime: 2024-10-22 10:39:20
 LastEditors: Wenyu Ouyang
 Description: evaluate the results
-FilePath: \HydroMTL\scripts\evaluate_pub_dataaug.py
+FilePath: \HydroMTL\scripts\improve4lessobspub.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
@@ -106,7 +106,7 @@ plot_ecdf_func(
     cases_exps_legends_together,
     save_path=os.path.join(figure_dir, "mtl_stl_pub_nse_comp.png"),
 )
-plot_scatter_with_11line(
+_, _, textstr = plot_scatter_with_11line(
     inds_all_lst[0],
     inds_all_lst[1],
     # xlabel="NSE single-task",
@@ -114,6 +114,7 @@ plot_scatter_with_11line(
     xlabel=f"{cases_exps_legends_together[0]} NSE",
     ylabel=f"{cases_exps_legends_together[1]} NSE",
 )
+print(textstr)
 plt.savefig(
     os.path.join(
         figure_dir,
