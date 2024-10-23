@@ -77,9 +77,11 @@ for exps in exps_eval:
     q_ssm_inds.append(inds_ensemble["NSE"])
 
 # ------------------------- Plots -------------------------
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 # Plot a Empirical Cumulative Distribution Function (ECDF) of NSE for above MTL models.
 cases_exps_legends_together = [
-    "STL",
+    "STL_SSM",
     "MTL",
     "MTL_Pretrained",
 ]
@@ -108,7 +110,7 @@ basin_ids = pd.read_csv(gage_id_file, dtype={"GAGE_ID": str})
 plot_mtl_results_map(
     basin_ids["GAGE_ID"].values,
     [q_ssm_inds[0], q_ssm_inds[2]],
-    ["STL", "MTL_Pretrained"],
+    ["STL_SSM", "MTL_Pretrained"],
     ["o", "x"],
     os.path.join(
         figure_dir,
@@ -121,7 +123,7 @@ _, _, tesxtstr = plot_scatter_with_11line(
     q_ssm_inds[2],
     # xlabel="NSE single-task",
     # ylabel="NSE multi-task",
-    xlabel="STL NSE",
+    xlabel="STL_SSM NSE",
     ylabel="MTL_Pretrained NSE",
 )
 print(tesxtstr)

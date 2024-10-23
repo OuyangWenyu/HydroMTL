@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-09 16:07:19
-LastEditTime: 2024-06-17 09:44:33
+LastEditTime: 2024-10-23 14:05:01
 LastEditors: Wenyu Ouyang
 Description: Same content with evaluate.ipynb but in .py format
 FilePath: \HydroMTL\scripts\evaluate_ensemble.py
@@ -676,10 +676,12 @@ if __name__ == "__main__":
     figure_dir = os.path.join(
         definitions.RESULT_DIR,
         "figures",
+        "ensemble",
     )
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)
-
+    # set font
+    plt.rcParams["font.family"] = "Times New Roman"
     # ----------------------  Plot for valid period  ---------------------
     # plot boxes of NSEs for valid Q
     valid_ensemble_q_nse = extract_and_aggregate_metrics(inds_ensemble_q_valid, "NSE")

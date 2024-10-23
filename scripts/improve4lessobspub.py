@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-10-14 20:34:23
-LastEditTime: 2024-10-22 10:39:20
+LastEditTime: 2024-10-23 13:39:22
 LastEditors: Wenyu Ouyang
 Description: evaluate the results
 FilePath: \HydroMTL\scripts\improve4lessobspub.py
@@ -101,6 +101,8 @@ for i in range(len(cases_exps_legends_together)):
         f"the median NSE of {cases_exps_legends_together[i]} is {np.median(inds_all_lst[i])}"
     )
 figure_dir = os.path.join(definitions.RESULT_DIR, "figures", "data_augment")
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 plot_ecdf_func(
     inds_all_lst,
     cases_exps_legends_together,

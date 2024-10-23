@@ -191,7 +191,11 @@ def mean_of_medians(metric_lst):
 
 xlabel = "Percent basin used for training"
 ylabel = "Median NSE"
-figure_dir = os.path.join(definitions.RESULT_DIR, "figures")
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
+figure_dir = os.path.join(definitions.RESULT_DIR, "figures", "scale")
+if not os.path.exists(figure_dir):
+    os.makedirs(figure_dir)
 mtlq_temporal_medians = mean_of_medians(mtlq_temporal_metric_lst)
 stlq_temporal_medians = mean_of_medians(stlq_temporal_metric_lst)
 

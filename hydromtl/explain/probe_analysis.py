@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-21 15:53:23
-LastEditTime: 2024-06-16 11:13:19
+LastEditTime: 2024-10-23 13:23:33
 LastEditors: Wenyu Ouyang
 Description: Train and test a linear probe for DL models
 FilePath: \HydroMTL\hydromtl\explain\probe_analysis.py
@@ -421,9 +421,14 @@ def plot_errors(
             ),  # arrow style, color, and linestyle
             color=f"C{str(i)}",
             horizontalalignment="right",
+            fontsize=14,
         )
-    ax2.legend()
-
+    ax2.legend(
+        fontsize=14,
+    )
+    # set fontsize of xticks, yticks
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     ax2.set_xlabel(show_probe_metric, fontsize=16)
     # ax2.set_title(
     #     show_probe_metric

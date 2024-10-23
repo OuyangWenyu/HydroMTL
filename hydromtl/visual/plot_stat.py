@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2021-12-05 11:21:58
-LastEditTime: 2024-10-22 10:34:40
+LastEditTime: 2024-10-23 14:06:57
 LastEditors: Wenyu Ouyang
 Description: basic plot functions for statistics, using cartopy, matplotlib, and seaborn
 FilePath: \HydroMTL\hydromtl\visual\plot_stat.py
@@ -21,6 +21,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from hydromtl.utils.hydro_stat import ecdf
 import matplotlib.lines as mlines
+
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 
 
 def plot_simple_lines(

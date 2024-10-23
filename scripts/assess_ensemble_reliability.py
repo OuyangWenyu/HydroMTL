@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-14 17:44:31
-LastEditTime: 2024-06-14 11:48:27
+LastEditTime: 2024-10-23 11:29:00
 LastEditors: Wenyu Ouyang
 Description: scripts same with assess_reliability.ipynb
 FilePath: \HydroMTL\scripts\assess_ensemble_reliability.py
@@ -10,6 +10,7 @@ Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 
 import os
 import sys
+from matplotlib import pyplot as plt
 import xarray as xr
 
 
@@ -50,7 +51,7 @@ run_exp_lst = [
         f"camels{os.sep}expstlet0050",
     ],
 ]
-save_dir = os.path.join(definitions.RESULT_DIR, "figures", "ensemble")
+save_dir = os.path.join(definitions.RESULT_DIR, "figures", "reliability")
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 legend_lst = ["STL-Q Cell State", "MTL Cell State", "STL-ET Cell State"]
@@ -164,6 +165,8 @@ def show_probe_ensemble(
     )
 
 
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 # The probe is for streamflow (Q).
 show_probe_ensemble(
     run_exp_lst=run_exp_lst,

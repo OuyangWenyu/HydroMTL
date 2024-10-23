@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-05-14 17:44:31
-LastEditTime: 2024-05-26 20:26:19
+LastEditTime: 2024-10-23 14:12:03
 LastEditors: Wenyu Ouyang
 Description: scripts same with assess_reliability.ipynb
 FilePath: \HydroMTL\scripts\assess_reliability.py
@@ -10,6 +10,8 @@ Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 
 import os
 import sys
+
+from matplotlib import pyplot as plt
 
 
 # Get the current directory of the project
@@ -38,18 +40,20 @@ from hydromtl.explain.probe_analysis import show_probe
 #     f"camels{os.sep}expmtl3030",
 #     f"camels{os.sep}expstlet0020",
 # ]
-# random_seed = 111
-# run_exp_lst = [
-#     f"camels{os.sep}expstlq2040",
-#     f"camels{os.sep}expmtl4030",
-#     f"camels{os.sep}expstlet0040",
-# ]
-random_seed = 1111
+random_seed = 111
 run_exp_lst = [
-    f"camels{os.sep}expstlq2050",
-    f"camels{os.sep}expmtl5030",
-    f"camels{os.sep}expstlet0050",
+    f"camels{os.sep}expstlq2040",
+    f"camels{os.sep}expmtl4030",
+    f"camels{os.sep}expstlet0040",
 ]
+# random_seed = 1111
+# run_exp_lst = [
+#     f"camels{os.sep}expstlq2050",
+#     f"camels{os.sep}expmtl5030",
+#     f"camels{os.sep}expstlet0050",
+# ]
+# set font
+plt.rcParams["font.family"] = "Times New Roman"
 save_dir = os.path.join(definitions.RESULT_DIR, "figures", f"rs{random_seed}")
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
